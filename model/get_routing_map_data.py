@@ -1,0 +1,71 @@
+import pandas as pd
+
+
+def get_routing_map_data(file_path: str) -> dict:
+    """
+    Load data from an Excel file for the EV routing optimization model.
+
+    Parameters
+    ----------
+    file_path: str
+        The path to the Excel file (.xlsx) containing the data.
+
+    Returns
+    -------
+    input_data: dict
+        The input data for the model in the format required by Pyomo.
+    """
+
+    # Read sheets from the Excel file
+    unindexed_df = pd.read_excel(file_path, sheet_name="Unindexed", index_col="Name")
+    paths_df = pd.read_excel(file_path, sheet_name="sPaths")
+    delivery_points_df = pd.read_excel(file_path, sheet_name="sDeliveryPoints")
+    charging_stations_df = pd.read_excel(file_path, sheet_name="sChargingStations")
+
+    # Function to clean column names by taking only the first word
+    def clean_column_name(col_name):
+        return col_name.split(" ")[0]
+
+    # Clean column names for all dataframes
+    for df in [paths_df, delivery_points_df, charging_stations_df]:
+        df.columns = [clean_column_name(col) for col in df.columns]
+
+    # Extract sets
+    # Get all unique intersections from the paths dataframe
+    all_intersections = paths_df["pOriginIntersection"].tolist() + paths_df["pDestinationIntersection"].tolist()
+    intersections = sorted(list(set(all_intersections)))
+    
+    # Path IDs from 1 to number of paths
+    paths = list(range(1, len(paths_df) + 1))
+    
+    # Delivery points and charging stations are defined by their respective sheets
+    delivery_points = delivery_points_df["pDeliveryIntersection"].tolist()
+    charging_stations = charging_stations_df["pStationIntersection"].tolist()
+
+    # Start building the input data dictionary
+    input_data = {None: {
+        'sIntersections': {None: intersections},
+        'sPaths': {None: paths},
+        'sDeliveryPoints': {None: delivery_points},
+        'sChargingStations': {None: charging_stations},
+    }}
+
+    # Process unindexed parameters (scalar values)
+    for idx, row in unindexed_df.iterrows():
+        param_name = clean_column_name(idx)
+        value = row["Value"].item()
+        input_data[None][param_name] = {None: value}
+
+    # Process indexed parameters for paths, delivery points and charging stations
+    for df, points_list in [
+        (paths_df, paths),
+        (delivery_points_df, delivery_points),
+        (charging_stations_df, charging_stations)
+    ]:
+        for col in df.columns:
+            param_data = {point: getattr(row, col) for point, row in zip(points_list, df.itertuples(index=False))}
+            input_data[None][col] = param_data
+
+    return input_data
+    
+
