@@ -1,5 +1,4 @@
-from model import get_routing_map_data, get_ev_routing_abstract_model
-from model.save_solution_data import save_solution_data
+from model import get_routing_map_data, get_ev_routing_abstract_model, save_solution_data
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
