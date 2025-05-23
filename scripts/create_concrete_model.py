@@ -9,6 +9,7 @@ def main():
     # Get data from Excel file
     print(f"Loading data from {file_path}...")
     input_data = get_routing_map_data(file_path, ev=1)
+    print(input_data)
     
     # Get the abstract model
     print("Creating abstract model...")
@@ -16,7 +17,6 @@ def main():
     
     # Create a concrete instance using the data
     print("Creating concrete model instance...")
-    print(input_data)
     concrete_model = abstract_model.create_instance(input_data)
     
     # Basic model information
