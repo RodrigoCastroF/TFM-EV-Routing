@@ -142,14 +142,14 @@ def get_ev_routing_abstract_model():
         rule=c40_visit_starting_point
     )
 
-    # TODO: confirm whether c40plus is necessary
-
-    def c40plus_visit_ending_point(m):
-        return m.v01VisitIntersection[m.pEndingPoint] == 1
-
-    m.c40plus_visit_ending_point = pyo.Constraint(
-        rule=c40plus_visit_ending_point
-    )
+    # # TODO: confirm whether cn1 is necessary
+    #
+    # def cn1_visit_ending_point(m):
+    #     return m.v01VisitIntersection[m.pEndingPoint] == 1
+    #
+    # m.cn1_visit_ending_point = pyo.Constraint(
+    #     rule=cn1_visit_ending_point
+    # )
 
     def c41_visit_delivery_point(m, delivery_point):
         return m.v01VisitIntersection[delivery_point] == 1
