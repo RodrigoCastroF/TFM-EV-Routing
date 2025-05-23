@@ -26,6 +26,8 @@ def get_ev_routing_abstract_model():
     m.pStartingSoC = pyo.Param(within=pyo.NonNegativeReals)
     m.pStartingTime = pyo.Param(within=pyo.NonNegativeReals)
     m.pMaxTime = pyo.Param(within=pyo.NonNegativeReals)
+    m.pStartingPoint = pyo.Param(within=m.sIntersections)
+    m.pEndingPoint = pyo.Param(within=m.sIntersections)
 
     # Parameters indexed by sPaths
     m.pOriginIntersection = pyo.Param(m.sPaths, within=m.sIntersections)
@@ -55,11 +57,41 @@ def get_ev_routing_abstract_model():
     # Variables
     # ----
 
-    # ...       
+    # Binary variables
+    m.v01Charge = pyo.Var(m.sChargingStations, within=pyo.Binary)
+    m.v01TravelPath = pyo.Var(m.sPaths, within=pyo.Binary)
+    m.v01TravelIntersection = pyo.Var(m.sIntersections, within=pyo.Binary)
+
+    # State of charge
+    m.vSoCArrival = pyo.Var(m.sIntersections, within=pyo.NonNegativeReals)
+    m.vSoCDeparture = pyo.Var(m.sIntersections, within=pyo.NonNegativeReals)
+
+    # Operation time
+    m.vTimeArrival = pyo.Var(m.sIntersections, within=pyo.NonNegativeReals)
+    m.vTimeDeparture = pyo.Var(m.sIntersections, within=pyo.NonNegativeReals)
+
+    # Time difference (delta)
+    m.vTimeCharging = pyo.Var(m.sChargingStations, within=pyo.NonNegativeReals)
+    m.vTimeDelay = pyo.Var(m.sDeliveryPoints, within=pyo.NonNegativeReals)
 
     # ----
     # Constraints
     # ----
+
+    # Navigation constraints
+
+    def c36_travel_intersection(m, intersection):
+        return sum(
+            m.v01TravelPath[path] for path in m.sPaths
+            if m.pOriginIntersection[path] == intersection
+        ) == m.v01TravelIntersection[intersection]
+
+    m.c36_travel_intersection = pyo.Constraint(
+        m.sIntersections, rule=c36_travel_intersection
+    )
+
+    def c37_home_cannot_be_origin(m):
+        pass
 
     # ...
     

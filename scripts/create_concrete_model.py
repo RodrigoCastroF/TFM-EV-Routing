@@ -16,6 +16,7 @@ def main():
     
     # Create a concrete instance using the data
     print("Creating concrete model instance...")
+    print(input_data)
     concrete_model = abstract_model.create_instance(input_data)
     
     # Basic model information
