@@ -90,6 +90,9 @@ def get_ev_routing_abstract_model():
     # ----
 
     def c36_visit_intersection_when_origin_of_path(m, intersection):
+        # Every visited node needs to be the origin of a path, except for the ending point
+        if intersection == m.pEndingPoint:
+            return pyo.Constraint.Skip
         return sum(
             m.v01TravelPath[path] for path in m.sPaths
             if m.pOriginIntersection[path] == intersection
@@ -110,6 +113,9 @@ def get_ev_routing_abstract_model():
     )
 
     def c38_visit_intersection_when_destination_of_path(m, intersection):
+        # Every visited node needs to be the destination of a path, except for the starting point
+        if intersection == m.pStartingPoint:
+            return pyo.Constraint.Skip
         return sum(
             m.v01TravelPath[path] for path in m.sPaths
             if m.pDestinationIntersection[path] == intersection
