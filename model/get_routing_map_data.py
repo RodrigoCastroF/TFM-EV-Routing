@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def get_routing_map_data(file_path: str) -> dict:
+def get_routing_map_data(file_path: str, ev: int = None) -> dict:
     """
     Load data from an Excel file for the EV routing optimization model.
 
@@ -9,6 +9,8 @@ def get_routing_map_data(file_path: str) -> dict:
     ----------
     file_path: str
         The path to the Excel file (.xlsx) containing the data.
+    ev: int, optional
+        The specific EV to filter delivery points for. If None, all delivery points are included.
 
     Returns
     -------
@@ -29,6 +31,10 @@ def get_routing_map_data(file_path: str) -> dict:
     # Clean column names for all dataframes
     for df in [paths_df, delivery_points_df, charging_stations_df]:
         df.columns = [clean_column_name(col) for col in df.columns]
+
+    # Filter delivery points by EV if specified
+    if ev is not None:
+        delivery_points_df = delivery_points_df[delivery_points_df["EV"] == ev]
 
     # Extract sets
     # Get all unique intersections from the paths dataframe

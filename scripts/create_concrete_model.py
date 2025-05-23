@@ -4,11 +4,11 @@ import pyomo.environ as pyo
 
 def main():
     # Define the file path
-    file_path = "./data/37-intersection map.xlsx"
+    file_path = "../data/37-intersection map.xlsx"
     
     # Get data from Excel file
     print(f"Loading data from {file_path}...")
-    input_data = get_routing_map_data(file_path)
+    input_data = get_routing_map_data(file_path, ev=1)
     
     # Get the abstract model
     print("Creating abstract model...")
