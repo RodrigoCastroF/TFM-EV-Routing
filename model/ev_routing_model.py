@@ -78,7 +78,12 @@ def get_ev_routing_abstract_model():
     # Objective function
     # ----
 
-    # TODO: add the objective function
+    # TODO: replace with the actual objective function
+
+    def objective_function(m):
+        return sum(m.v01VisitIntersection[intersection] for intersection in m.sIntersections)
+
+    m.Obj = pyo.Objective(rule=objective_function, sense=pyo.minimize)
 
     # ----
     # Navigation constraints
