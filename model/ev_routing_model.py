@@ -166,6 +166,7 @@ def get_ev_routing_abstract_model():
     )
 
     # Miller-Tucker-Zemlin (MTZ) formulation for subtour elimination
+    # See [[Issue - Loops in navigation]]
     
     def cn2_mtz_subtour_elimination(m, path):
         origin = m.pOriginIntersection[path]
