@@ -61,6 +61,7 @@ def get_routing_map_data(file_path: str, ev: int = None) -> dict:
         param_name = clean_column_name(idx)
         value = row["Value"].item()
         input_data[None][param_name] = {None: value}
+    input_data[None]['pNumIntersections'] = {None: len(intersections)}
 
     # Process indexed parameters for paths, delivery points and charging stations
     for df, points_list in [
@@ -71,6 +72,14 @@ def get_routing_map_data(file_path: str, ev: int = None) -> dict:
         for col in df.columns:
             param_data = {point: getattr(row, col) for point, row in zip(points_list, df.itertuples(index=False))}
             input_data[None][col] = param_data
+
+    # Create pPath parameter: mapping from (origin, destination) to path ID
+    pPath_data = {}
+    for path_id, row in zip(paths, paths_df.itertuples(index=False)):
+        origin = row.pOriginIntersection
+        destination = row.pDestinationIntersection
+        pPath_data[(origin, destination)] = path_id
+    input_data[None]['pPath'] = pPath_data
 
     return input_data
     

@@ -28,6 +28,7 @@ def get_ev_routing_abstract_model():
     m.pMaxTime = pyo.Param(within=pyo.NonNegativeReals)
     m.pStartingPoint = pyo.Param(within=m.sIntersections)
     m.pEndingPoint = pyo.Param(within=m.sIntersections)
+    m.pNumIntersections = pyo.Param(within=pyo.PositiveIntegers)
 
     # Parameters indexed by sPaths
     m.pOriginIntersection = pyo.Param(m.sPaths, within=m.sIntersections)
@@ -53,6 +54,9 @@ def get_ev_routing_abstract_model():
     m.pMinChargingTime = pyo.Param(m.sChargingStations, within=pyo.NonNegativeReals)
     m.pChargerEfficiencyRate = pyo.Param(m.sChargingStations, within=pyo.NonNegativeReals)
 
+    # Parameter to find path ID given origin and destination nodes
+    m.pPath = pyo.Param(m.sIntersections, m.sIntersections, within=m.sPaths)
+
     # ----
     # Variables
     # ----
@@ -73,6 +77,9 @@ def get_ev_routing_abstract_model():
     # Time difference (delta)
     m.vTimeCharging = pyo.Var(m.sChargingStations, within=pyo.NonNegativeReals)
     m.vTimeDelay = pyo.Var(m.sDeliveryPoints, within=pyo.NonNegativeReals)
+    
+    # MTZ variables for subtour elimination
+    m.vOrderVisited = pyo.Var(m.sIntersections, within=pyo.NonNegativeReals)
 
     # ----
     # Objective function
@@ -156,6 +163,42 @@ def get_ev_routing_abstract_model():
 
     m.c41_visit_delivery_point = pyo.Constraint(
         m.sDeliveryPoints, rule=c41_visit_delivery_point
+    )
+
+    # Miller-Tucker-Zemlin (MTZ) formulation for subtour elimination
+    
+    def cn2_mtz_subtour_elimination(m, path):
+        origin = m.pOriginIntersection[path]
+        destination = m.pDestinationIntersection[path]
+        
+        # Skip constraint if origin is the starting point (acts as depot in TSP)
+        if origin == m.pStartingPoint:
+            return pyo.Constraint.Skip
+            
+        return (
+            m.vOrderVisited[origin] - m.vOrderVisited[destination] + 1 
+            <= (m.pNumIntersections - 1) * (1 - m.v01TravelPath[path])
+        )
+
+    m.cn2_mtz_subtour_elimination = pyo.Constraint(
+        m.sPaths, rule=cn2_mtz_subtour_elimination
+    )
+    
+    def cn3_mtz_order_lower_bound(m, intersection):
+        if intersection == m.pStartingPoint:
+            return m.vOrderVisited[intersection] == 1
+        else:
+            return m.vOrderVisited[intersection] >= 2
+
+    m.cn3_mtz_order_lower_bound = pyo.Constraint(
+        m.sIntersections, rule=cn3_mtz_order_lower_bound
+    )
+
+    def cn4_mtz_order_upper_bound(m, intersection):
+        return m.vOrderVisited[intersection] <= m.pNumIntersections
+
+    m.cn4_mtz_order_upper_bound = pyo.Constraint(
+        m.sIntersections, rule=cn4_mtz_order_upper_bound
     )
 
     # ----
