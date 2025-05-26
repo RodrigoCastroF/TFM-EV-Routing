@@ -1,13 +1,13 @@
-from model import get_routing_map_data, get_ev_routing_abstract_model, save_solution_data
+from model import get_routing_map_data, get_ev_routing_abstract_model, save_solution_data, create_solution_map
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
 
-def main(input_file, output_file, solver="gurobi", ev=1, time_limit=300, verbose=True):
+def main(input_excel_file, output_excel_file, output_image_file, input_coordinates_file=None, solver="gurobi", ev=1, time_limit=300, verbose=True):
     
     # Get data from Excel file
-    print(f"Loading data from {input_file}...")
-    input_data = get_routing_map_data(input_file, ev=ev)
+    print(f"Loading data from {input_excel_file}...")
+    input_data = get_routing_map_data(input_excel_file, ev=ev)
     if verbose:
         print("Input data loaded successfully")
     
@@ -79,12 +79,20 @@ def main(input_file, output_file, solver="gurobi", ev=1, time_limit=300, verbose
                 print(f"Execution time: {execution_time:.2f} seconds")
         
         # Save solution data to Excel
-        print(f"\nSaving solution data to {output_file}...")
+        print(f"\nSaving solution data to {output_excel_file}...")
         try:
-            save_solution_data(concrete_model, output_file)
+            save_solution_data(concrete_model, output_excel_file)
             print("Solution data saved successfully!")
         except Exception as e:
             print(f"Error saving solution data: {e}")
+        
+        # Create solution map visualization
+        print(f"\nCreating solution map visualization: {output_image_file}...")
+        try:
+            create_solution_map(concrete_model, input_data, output_image_file, input_coordinates_file, ev=ev)
+            print("Solution map created successfully!")
+        except Exception as e:
+            print(f"Error creating solution map: {e}")
         
         # Return results summary
         results_summary = {
@@ -115,8 +123,10 @@ def main(input_file, output_file, solver="gurobi", ev=1, time_limit=300, verbose
 
 
 if __name__ == "__main__":
-    input_file = "../data/37-intersection map.xlsx"
-    output_file = "../data/37-intersection map Solution.xlsx"
-    results = main(input_file, output_file)
+    input_excel_file = "../data/37-intersection map.xlsx"
+    input_coordinates_file = "../data/37-intersection map Coordinates.json"
+    output_excel_file = "../data/37-intersection map Solution.xlsx"
+    output_image_file = "../data/37-intersection map Solution Map.png"
+    results = main(input_excel_file, output_excel_file, output_image_file, input_coordinates_file)
     print("Results:", results)
 
