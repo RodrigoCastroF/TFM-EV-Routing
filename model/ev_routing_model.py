@@ -149,8 +149,10 @@ def get_ev_routing_abstract_model():
         rule=c40_visit_starting_point
     )
 
-    # # TODO: confirm whether cn1 is necessary
-    #
+    # cn1: force the EV to end at the ending point
+    # It seems this constraint is unnecessary;
+    # the EV automatically ends on the ending node with the other constraints
+
     # def cn1_visit_ending_point(m):
     #     return m.v01VisitIntersection[m.pEndingPoint] == 1
     #
@@ -165,7 +167,7 @@ def get_ev_routing_abstract_model():
         m.sDeliveryPoints, rule=c41_visit_delivery_point
     )
 
-    # Miller-Tucker-Zemlin (MTZ) formulation for subtour elimination
+    # cn2, cn3 and cn4: Miller-Tucker-Zemlin (MTZ) formulation for subtour elimination
     # See [[Issue - Loops in navigation]]
     
     def cn2_mtz_subtour_elimination(m, path):
