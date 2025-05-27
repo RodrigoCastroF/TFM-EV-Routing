@@ -208,6 +208,7 @@ def get_ev_routing_abstract_model():
     # Battery constraints
     # ----
 
+    # Split constraint (24) into two separate constraints for proper Pyomo handling
     def c24_soc_arrival_lower_bound(m, intersection):
         return m.vSoCArrival[intersection] >= m.v01VisitIntersection[intersection] * m.pMinSoC
 
@@ -282,6 +283,97 @@ def get_ev_routing_abstract_model():
     # Time constraints
     # ----
 
-    # TODO: add the time constraints
+    def c45_time_arrival_starting_point(m):
+        return m.vTimeArrival[m.pStartingPoint] == m.v01VisitIntersection[m.pStartingPoint] * m.pStartingTime
+
+    m.c45_time_arrival_starting_point = pyo.Constraint(
+        rule=c45_time_arrival_starting_point
+    )
+
+    def c46_time_arrival_balance(m, intersection):
+        # Skip for starting point as it's handled by c45
+        if intersection == m.pStartingPoint:
+            return pyo.Constraint.Skip
+        
+        # This is the non-linear constraint as specified in the documentation
+        # Time arrival = Time departure from origin + time at average speed + acceleration/braking time
+        return m.vTimeArrival[intersection] == sum(
+            m.v01TravelPath[path] * (
+                m.vTimeDeparture[m.pOriginIntersection[path]] +
+                (m.pDistanceAtAvgSpeed[path] / m.pAvgSpeed[path]) +
+                m.pAccelerationBrakingTime[path]
+            )
+            for path in m.sPaths
+            if m.pDestinationIntersection[path] == intersection
+        )
+
+    m.c46_time_arrival_balance = pyo.Constraint(
+        m.sIntersections, rule=c46_time_arrival_balance
+    )
+
+    def c47_time_departure_delivery_point(m, delivery_point):
+        return m.vTimeDeparture[delivery_point] == m.vTimeArrival[delivery_point] + m.pTimeMakingDelivery[delivery_point]
+
+    m.c47_time_departure_delivery_point = pyo.Constraint(
+        m.sDeliveryPoints, rule=c47_time_departure_delivery_point
+    )
+
+    def c48_time_departure_charging_station(m, charging_station):
+        return m.vTimeDeparture[charging_station] == m.vTimeArrival[charging_station] + m.vTimeCharging[charging_station]
+
+    m.c48_time_departure_charging_station = pyo.Constraint(
+        m.sChargingStations, rule=c48_time_departure_charging_station
+    )
+
+    # Split constraint (49) into two separate constraints for proper Pyomo handling
+    def c49_charging_time_lower_bound(m, charging_station):
+        return m.vTimeCharging[charging_station] >= m.v01Charge[charging_station] * m.pMinChargingTime[charging_station]
+
+    m.c49_charging_time_lower_bound = pyo.Constraint(
+        m.sChargingStations, rule=c49_charging_time_lower_bound
+    )
+
+    def c49_charging_time_upper_bound(m, charging_station):
+        return m.vTimeCharging[charging_station] <= m.v01Charge[charging_station] * m.pMaxChargingTime[charging_station]
+
+    m.c49_charging_time_upper_bound = pyo.Constraint(
+        m.sChargingStations, rule=c49_charging_time_upper_bound
+    )
+
+    def c50_charge_only_when_visiting(m, charging_station):
+        return m.v01Charge[charging_station] <= m.v01VisitIntersection[charging_station]
+
+    m.c50_charge_only_when_visiting = pyo.Constraint(
+        m.sChargingStations, rule=c50_charge_only_when_visiting
+    )
+
+    def c51_time_departure_regular_intersection(m, intersection):
+        return m.vTimeDeparture[intersection] == m.vTimeArrival[intersection]
+
+    m.c51_time_departure_regular_intersection = pyo.Constraint(
+        m.sIntersections - m.sChargingStations - m.sDeliveryPoints, rule=c51_time_departure_regular_intersection
+    )
+
+    def c52_time_arrival_ending_point_limit(m):
+        return m.vTimeArrival[m.pEndingPoint] <= m.v01VisitIntersection[m.pEndingPoint] * m.pMaxTime
+
+    m.c52_time_arrival_ending_point_limit = pyo.Constraint(
+        rule=c52_time_arrival_ending_point_limit
+    )
+
+    def c54_delivery_time_with_delay(m, delivery_point):
+        return m.vTimeArrival[delivery_point] <= m.pTimeWithoutPenalty[delivery_point] + m.vTimeDelay[delivery_point]
+
+    m.c54_delivery_time_with_delay = pyo.Constraint(
+        m.sDeliveryPoints, rule=c54_delivery_time_with_delay
+    )
+
+    # Constraint (55) is not needed because vTimeDelay is non-negative by definition
+    # def c55_delay_time_positive(m, delivery_point):
+    #     return m.vTimeDelay[delivery_point] >= 0
+
+    # m.c55_delay_time_positive = pyo.Constraint(
+    #     m.sDeliveryPoints, rule=c55_delay_time_positive
+    # )
 
     return m
