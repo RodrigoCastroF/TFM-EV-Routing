@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def get_routing_map_data(file_path: str, ev: int = None) -> dict:
+def load_excel_map_data(file_path: str) -> dict:
     """
     Load data from an Excel file for the EV routing optimization model.
 
@@ -9,13 +9,11 @@ def get_routing_map_data(file_path: str, ev: int = None) -> dict:
     ----------
     file_path: str
         The path to the Excel file (.xlsx) containing the data.
-    ev: int, optional
-        The specific EV to filter delivery points for. If None, all delivery points are included.
 
     Returns
     -------
-    input_data: dict
-        The input data for the model in the format required by Pyomo.
+    map_data: dict
+        The raw map data loaded from Excel, containing all dataframes and metadata.
     """
 
     # Read sheets from the Excel file
@@ -32,9 +30,44 @@ def get_routing_map_data(file_path: str, ev: int = None) -> dict:
     for df in [paths_df, delivery_points_df, charging_stations_df]:
         df.columns = [clean_column_name(col) for col in df.columns]
 
-    # Filter delivery points by EV if specified
-    if ev is not None:
-        delivery_points_df = delivery_points_df[delivery_points_df["EV"] == ev]
+    # Return the raw data in a structured format
+    map_data = {
+        'unindexed_df': unindexed_df,
+        'paths_df': paths_df,
+        'delivery_points_df': delivery_points_df,
+        'charging_stations_df': charging_stations_df,
+        'clean_column_name': clean_column_name
+    }
+
+    return map_data
+
+
+def filter_map_data_for_ev(map_data: dict, ev: int) -> dict:
+    """
+    Filter map data for a specific EV and convert to Pyomo input format.
+
+    Parameters
+    ----------
+    map_data: dict
+        The raw map data returned by load_excel_map_data().
+    ev: int
+        The specific EV to filter delivery points for.
+
+    Returns
+    -------
+    input_data: dict
+        The input data for the model in the format required by Pyomo.
+    """
+
+    # Extract dataframes from map_data
+    unindexed_df = map_data['unindexed_df']
+    paths_df = map_data['paths_df']
+    delivery_points_df = map_data['delivery_points_df']
+    charging_stations_df = map_data['charging_stations_df']
+    clean_column_name = map_data['clean_column_name']
+
+    # Filter delivery points by EV
+    delivery_points_df = delivery_points_df[delivery_points_df["EV"] == ev]
 
     # Extract sets
     # Get all unique intersections from the paths dataframe
@@ -82,5 +115,4 @@ def get_routing_map_data(file_path: str, ev: int = None) -> dict:
     input_data[None]['pPath'] = pPath_data
 
     return input_data
-    
 

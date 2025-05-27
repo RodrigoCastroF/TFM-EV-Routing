@@ -1,15 +1,21 @@
-from model import get_routing_map_data, get_ev_routing_abstract_model, save_solution_data, create_solution_map
+from model import load_excel_map_data, filter_map_data_for_ev, get_ev_routing_abstract_model, save_solution_data, create_solution_map
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
 
 def main(input_excel_file, output_excel_file, output_image_file, input_coordinates_file=None, solver="gurobi", ev=1, time_limit=300, verbose=True):
     
-    # Get data from Excel file
+    # Load data from Excel file
     print(f"Loading data from {input_excel_file}...")
-    input_data = get_routing_map_data(input_excel_file, ev=ev)
+    map_data = load_excel_map_data(input_excel_file)
     if verbose:
-        print("Input data loaded successfully")
+        print("Raw map data loaded successfully")
+    
+    # Filter data for specific EV
+    print(f"Filtering data for EV {ev}...")
+    input_data = filter_map_data_for_ev(map_data, ev)
+    if verbose:
+        print("Input data filtered successfully")
     
     # Get the abstract model
     print("Creating abstract model...")

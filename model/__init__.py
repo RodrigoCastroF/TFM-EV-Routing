@@ -1,3 +1,3 @@
-from .get_routing_map_data import get_routing_map_data
+from .get_routing_map_data import load_excel_map_data, filter_map_data_for_ev
 from .ev_routing_model import get_ev_routing_abstract_model
 from .save_solution_data import save_solution_data, create_solution_map
