@@ -41,13 +41,13 @@ def get_ev_routing_abstract_model():
     m.pKineticEnergy = pyo.Param(m.sPaths, within=pyo.NonNegativeReals)
 
     # Parameters indexed by sDeliveryPoints
-    m.pDeliveryIntersection = pyo.Param(m.sDeliveryPoints, within=m.sIntersections)
+    # m.pDeliveryIntersection = pyo.Param(m.sDeliveryPoints, within=m.sIntersections)  # Unnecessary, since sDeliveryPoints is a subset of sIntersections
     m.pTimeMakingDelivery = pyo.Param(m.sDeliveryPoints, within=pyo.NonNegativeReals)
     m.pTimeWithoutPenalty = pyo.Param(m.sDeliveryPoints, within=pyo.NonNegativeReals)
     m.pDelayPenalty = pyo.Param(m.sDeliveryPoints, within=pyo.NonNegativeReals)
 
     # Parameters indexed by sChargingStations
-    m.pStationIntersection = pyo.Param(m.sChargingStations, within=m.sIntersections)
+    # m.pStationIntersection = pyo.Param(m.sChargingStations, within=m.sIntersections)  # Unnecessary, since sChargingStations is a subset of sIntersections
     m.pChargingPower = pyo.Param(m.sChargingStations, within=pyo.NonNegativeReals)
     m.pChargingPrice = pyo.Param(m.sChargingStations, within=pyo.NonNegativeReals)
     m.pMaxChargingTime = pyo.Param(m.sChargingStations, within=pyo.NonNegativeReals)
@@ -208,7 +208,75 @@ def get_ev_routing_abstract_model():
     # Battery constraints
     # ----
 
-    # TODO: add the battery constraints
+    def c24_soc_arrival_lower_bound(m, intersection):
+        return m.vSoCArrival[intersection] >= m.v01VisitIntersection[intersection] * m.pMinSoC
+
+    m.c24_soc_arrival_lower_bound = pyo.Constraint(
+        m.sIntersections, rule=c24_soc_arrival_lower_bound
+    )
+
+    def c24_soc_arrival_upper_bound(m, intersection):
+        return m.vSoCArrival[intersection] <= m.v01VisitIntersection[intersection] * m.pMaxSoC
+    
+    m.c24_soc_arrival_upper_bound = pyo.Constraint(
+        m.sIntersections, rule=c24_soc_arrival_upper_bound
+    )
+
+    def c25_soc_departure_charging_station(m, charging_station):
+        return (
+            m.vSoCDeparture[charging_station] == 
+            m.vSoCArrival[charging_station] + 
+            m.pChargingPower[charging_station] * m.vTimeCharging[charging_station] * m.pChargerEfficiencyRate[charging_station]
+        )
+
+    m.c25_soc_departure_charging_station = pyo.Constraint(
+        m.sChargingStations, rule=c25_soc_departure_charging_station
+    )
+
+    def c27_soc_departure_non_charging_station(m, intersection):
+        return m.vSoCDeparture[intersection] == m.vSoCArrival[intersection]
+
+    m.c27_soc_departure_non_charging_station = pyo.Constraint(
+        # Set differences are allowed - See https://pyomo.readthedocs.io/en/6.8.0/pyomo_modeling_components/Sets.html#operations
+        m.sIntersections - m.sChargingStations, rule=c27_soc_departure_non_charging_station
+    )
+
+    def c42_soc_starting_point(m):
+        # Multiplying by the binary variable here is unnecessary due to constraint c40_visit_starting_point
+        return m.vSoCArrival[m.pStartingPoint] == m.v01VisitIntersection[m.pStartingPoint] * m.pStartingSoC
+
+    m.c42_soc_starting_point = pyo.Constraint(
+        rule=c42_soc_starting_point
+    )
+
+    def c43_soc_arrival_energy_balance(m, intersection):
+        # Skip for starting point as it's handled by c42
+        if intersection == m.pStartingPoint:
+            return pyo.Constraint.Skip
+        
+        # This is the non-linear constraint as specified in the documentation
+        # SoC arrival = SoC departure from origin - power consumption - acceleration energy + braking energy
+        return m.vSoCArrival[intersection] == sum(
+            m.v01TravelPath[path] * (
+                m.vSoCDeparture[m.pOriginIntersection[path]] -
+                m.pPowerConsAtAvgSpeed[path] * (m.pDistanceAtAvgSpeed[path] / m.pAvgSpeed[path]) -
+                (1 / m.pAccelerationEfficiency - m.pBrakingEfficiency) * m.pKineticEnergy[path]
+            )
+            for path in m.sPaths
+            if m.pDestinationIntersection[path] == intersection
+        )
+
+    m.c43_soc_arrival_energy_balance = pyo.Constraint(
+        m.sIntersections, rule=c43_soc_arrival_energy_balance
+    )
+
+    def c44_soc_ending_point(m):
+        # Multiplying by the binary variable here is unnecessary since the ending point is always visited
+        return m.vSoCDeparture[m.pEndingPoint] == m.v01VisitIntersection[m.pEndingPoint] * m.pStartingSoC
+
+    m.c44_soc_ending_point = pyo.Constraint(
+        rule=c44_soc_ending_point
+    )
 
     # ----
     # Time constraints

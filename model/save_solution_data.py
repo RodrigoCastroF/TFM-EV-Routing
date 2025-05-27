@@ -86,7 +86,7 @@ def save_solution_data(model_instance, file_path: str):
         paths_df.to_excel(writer, sheet_name='sPaths', index=False)
 
 
-def create_solution_map(model_instance, input_data, file_path: str, coordinates_path: str = None, ev: int = 1):
+def create_solution_map(model_instance, input_data, file_path: str, coordinates_path: str = None, ev: int = 1, eps: float = 1e-5, decimal_precision: int = 1):
     """
     Create a visual map representation of the routing solution.
     
@@ -102,6 +102,10 @@ def create_solution_map(model_instance, input_data, file_path: str, coordinates_
         The path to the JSON file containing node coordinates. If None, uses automatic layout.
     ev: int
         The EV number for which to show delivery points.
+    eps: float
+        Tolerance for considering arrival and departure values as identical.
+    decimal_precision: int
+        Number of decimal places to show for time and SoC values.
     """
     
     # Extract data
@@ -228,11 +232,10 @@ def create_solution_map(model_instance, input_data, file_path: str, coordinates_
     # Add labels for intersections
     nx.draw_networkx_labels(G, pos, font_size=12, font_weight='bold')
     
-    # Add solution information for visited nodes (only key nodes to reduce clutter)
+    # Add solution information for all visited nodes
     for intersection in intersections:
         if (hasattr(model_instance.v01VisitIntersection[intersection], 'value') and 
-            model_instance.v01VisitIntersection[intersection].value > 0 and
-            (intersection in start_end_points or intersection in delivery_points or intersection in charging_stations)):
+            model_instance.v01VisitIntersection[intersection].value > 0):
             
             # Get solution values
             time_arr = getattr(model_instance.vTimeArrival[intersection], 'value', None)
@@ -243,15 +246,21 @@ def create_solution_map(model_instance, input_data, file_path: str, coordinates_
             # Format text more compactly
             info_text = []
             if time_arr is not None and time_dep is not None:
-                info_text.append(f"T: {time_arr:.1f}→{time_dep:.1f}")
+                if abs(time_arr - time_dep) < eps:  # Values are essentially identical
+                    info_text.append(f"T: {time_arr:.{decimal_precision}f}")
+                else:
+                    info_text.append(f"T: {time_arr:.{decimal_precision}f}→{time_dep:.{decimal_precision}f}")
             if soc_arr is not None and soc_dep is not None:
-                info_text.append(f"SoC: {soc_arr:.0f}→{soc_dep:.0f}")
+                if abs(soc_arr - soc_dep) < eps:  # Values are essentially identical
+                    info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}")
+                else:
+                    info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}→{soc_dep:.{decimal_precision}f}")
             
             if info_text:
                 plt.annotate('\n'.join(info_text), 
                            xy=pos[intersection], xytext=(15, 15),
-                           textcoords='offset points', fontsize=8, fontweight='bold',
-                           bbox=dict(boxstyle='round,pad=0.3', facecolor='lightyellow', alpha=0.8, edgecolor='gray'))
+                           textcoords='offset points', fontsize=12, fontweight='bold',
+                           bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', alpha=0.9, edgecolor='gray'))
     
     # Add legend
     legend_elements = [
