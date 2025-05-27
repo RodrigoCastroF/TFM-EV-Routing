@@ -13,7 +13,7 @@ def load_excel_map_data(file_path: str) -> dict:
     Returns
     -------
     map_data: dict
-        The raw map data loaded from Excel, containing all dataframes and metadata.
+        The raw map data loaded from Excel, containing all dataframes, metadata, and list of EVs.
     """
 
     # Read sheets from the Excel file
@@ -30,13 +30,17 @@ def load_excel_map_data(file_path: str) -> dict:
     for df in [paths_df, delivery_points_df, charging_stations_df]:
         df.columns = [clean_column_name(col) for col in df.columns]
 
+    # Extract list of unique EVs from delivery points
+    evs = sorted(delivery_points_df["EV"].unique().tolist())
+
     # Return the raw data in a structured format
     map_data = {
         'unindexed_df': unindexed_df,
         'paths_df': paths_df,
         'delivery_points_df': delivery_points_df,
         'charging_stations_df': charging_stations_df,
-        'clean_column_name': clean_column_name
+        'clean_column_name': clean_column_name,
+        'evs': evs
     }
 
     return map_data

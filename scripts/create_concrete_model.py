@@ -10,6 +10,7 @@ def main(input_excel_file, output_excel_file, output_image_file, input_coordinat
     map_data = load_excel_map_data(input_excel_file)
     if verbose:
         print("Raw map data loaded successfully")
+        print("List of EVs:", map_data["evs"])
     
     # Filter data for specific EV
     print(f"Filtering data for EV {ev}...")
