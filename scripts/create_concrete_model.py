@@ -3,61 +3,71 @@ import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
 
-def main(input_excel_file, output_excel_file, output_image_file, input_coordinates_file=None, solver="gurobi", ev=1, time_limit=300, verbose=True):
+def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=None, input_coordinates_file=None, solver="gurobi", time_limit=300, verbose=1):
+    """
+    Solve the EV routing problem for a single EV.
     
-    # Load data from Excel file
-    print(f"Loading data from {input_excel_file}...")
-    map_data = load_excel_map_data(input_excel_file)
-    if verbose:
-        print("Raw map data loaded successfully")
-        print("List of EVs:", map_data["evs"])
+    Args:
+        input_data: Filtered data for the specific EV
+        ev: EV number
+        output_excel_file: Path to save Excel solution (optional)
+        output_image_file: Path to save solution map image (optional)
+        input_coordinates_file: Path to coordinates file for visualization (optional)
+        solver: Solver to use (default: "gurobi")
+        time_limit: Time limit in seconds (default: 300)
+        verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
     
-    # Filter data for specific EV
-    print(f"Filtering data for EV {ev}...")
-    input_data = filter_map_data_for_ev(map_data, ev)
-    if verbose:
-        print("Input data filtered successfully")
+    Returns:
+        Dictionary with solution results
+    """
     
     # Get the abstract model
-    print("Creating abstract model...")
+    if verbose >= 1:
+        print(f"Creating abstract model for EV {ev}...")
     abstract_model = get_ev_routing_abstract_model()
     
     # Create a concrete instance using the data
-    print("Creating concrete model instance...")
+    if verbose >= 1:
+        print(f"Creating concrete model instance for EV {ev}...")
     concrete_model = abstract_model.create_instance(input_data)
     
     # Basic model information
-    print("\nModel Information:")
-    print(f"Number of intersections: {len(concrete_model.sIntersections)}")
-    print(f"Number of paths: {len(concrete_model.sPaths)}")
-    print(f"Number of delivery points: {len(concrete_model.sDeliveryPoints)}")
-    print(f"Number of charging stations: {len(concrete_model.sChargingStations)}")
+    if verbose >= 1:
+        print(f"\nModel Information for EV {ev}:")
+        print(f"Number of intersections: {len(concrete_model.sIntersections)}")
+        print(f"Number of paths: {len(concrete_model.sPaths)}")
+        print(f"Number of delivery points: {len(concrete_model.sDeliveryPoints)}")
+        print(f"Number of charging stations: {len(concrete_model.sChargingStations)}")
     
     # Create solver instance
-    print(f"\nSetting up {solver} solver...")
+    if verbose >= 1:
+        print(f"\nSetting up {solver} solver for EV {ev}...")
     opt = SolverFactory(solver)
     
     # Set time limit based on solver
     time_limit_option = {"cbc": "seconds", "gurobi": "timeLimit", "glpk": "tmlim"}
     if solver in time_limit_option:
         opt.options[time_limit_option[solver]] = time_limit
-        if verbose:
+        if verbose >= 2:
             print(f"Time limit set to {time_limit} seconds")
     
     # Solve the model
-    print("Solving the model...")
-    results = opt.solve(concrete_model, tee=verbose)
+    if verbose >= 1:
+        print(f"Solving the model for EV {ev}...")
+    results = opt.solve(concrete_model, tee=(verbose >= 2))
     
-    if verbose:
-        print("\nSOLVER RESULTS:")
+    if verbose >= 2:
+        print(f"\nSOLVER RESULTS for EV {ev}:")
         print(results)
     
     # Check if solution was found
     if results.solver.status == pyo.SolverStatus.ok:
         if results.solver.termination_condition == pyo.TerminationCondition.optimal:
-            print("\nOptimal solution found!")
+            if verbose >= 1:
+                print(f"\nOptimal solution found for EV {ev}!")
         else:
-            print("\nSolution is NOT optimal.")
+            if verbose >= 1:
+                print(f"\nSolution for EV {ev} is NOT optimal.")
         
         # Extract solution information
         try:
@@ -80,35 +90,46 @@ def main(input_excel_file, output_excel_file, output_image_file, input_coordinat
         # Get objective function value
         obj_value = pyo.value(concrete_model.Obj)
         
-        if verbose:
-            print(f"Objective function value: {obj_value}")
-            if final_gap is not None:
+        if verbose >= 1:
+            print(f"Objective function value for EV {ev}: {obj_value}")
+            if final_gap is not None and verbose >= 2:
                 print(f"Final gap: {final_gap:.6f}")
-            if execution_time is not None:
+            if execution_time is not None and verbose >= 2:
                 print(f"Execution time: {execution_time:.2f} seconds")
 
-        print(f"\nExtracting solution data...")
+        if verbose >= 1:
+            print(f"\nExtracting solution data for EV {ev}...")
         solution_data = extract_solution_data(concrete_model)
-        print("Solution data extracted successfully!")
+        if verbose >= 1:
+            print(f"Solution data extracted successfully for EV {ev}!")
         
-        # Save solution data to Excel
-        print(f"\nSaving solution data to {output_excel_file}...")
-        try:
-            save_solution_data(solution_data, output_excel_file)
-            print("Solution data saved successfully!")
-        except Exception as e:
-            print(f"Error saving solution data: {e}")
+        # Save solution data to Excel if file path provided
+        if output_excel_file:
+            if verbose >= 1:
+                print(f"\nSaving solution data for EV {ev} to {output_excel_file}...")
+            try:
+                save_solution_data(solution_data, output_excel_file)
+                if verbose >= 1:
+                    print(f"Solution data for EV {ev} saved successfully!")
+            except Exception as e:
+                if verbose >= 1:
+                    print(f"Error saving solution data for EV {ev}: {e}")
         
-        # Create solution map visualization
-        print(f"\nCreating solution map visualization: {output_image_file}...")
-        try:
-            create_solution_map(solution_data, input_data, output_image_file, input_coordinates_file, ev=ev)
-            print("Solution map created successfully!")
-        except Exception as e:
-            print(f"Error creating solution map: {e}")
+        # Create solution map visualization if file path provided
+        if output_image_file:
+            if verbose >= 1:
+                print(f"\nCreating solution map visualization for EV {ev}: {output_image_file}...")
+            try:
+                create_solution_map(solution_data, input_data, output_image_file, input_coordinates_file, ev=ev)
+                if verbose >= 1:
+                    print(f"Solution map for EV {ev} created successfully!")
+            except Exception as e:
+                if verbose >= 1:
+                    print(f"Error creating solution map for EV {ev}: {e}")
         
         # Return results summary
         results_summary = {
+            'ev': ev,
             'solution_data': solution_data,
             'solver_status': results.solver.status,
             'termination_condition': results.solver.termination_condition,
@@ -122,24 +143,169 @@ def main(input_excel_file, output_excel_file, output_image_file, input_coordinat
         return results_summary
         
     elif results.solver.termination_condition == pyo.TerminationCondition.infeasible:
-        print("\nModel is infeasible!")
-        return {'solver_status': 'infeasible'}
+        if verbose >= 1:
+            print(f"\nModel for EV {ev} is infeasible!")
+        return {'ev': ev, 'solver_status': 'infeasible'}
         
     elif results.solver.termination_condition == pyo.TerminationCondition.unbounded:
-        print("\nModel is unbounded!")
-        return {'solver_status': 'unbounded'}
+        if verbose >= 1:
+            print(f"\nModel for EV {ev} is unbounded!")
+        return {'ev': ev, 'solver_status': 'unbounded'}
         
     else:
-        print(f"\nSolver terminated with condition: {results.solver.termination_condition}")
-        print("No optimal solution found.")
-        return {'solver_status': 'no_solution'}
+        if verbose >= 1:
+            print(f"\nSolver for EV {ev} terminated with condition: {results.solver.termination_condition}")
+            print(f"No optimal solution found for EV {ev}.")
+        return {'ev': ev, 'solver_status': 'no_solution'}
+
+
+def solve_for_all_evs(input_excel_file, output_prefix=None, input_coordinates_file=None, solver="gurobi", time_limit=300, verbose=1):
+    """
+    Solve the EV routing problem for all EVs in the dataset.
+    
+    Args:
+        input_excel_file: Path to input Excel file
+        output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
+        input_coordinates_file: Path to coordinates file for visualization (optional)
+        solver: Solver to use (default: "gurobi")
+        time_limit: Time limit in seconds per EV (default: 300)
+        verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
+    
+    Returns:
+        Dictionary with results for all EVs
+    """
+    
+    # Load data from Excel file
+    if verbose >= 1:
+        print(f"Loading data from {input_excel_file}...")
+    map_data = load_excel_map_data(input_excel_file)
+    if verbose >= 1:
+        print("Raw map data loaded successfully")
+        print("List of EVs:", map_data["evs"])
+    
+    all_results = {}
+    
+    # Solve for each EV
+    for ev in map_data["evs"]:
+        if verbose >= 1:
+            print(f"\n{'='*50}")
+            print(f"Processing EV {ev}")
+            print(f"{'='*50}")
+        
+        # Filter data for specific EV
+        if verbose >= 1:
+            print(f"Filtering data for EV {ev}...")
+        input_data = filter_map_data_for_ev(map_data, ev)
+        if verbose >= 2:
+            print("Input data filtered successfully")
+        
+        # Generate output file paths if prefix provided
+        output_excel_file = None
+        output_image_file = None
+        if output_prefix:
+            output_excel_file = f"{output_prefix} EV{ev} Solution.xlsx"
+            output_image_file = f"{output_prefix} EV{ev} Solution Map.png"
+        
+        # Solve for this EV
+        ev_results = solve_for_one_ev(
+            input_data=input_data,
+            ev=ev,
+            output_excel_file=output_excel_file,
+            output_image_file=output_image_file,
+            input_coordinates_file=input_coordinates_file,
+            solver=solver,
+            time_limit=time_limit,
+            verbose=verbose
+        )
+        
+        all_results[ev] = ev_results
+    
+    if verbose >= 1:
+        print(f"\n{'='*50}")
+        print("SUMMARY OF ALL EVs")
+        print(f"{'='*50}")
+        for ev, results in all_results.items():
+            if 'objective_value' in results:
+                print(f"EV {ev}: Objective = {results['objective_value']:.2f}")
+            else:
+                print(f"EV {ev}: {results.get('solver_status', 'unknown status')}")
+    
+    return all_results
+
+
+def main(input_excel_file, output_prefix=None, input_coordinates_file=None, solver="gurobi", ev=None, time_limit=300, verbose=1):
+    """
+    Main function to solve EV routing problem.
+    
+    Args:
+        input_excel_file: Path to input Excel file
+        output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
+        input_coordinates_file: Path to coordinates file for visualization (optional)
+        solver: Solver to use (default: "gurobi")
+        ev: Specific EV to solve for (if None, solve for all EVs)
+        time_limit: Time limit in seconds (default: 300)
+        verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
+    
+    Returns:
+        Dictionary with results
+    """
+    
+    if ev is not None:
+        # Solve for specific EV
+        if verbose >= 1:
+            print(f"Solving for specific EV: {ev}")
+        
+        # Load and filter data
+        map_data = load_excel_map_data(input_excel_file)
+        if ev not in map_data["evs"]:
+            print(f"Error: EV {ev} not found in data. Available EVs: {map_data['evs']}")
+            return None
+        
+        input_data = filter_map_data_for_ev(map_data, ev)
+        
+        # Generate output file paths if prefix provided
+        output_excel_file = None
+        output_image_file = None
+        if output_prefix:
+            output_excel_file = f"{output_prefix} EV{ev} Solution.xlsx"
+            output_image_file = f"{output_prefix} EV{ev} Solution Map.png"
+        
+        return solve_for_one_ev(
+            input_data=input_data,
+            ev=ev,
+            output_excel_file=output_excel_file,
+            output_image_file=output_image_file,
+            input_coordinates_file=input_coordinates_file,
+            solver=solver,
+            time_limit=time_limit,
+            verbose=verbose
+        )
+    else:
+        # Solve for all EVs
+        if verbose >= 1:
+            print("Solving for all EVs")
+        
+        return solve_for_all_evs(
+            input_excel_file=input_excel_file,
+            output_prefix=output_prefix,
+            input_coordinates_file=input_coordinates_file,
+            solver=solver,
+            time_limit=time_limit,
+            verbose=verbose
+        )
 
 
 if __name__ == "__main__":
     input_excel_file = "../data/37-intersection map.xlsx"
     input_coordinates_file = "../data/37-intersection map Coordinates.json"
-    output_excel_file = "../data/37-intersection map Solution.xlsx"
-    output_image_file = "../data/37-intersection map Solution Map.png"
-    results = main(input_excel_file, output_excel_file, output_image_file, input_coordinates_file)
-    print("Results:", results)
+    output_prefix = "../data/37-intersection map"
+    
+    # Solve for all EVs
+    results = main(
+        input_excel_file=input_excel_file,
+        output_prefix=output_prefix,
+        input_coordinates_file=input_coordinates_file,
+        verbose=1
+    )
+    print("Final Results:", results)
 
