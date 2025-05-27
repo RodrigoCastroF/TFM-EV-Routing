@@ -6,18 +6,16 @@ import json
 from pathlib import Path
 
 
-def save_solution_data(model_instance, file_path: str):
+def extract_solution_data(model_instance):
     """
-    Save the solution data from a solved Pyomo model instance to an Excel file.
+    Extract solution data from a solved Pyomo model instance.
 
     Parameters
     ----------
     model_instance: pyomo.core.base.PyomoModel.ConcreteModel
         A solved Pyomo model instance containing the solution values.
-    file_path: str
-        The path where the Excel file should be saved (should end with .xlsx).
     """
-    
+
     # Helper function to safely get variable value
     def get_var_value(var):
         """Safely extract variable value, returning None if not available."""
@@ -80,20 +78,43 @@ def save_solution_data(model_instance, file_path: str):
     
     paths_df = pd.DataFrame(paths_data)
     
+    solution_data = {
+        'intersections_df': intersections_df,
+        'paths_df': paths_df
+    }
+
+    return solution_data
+
+
+def save_solution_data(solution_data, file_path: str):
+    """
+    Save the solution data from a solved Pyomo model instance to an Excel file.
+
+    Parameters
+    ----------
+    solution_data: dict
+        A dictionary containing the solution data from extract_solution_data().
+    file_path: str
+        The path where the Excel file should be saved (should end with .xlsx).
+    """
+    
+    intersections_df = solution_data['intersections_df']
+    paths_df = solution_data['paths_df']
+    
     # Save to Excel file
     with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
         intersections_df.to_excel(writer, sheet_name='sIntersections', index=False)
         paths_df.to_excel(writer, sheet_name='sPaths', index=False)
 
 
-def create_solution_map(model_instance, input_data, file_path: str, coordinates_path: str = None, ev: int = 1, eps: float = 1e-5, decimal_precision: int = 1):
+def create_solution_map(solution_data, input_data, file_path: str, coordinates_path: str = None, ev: int = 1, eps: float = 1e-5, decimal_precision: int = 1):
     """
     Create a visual map representation of the routing solution.
     
     Parameters
     ----------
-    model_instance: pyomo.core.base.PyomoModel.ConcreteModel
-        A solved Pyomo model instance containing the solution values.
+    solution_data: dict
+        A dictionary containing the solution data from extract_solution_data().
     input_data: dict
         The input data dictionary from get_routing_map_data.
     file_path: str
@@ -114,6 +135,10 @@ def create_solution_map(model_instance, input_data, file_path: str, coordinates_
     paths = paths_data['sPaths'][None]
     delivery_points = paths_data['sDeliveryPoints'][None]
     charging_stations = paths_data['sChargingStations'][None]
+    
+    # Extract solution data
+    intersections_df = solution_data['intersections_df']
+    paths_df = solution_data['paths_df']
     
     # Create graph
     G = nx.Graph()
@@ -195,13 +220,12 @@ def create_solution_map(model_instance, input_data, file_path: str, coordinates_
             plt.plot(x_coords, y_coords, 'k-', linewidth=1, alpha=0.7)
     
     # Draw solution paths in red
-    for path_id in paths:
-        if hasattr(model_instance.v01TravelPath[path_id], 'value') and model_instance.v01TravelPath[path_id].value > 0:
-            origin = paths_data['pOriginIntersection'][path_id]
-            dest = paths_data['pDestinationIntersection'][path_id]
-            x_coords = [pos[origin][0], pos[dest][0]]
-            y_coords = [pos[origin][1], pos[dest][1]]
-            plt.plot(x_coords, y_coords, 'r-', linewidth=6, alpha=0.8)
+    for _, row in paths_df.iterrows():
+        origin = row['pOriginIntersection']
+        dest = row['pDestinationIntersection']
+        x_coords = [pos[origin][0], pos[dest][0]]
+        y_coords = [pos[origin][1], pos[dest][1]]
+        plt.plot(x_coords, y_coords, 'r-', linewidth=6, alpha=0.8)
     
     # Get start/end points from unindexed parameters
     start_point = paths_data['pStartingPoint'][None]
@@ -233,34 +257,33 @@ def create_solution_map(model_instance, input_data, file_path: str, coordinates_
     nx.draw_networkx_labels(G, pos, font_size=12, font_weight='bold')
     
     # Add solution information for all visited nodes
-    for intersection in intersections:
-        if (hasattr(model_instance.v01VisitIntersection[intersection], 'value') and 
-            model_instance.v01VisitIntersection[intersection].value > 0):
-            
-            # Get solution values
-            time_arr = getattr(model_instance.vTimeArrival[intersection], 'value', None)
-            time_dep = getattr(model_instance.vTimeDeparture[intersection], 'value', None)
-            soc_arr = getattr(model_instance.vSoCArrival[intersection], 'value', None)
-            soc_dep = getattr(model_instance.vSoCDeparture[intersection], 'value', None)
-            
-            # Format text more compactly
-            info_text = []
-            if time_arr is not None and time_dep is not None:
-                if abs(time_arr - time_dep) < eps:  # Values are essentially identical
-                    info_text.append(f"T: {time_arr:.{decimal_precision}f}")
-                else:
-                    info_text.append(f"T: {time_arr:.{decimal_precision}f}→{time_dep:.{decimal_precision}f}")
-            if soc_arr is not None and soc_dep is not None:
-                if abs(soc_arr - soc_dep) < eps:  # Values are essentially identical
-                    info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}")
-                else:
-                    info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}→{soc_dep:.{decimal_precision}f}")
-            
-            if info_text:
-                plt.annotate('\n'.join(info_text), 
-                           xy=pos[intersection], xytext=(15, 15),
-                           textcoords='offset points', fontsize=12, fontweight='bold',
-                           bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', alpha=0.9, edgecolor='gray'))
+    for _, row in intersections_df.iterrows():
+        intersection = row['intersection']
+        
+        # Get solution values from the DataFrame
+        time_arr = row['vTimeArrival']
+        time_dep = row['vTimeDeparture']
+        soc_arr = row['vSoCArrival']
+        soc_dep = row['vSoCDeparture']
+        
+        # Format text more compactly
+        info_text = []
+        if time_arr is not None and time_dep is not None:
+            if abs(time_arr - time_dep) < eps:  # Values are essentially identical
+                info_text.append(f"T: {time_arr:.{decimal_precision}f}")
+            else:
+                info_text.append(f"T: {time_arr:.{decimal_precision}f}→{time_dep:.{decimal_precision}f}")
+        if soc_arr is not None and soc_dep is not None:
+            if abs(soc_arr - soc_dep) < eps:  # Values are essentially identical
+                info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}")
+            else:
+                info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}→{soc_dep:.{decimal_precision}f}")
+        
+        if info_text:
+            plt.annotate('\n'.join(info_text), 
+                       xy=pos[intersection], xytext=(15, 15),
+                       textcoords='offset points', fontsize=12, fontweight='bold',
+                       bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', alpha=0.9, edgecolor='gray'))
     
     # Add legend
     legend_elements = [

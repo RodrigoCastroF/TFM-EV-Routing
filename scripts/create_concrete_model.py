@@ -1,4 +1,4 @@
-from model import load_excel_map_data, filter_map_data_for_ev, get_ev_routing_abstract_model, save_solution_data, create_solution_map
+from model import load_excel_map_data, filter_map_data_for_ev, get_ev_routing_abstract_model, extract_solution_data, save_solution_data, create_solution_map
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
@@ -53,9 +53,11 @@ def main(input_excel_file, output_excel_file, output_image_file, input_coordinat
         print(results)
     
     # Check if solution was found
-    if (results.solver.status == pyo.SolverStatus.ok) and \
-       (results.solver.termination_condition == pyo.TerminationCondition.optimal):
-        print("\nOptimal solution found!")
+    if results.solver.status == pyo.SolverStatus.ok:
+        if results.solver.termination_condition == pyo.TerminationCondition.optimal:
+            print("\nOptimal solution found!")
+        else:
+            print("\nSolution is NOT optimal.")
         
         # Extract solution information
         try:
@@ -84,11 +86,15 @@ def main(input_excel_file, output_excel_file, output_image_file, input_coordinat
                 print(f"Final gap: {final_gap:.6f}")
             if execution_time is not None:
                 print(f"Execution time: {execution_time:.2f} seconds")
+
+        print(f"\nExtracting solution data...")
+        solution_data = extract_solution_data(concrete_model)
+        print("Solution data extracted successfully!")
         
         # Save solution data to Excel
         print(f"\nSaving solution data to {output_excel_file}...")
         try:
-            save_solution_data(concrete_model, output_excel_file)
+            save_solution_data(solution_data, output_excel_file)
             print("Solution data saved successfully!")
         except Exception as e:
             print(f"Error saving solution data: {e}")
@@ -96,14 +102,14 @@ def main(input_excel_file, output_excel_file, output_image_file, input_coordinat
         # Create solution map visualization
         print(f"\nCreating solution map visualization: {output_image_file}...")
         try:
-            create_solution_map(concrete_model, input_data, output_image_file, input_coordinates_file, ev=ev)
+            create_solution_map(solution_data, input_data, output_image_file, input_coordinates_file, ev=ev)
             print("Solution map created successfully!")
         except Exception as e:
             print(f"Error creating solution map: {e}")
         
         # Return results summary
         results_summary = {
-            'model_instance': concrete_model,
+            'solution_data': solution_data,
             'solver_status': results.solver.status,
             'termination_condition': results.solver.termination_condition,
             'objective_value': obj_value,
@@ -117,16 +123,16 @@ def main(input_excel_file, output_excel_file, output_image_file, input_coordinat
         
     elif results.solver.termination_condition == pyo.TerminationCondition.infeasible:
         print("\nModel is infeasible!")
-        return {'status': 'infeasible', 'model_instance': concrete_model}
+        return {'solver_status': 'infeasible'}
         
     elif results.solver.termination_condition == pyo.TerminationCondition.unbounded:
         print("\nModel is unbounded!")
-        return {'status': 'unbounded', 'model_instance': concrete_model}
+        return {'solver_status': 'unbounded'}
         
     else:
         print(f"\nSolver terminated with condition: {results.solver.termination_condition}")
         print("No optimal solution found.")
-        return {'status': 'no_solution', 'model_instance': concrete_model, 'results': results}
+        return {'solver_status': 'no_solution'}
 
 
 if __name__ == "__main__":
