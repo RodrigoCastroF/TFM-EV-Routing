@@ -28,35 +28,30 @@ def extract_solution_data(model_instance):
     intersections_data = []
     
     for intersection in model_instance.sIntersections:
-        # Get the visit intersection value
-        visit_value = get_var_value(model_instance.v01VisitIntersection[intersection])
-        
-        # Only include rows where v01VisitIntersection is not 0
-        if visit_value is not None and visit_value != 0:
-            row_data = {
-                'intersection': intersection,
-                'v01VisitIntersection': visit_value,
-                'vSoCArrival': get_var_value(model_instance.vSoCArrival[intersection]),
-                'vSoCDeparture': get_var_value(model_instance.vSoCDeparture[intersection]),
-                'vTimeArrival': get_var_value(model_instance.vTimeArrival[intersection]),
-                'vTimeDeparture': get_var_value(model_instance.vTimeDeparture[intersection]),
-            }
-            
-            # Add charging station variables if the intersection is a charging station
-            if intersection in model_instance.sChargingStations:
-                row_data['v01Charge'] = get_var_value(model_instance.v01Charge[intersection])
-                row_data['vTimeCharging'] = get_var_value(model_instance.vTimeCharging[intersection])
-            else:
-                row_data['v01Charge'] = None
-                row_data['vTimeCharging'] = None
-                
-            # Add delivery point variable if the intersection is a delivery point
-            if intersection in model_instance.sDeliveryPoints:
-                row_data['vTimeDelay'] = get_var_value(model_instance.vTimeDelay[intersection])
-            else:
-                row_data['vTimeDelay'] = None
-                
-            intersections_data.append(row_data)
+        row_data = {
+            'intersection': intersection,
+            'v01VisitIntersection': get_var_value(model_instance.v01VisitIntersection[intersection]),
+            'vSoCArrival': get_var_value(model_instance.vSoCArrival[intersection]),
+            'vSoCDeparture': get_var_value(model_instance.vSoCDeparture[intersection]),
+            'vTimeArrival': get_var_value(model_instance.vTimeArrival[intersection]),
+            'vTimeDeparture': get_var_value(model_instance.vTimeDeparture[intersection]),
+        }
+
+        # Add charging station variables if the intersection is a charging station
+        if intersection in model_instance.sChargingStations:
+            row_data['v01Charge'] = get_var_value(model_instance.v01Charge[intersection])
+            row_data['vTimeCharging'] = get_var_value(model_instance.vTimeCharging[intersection])
+        else:
+            row_data['v01Charge'] = None
+            row_data['vTimeCharging'] = None
+
+        # Add delivery point variable if the intersection is a delivery point
+        if intersection in model_instance.sDeliveryPoints:
+            row_data['vTimeDelay'] = get_var_value(model_instance.vTimeDelay[intersection])
+        else:
+            row_data['vTimeDelay'] = None
+
+        intersections_data.append(row_data)
     
     intersections_df = pd.DataFrame(intersections_data)
     
@@ -64,17 +59,24 @@ def extract_solution_data(model_instance):
     paths_data = []
     
     for path in model_instance.sPaths:
-        # Get the travel path value
-        travel_value = get_var_value(model_instance.v01TravelPath[path])
-        
-        # Only include rows where v01TravelPath is not 0
-        if travel_value is not None and travel_value != 0:
-            row_data = {
-                'pOriginIntersection': model_instance.pOriginIntersection[path],
-                'pDestinationIntersection': model_instance.pDestinationIntersection[path],
-                'v01TravelPath': travel_value,
-            }
-            paths_data.append(row_data)
+        row_data = {
+            'pOriginIntersection': model_instance.pOriginIntersection[path],
+            'pDestinationIntersection': model_instance.pDestinationIntersection[path],
+            'v01TravelPath': get_var_value(model_instance.v01TravelPath[path]),
+        }
+
+        # Add auxiliary variables if they exist (for linearized constraints)
+        if hasattr(model_instance, 'vXiSoC'):
+            row_data['vXiSoC'] = get_var_value(model_instance.vXiSoC[path])
+        else:
+            row_data['vXiSoC'] = None
+
+        if hasattr(model_instance, 'vZetaTime'):
+            row_data['vZetaTime'] = get_var_value(model_instance.vZetaTime[path])
+        else:
+            row_data['vZetaTime'] = None
+
+        paths_data.append(row_data)
     
     paths_df = pd.DataFrame(paths_data)
     
@@ -139,6 +141,13 @@ def create_solution_map(solution_data, input_data, file_path: str, coordinates_p
     # Extract solution data
     intersections_df = solution_data['intersections_df']
     paths_df = solution_data['paths_df']
+
+    # Consider only visited intersections and paths
+    # Note Gurobi may save the binary variable as 0.999999936,
+    # so we check for `abs(intersections_df['v01VisitIntersection'] - 1) < eps`
+    # instead of `intersections_df['v01VisitIntersection'] == 1
+    intersections_df = intersections_df[abs(intersections_df['v01VisitIntersection'] - 1) < eps]
+    paths_df = paths_df[abs(paths_df['v01TravelPath'] - 1) < eps]
     
     # Create graph
     G = nx.Graph()

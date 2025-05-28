@@ -3,7 +3,7 @@ import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
 
-def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=None, input_coordinates_file=None, solver="gurobi", time_limit=300, verbose=1):
+def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=None, input_coordinates_file=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
     """
     Solve the EV routing problem for a single EV.
     
@@ -16,6 +16,7 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
         solver: Solver to use (default: "gurobi")
         time_limit: Time limit in seconds (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
+        linearize_constraints: Whether to use linearized constraints (default: False)
     
     Returns:
         Dictionary with solution results
@@ -23,8 +24,9 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     
     # Get the abstract model
     if verbose >= 1:
-        print(f"Creating abstract model for EV {ev}...")
-    abstract_model = get_ev_routing_abstract_model()
+        constraint_type = "linearized" if linearize_constraints else "quadratic"
+        print(f"Creating abstract model for EV {ev} with {constraint_type} constraints...")
+    abstract_model = get_ev_routing_abstract_model(linearize_constraints=linearize_constraints)
     
     # Create a concrete instance using the data
     if verbose >= 1:
@@ -79,7 +81,7 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
         lower_bound = results['problem'][0]['Lower bound']
         upper_bound = results['problem'][0]['Upper bound']
         if lower_bound is not None and lower_bound != 0:
-            final_gap = (upper_bound - lower_bound) / abs(lower_bound)
+            final_gap = (upper_bound - lower_bound) / abs(upper_bound)
         else:
             final_gap = 0.0
     except (KeyError, TypeError, IndexError):
@@ -98,7 +100,7 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     if verbose >= 1:
         print(f"Objective function value for EV {ev}: {obj_value}")
         if final_gap is not None and verbose >= 2:
-            print(f"Final gap: {final_gap:.6f}")
+            print(f"Final gap: {final_gap:2.1%}")
         if execution_time is not None and verbose >= 2:
             print(f"Execution time: {execution_time:.2f} seconds")
 
@@ -148,7 +150,7 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     return ev_results
 
 
-def solve_for_all_evs(input_excel_file, output_prefix=None, input_coordinates_file=None, solver="gurobi", time_limit=300, verbose=1):
+def solve_for_all_evs(input_excel_file, output_prefix=None, input_coordinates_file=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
     """
     Solve the EV routing problem for all EVs in the dataset.
     
@@ -159,6 +161,7 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, input_coordinates_fi
         solver: Solver to use (default: "gurobi")
         time_limit: Time limit in seconds per EV (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
+        linearize_constraints: Whether to use linearized constraints (default: False)
     
     Returns:
         Dictionary with results for all EVs
@@ -204,7 +207,8 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, input_coordinates_fi
             input_coordinates_file=input_coordinates_file,
             solver=solver,
             time_limit=time_limit,
-            verbose=verbose
+            verbose=verbose,
+            linearize_constraints=linearize_constraints
         )
         
         all_results[ev] = ev_results
@@ -222,7 +226,7 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, input_coordinates_fi
     return all_results
 
 
-def main(input_excel_file, output_prefix=None, input_coordinates_file=None, solver="gurobi", ev=None, time_limit=300, verbose=1):
+def main(input_excel_file, output_prefix=None, input_coordinates_file=None, solver="gurobi", ev=None, time_limit=300, verbose=1, linearize_constraints=False):
     """
     Main function to solve EV routing problem.
     
@@ -234,6 +238,7 @@ def main(input_excel_file, output_prefix=None, input_coordinates_file=None, solv
         ev: Specific EV to solve for (if None, solve for all EVs)
         time_limit: Time limit in seconds (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
+        linearize_constraints: Whether to use linearized constraints (default: False)
     
     Returns:
         Dictionary with results
@@ -267,7 +272,8 @@ def main(input_excel_file, output_prefix=None, input_coordinates_file=None, solv
             input_coordinates_file=input_coordinates_file,
             solver=solver,
             time_limit=time_limit,
-            verbose=verbose
+            verbose=verbose,
+            linearize_constraints=linearize_constraints
         )
     else:
         # Solve for all EVs
@@ -280,22 +286,25 @@ def main(input_excel_file, output_prefix=None, input_coordinates_file=None, solv
             input_coordinates_file=input_coordinates_file,
             solver=solver,
             time_limit=time_limit,
-            verbose=verbose
+            verbose=verbose,
+            linearize_constraints=linearize_constraints
         )
 
 
 if __name__ == "__main__":
+    linearize_constraints = True
     input_excel_file = "../data/37-intersection map.xlsx"
     input_coordinates_file = "../data/37-intersection map Coordinates.json"
-    output_prefix = "../data/37-intersection map"
+    output_prefix = "../data/37-intersection map LIN" if linearize_constraints else "../data/37-intersection map"
     
     # Solve for all EVs
     results = main(
         input_excel_file=input_excel_file,
         output_prefix=output_prefix,
         input_coordinates_file=input_coordinates_file,
-        time_limit=15,
-        verbose=2
+        time_limit=300,
+        verbose=2,
+        linearize_constraints=linearize_constraints
     )
     print("Final Results:", results)
 

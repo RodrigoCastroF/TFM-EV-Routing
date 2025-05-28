@@ -1,7 +1,7 @@
 import pyomo.environ as pyo
 
 
-def get_ev_routing_abstract_model():
+def get_ev_routing_abstract_model(linearize_constraints=False):
 
     m = pyo.AbstractModel()
 
@@ -57,6 +57,12 @@ def get_ev_routing_abstract_model():
     # Parameter to find path ID given origin and destination nodes
     m.pPath = pyo.Param(m.sIntersections, m.sIntersections, within=m.sPaths)
 
+    # Parameters used in the linearized version
+    if linearize_constraints:
+        m.pMinSoCDeparture = pyo.Param(within=pyo.NonNegativeReals, default=0)
+        m.pMaxSoCDeparture = pyo.Param(within=pyo.NonNegativeReals, default=24)
+        m.pMinTimeWeight = pyo.Param(within=pyo.NonNegativeReals, default=0.001)
+
     # ----
     # Variables
     # ----
@@ -81,6 +87,14 @@ def get_ev_routing_abstract_model():
     # MTZ variables for subtour elimination
     m.vOrderVisited = pyo.Var(m.sIntersections, within=pyo.NonNegativeReals)
 
+    # Auxiliary variables for linearization
+    if linearize_constraints:
+        # Auxiliary variables for constraint c43 linearization (SoC energy balance)
+        m.vXiSoC = pyo.Var(m.sPaths, within=pyo.NonNegativeReals)
+        
+        # Auxiliary variables for constraint c46 linearization (time arrival balance)
+        m.vZetaTime = pyo.Var(m.sPaths, within=pyo.NonNegativeReals)
+
     # ----
     # Objective function
     # ----
@@ -102,7 +116,13 @@ def get_ev_routing_abstract_model():
             for delivery_point in m.sDeliveryPoints
         )
 
-        return charging_cost + delay_penalty
+        # Prevent the model from artificially inflating the time when linearized
+        if linearize_constraints:
+            time_penalty = m.pMinTimeWeight * m.vTimeArrival[m.pEndingPoint]
+        else:
+            time_penalty = 0
+
+        return charging_cost + delay_penalty + time_penalty
 
     m.Obj = pyo.Objective(rule=c34_objective_function, sense=pyo.minimize)
 
@@ -269,17 +289,28 @@ def get_ev_routing_abstract_model():
         if intersection == m.pStartingPoint:
             return pyo.Constraint.Skip
         
-        # This is the non-linear constraint as specified in the documentation
-        # SoC arrival = SoC departure from origin - power consumption - acceleration energy + braking energy
-        return m.vSoCArrival[intersection] == sum(
-            m.v01TravelPath[path] * (
-                m.vSoCDeparture[m.pOriginIntersection[path]] -
-                m.pPowerConsAtAvgSpeed[path] * (m.pDistanceAtAvgSpeed[path] / m.pAvgSpeed[path]) -
-                (1 / m.pAccelerationEfficiency - m.pBrakingEfficiency) * m.pKineticEnergy[path]
+        if linearize_constraints:
+            # Linearized version using auxiliary variables
+            return m.vSoCArrival[intersection] <= sum(
+                m.vXiSoC[path] - m.v01TravelPath[path] * (
+                    m.pPowerConsAtAvgSpeed[path] * (m.pDistanceAtAvgSpeed[path] / m.pAvgSpeed[path]) +
+                    (1 / m.pAccelerationEfficiency - m.pBrakingEfficiency) * m.pKineticEnergy[path]
+                )
+                for path in m.sPaths
+                if m.pDestinationIntersection[path] == intersection
             )
-            for path in m.sPaths
-            if m.pDestinationIntersection[path] == intersection
-        )
+        else:
+            # Original quadratic constraint
+            # SoC arrival = SoC departure from origin - power consumption - acceleration energy + braking energy
+            return m.vSoCArrival[intersection] == sum(
+                m.v01TravelPath[path] * (
+                    m.vSoCDeparture[m.pOriginIntersection[path]] -
+                    m.pPowerConsAtAvgSpeed[path] * (m.pDistanceAtAvgSpeed[path] / m.pAvgSpeed[path]) -
+                    (1 / m.pAccelerationEfficiency - m.pBrakingEfficiency) * m.pKineticEnergy[path]
+                )
+                for path in m.sPaths
+                if m.pDestinationIntersection[path] == intersection
+            )
 
     m.c43_soc_arrival_energy_balance = pyo.Constraint(
         m.sIntersections, rule=c43_soc_arrival_energy_balance
@@ -309,17 +340,28 @@ def get_ev_routing_abstract_model():
         if intersection == m.pStartingPoint:
             return pyo.Constraint.Skip
         
-        # This is the non-linear constraint as specified in the documentation
-        # Time arrival = Time departure from origin + time at average speed + acceleration/braking time
-        return m.vTimeArrival[intersection] == sum(
-            m.v01TravelPath[path] * (
-                m.vTimeDeparture[m.pOriginIntersection[path]] +
-                (m.pDistanceAtAvgSpeed[path] / m.pAvgSpeed[path]) +
-                m.pAccelerationBrakingTime[path]
+        if linearize_constraints:
+            # Linearized version using auxiliary variables
+            return m.vTimeArrival[intersection] >= sum(
+                m.vZetaTime[path] + m.v01TravelPath[path] * (
+                    (m.pDistanceAtAvgSpeed[path] / m.pAvgSpeed[path]) +
+                    m.pAccelerationBrakingTime[path]
+                )
+                for path in m.sPaths
+                if m.pDestinationIntersection[path] == intersection
             )
-            for path in m.sPaths
-            if m.pDestinationIntersection[path] == intersection
-        )
+        else:
+            # Original quadratic constraint
+            # Time arrival = Time departure from origin + time at average speed + acceleration/braking time
+            return m.vTimeArrival[intersection] == sum(
+                m.v01TravelPath[path] * (
+                    m.vTimeDeparture[m.pOriginIntersection[path]] +
+                    (m.pDistanceAtAvgSpeed[path] / m.pAvgSpeed[path]) +
+                    m.pAccelerationBrakingTime[path]
+                )
+                for path in m.sPaths
+                if m.pDestinationIntersection[path] == intersection
+            )
 
     m.c46_time_arrival_balance = pyo.Constraint(
         m.sIntersections, rule=c46_time_arrival_balance
@@ -389,5 +431,77 @@ def get_ev_routing_abstract_model():
     # m.c55_delay_time_positive = pyo.Constraint(
     #     m.sDeliveryPoints, rule=c55_delay_time_positive
     # )
+
+    # ----
+    # Linearization constraints
+    # ----
+    
+    if linearize_constraints:
+
+        # Linearization constraints for c43 (SoC energy balance)
+        # These implement: vXiSoC[path] = v01TravelPath[path] * vSoCDeparture[origin_of_path]
+        
+        def cA7_xi_lower_bound(m, path):
+            return m.vXiSoC[path] >= m.pMinSoCDeparture * m.v01TravelPath[path]
+        
+        m.cA7_xi_lower_bound = pyo.Constraint(
+            m.sPaths, rule=cA7_xi_lower_bound
+        )
+        
+        def cA7_xi_upper_bound(m, path):
+            return m.vXiSoC[path] <= m.pMaxSoCDeparture * m.v01TravelPath[path]
+        
+        m.cA7_xi_upper_bound = pyo.Constraint(
+            m.sPaths, rule=cA7_xi_upper_bound
+        )
+        
+        def cA6_soc_minus_xi_lower_bound(m, path):
+            origin = m.pOriginIntersection[path]
+            return m.vSoCDeparture[origin] - m.vXiSoC[path] >= m.pMinSoCDeparture * (1 - m.v01TravelPath[path])
+        
+        m.cA6_soc_minus_xi_lower_bound = pyo.Constraint(
+            m.sPaths, rule=cA6_soc_minus_xi_lower_bound
+        )
+
+        def cA6_soc_minus_xi_upper_bound(m, path):
+            origin = m.pOriginIntersection[path]
+            return m.vSoCDeparture[origin] - m.vXiSoC[path] <= m.pMaxSoCDeparture * (1 - m.v01TravelPath[path])
+
+        m.cA6_soc_minus_xi_upper_bound = pyo.Constraint(
+            m.sPaths, rule=cA6_soc_minus_xi_upper_bound
+        )
+        
+        # Linearization constraints for c46 (time arrival balance)
+        # These implement: vZetaTime[path] = v01TravelPath[path] * vTimeDeparture[origin_of_path]
+        
+        def cA11_zeta_lower_bound(m, path):
+            return m.vZetaTime[path] >= m.pStartingTime * m.v01TravelPath[path]
+        
+        m.cA11_zeta_lower_bound = pyo.Constraint(
+            m.sPaths, rule=cA11_zeta_lower_bound
+        )
+        
+        def cA11_zeta_upper_bound(m, path):
+            return m.vZetaTime[path] <= m.pMaxTime * m.v01TravelPath[path]
+        
+        m.cA11_zeta_upper_bound = pyo.Constraint(
+            m.sPaths, rule=cA11_zeta_upper_bound
+        )
+        
+        def cA10_time_minus_zeta_lower_bound(m, path):
+            origin = m.pOriginIntersection[path]
+            return m.vTimeDeparture[origin] - m.vZetaTime[path] >= m.pStartingTime * (1 - m.v01TravelPath[path])
+        
+        m.cA10_time_minus_zeta_lower_bound = pyo.Constraint(
+            m.sPaths, rule=cA10_time_minus_zeta_lower_bound
+        )
+
+        def cA10_time_minus_zeta_upper_bound(m, path):
+            origin = m.pOriginIntersection[path]
+            return m.vTimeDeparture[origin] - m.vZetaTime[path] <= m.pMaxTime * (1 - m.v01TravelPath[path])
+
+        m.cA10_time_minus_zeta_upper_bound = pyo.Constraint(
+            m.sPaths, rule=cA10_time_minus_zeta_upper_bound
+        )
 
     return m
