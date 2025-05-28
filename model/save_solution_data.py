@@ -279,11 +279,64 @@ def create_solution_map(solution_data, input_data, file_path: str, coordinates_p
             else:
                 info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}→{soc_dep:.{decimal_precision}f}")
         
+        # Add objective function components
+        if intersection in delivery_points:
+            # Delivery time (parameter pTimeWithoutPenalty)
+            delivery_time = paths_data['pTimeWithoutPenalty'][intersection]
+            info_text.append(f"Delivery Time: {delivery_time:.{decimal_precision}f}")
+            
+            # Delay penalty calculation: pDelayPenalty * vTimeDelay
+            delay_time = row['vTimeDelay'] if row['vTimeDelay'] is not None else 0
+            delay_penalty_rate = paths_data['pDelayPenalty'][intersection]
+            delay_penalty = delay_penalty_rate * delay_time
+            if delay_penalty > eps:
+                info_text.append(f"Delay Penalty: {delay_penalty:.{decimal_precision}f}")
+            else:
+                info_text.append("Delay Penalty: 0")
+        
+        if intersection in charging_stations:
+            # Charging cost calculation: pChargingPrice * pChargingPower * vTimeCharging * pChargerEfficiencyRate
+            charging_time = row['vTimeCharging'] if row['vTimeCharging'] is not None else 0
+            if charging_time > eps:  # Only show if actually charging
+                charging_price = paths_data['pChargingPrice'][intersection]
+                charging_power = paths_data['pChargingPower'][intersection]
+                charger_efficiency = paths_data['pChargerEfficiencyRate'][intersection]
+                charging_cost = charging_price * charging_power * charging_time * charger_efficiency
+                info_text.append(f"Charging Cost: {charging_cost:.{decimal_precision}f}")
+            else:
+                info_text.append("Charging Cost: 0")
+        
         if info_text:
             plt.annotate('\n'.join(info_text), 
                        xy=pos[intersection], xytext=(15, 15),
-                       textcoords='offset points', fontsize=12, fontweight='bold',
+                       textcoords='offset points', fontsize=10, fontweight='bold',
                        bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', alpha=0.9, edgecolor='gray'))
+    
+    # Calculate and display total objective function value
+    total_charging_cost = 0
+    total_delay_penalty = 0
+    
+    for _, row in intersections_df.iterrows():
+        intersection = row['intersection']
+        
+        # Sum charging costs
+        if intersection in charging_stations:
+            charging_time = row['vTimeCharging'] if row['vTimeCharging'] is not None else 0
+            if charging_time > eps:
+                charging_price = paths_data['pChargingPrice'][intersection]
+                charging_power = paths_data['pChargingPower'][intersection]
+                charger_efficiency = paths_data['pChargerEfficiencyRate'][intersection]
+                charging_cost = charging_price * charging_power * charging_time * charger_efficiency
+                total_charging_cost += charging_cost
+        
+        # Sum delay penalties
+        if intersection in delivery_points:
+            delay_time = row['vTimeDelay'] if row['vTimeDelay'] is not None else 0
+            delay_penalty_rate = paths_data['pDelayPenalty'][intersection]
+            delay_penalty = delay_penalty_rate * delay_time
+            total_delay_penalty += delay_penalty
+    
+    total_objective = total_charging_cost + total_delay_penalty
     
     # Add legend
     legend_elements = [
@@ -297,7 +350,12 @@ def create_solution_map(solution_data, input_data, file_path: str, coordinates_p
     ]
     plt.legend(handles=legend_elements, loc='upper right')
     
-    plt.title(f'EV Routing Solution - EV {ev}', fontsize=16, fontweight='bold')
+    # Update title to include objective function value
+    plt.title(f'EV Routing Solution - EV {ev}\n'
+              f'Total Cost: {total_objective:.{decimal_precision}f} '
+              f'(Charging: {total_charging_cost:.{decimal_precision}f}, '
+              f'Delay Penalty: {total_delay_penalty:.{decimal_precision}f})', 
+              fontsize=16, fontweight='bold')
     plt.tight_layout()
     
     # Save image
