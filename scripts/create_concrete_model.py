@@ -59,104 +59,93 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     if verbose >= 2:
         print(f"\nSOLVER RESULTS for EV {ev}:")
         print(results)
-    
-    # Check if solution was found
-    if results.solver.status == pyo.SolverStatus.ok:
-        if results.solver.termination_condition == pyo.TerminationCondition.optimal:
-            if verbose >= 1:
-                print(f"\nOptimal solution found for EV {ev}!")
-        else:
-            if verbose >= 1:
-                print(f"\nSolution for EV {ev} is NOT optimal.")
-        
-        # Extract solution information
-        try:
-            lower_bound = results['problem'][0]['Lower bound']
-            upper_bound = results['problem'][0]['Upper bound']
-            if lower_bound is not None and lower_bound != 0:
-                final_gap = (upper_bound - lower_bound) / abs(lower_bound)
-            else:
-                final_gap = 0.0
-        except (KeyError, TypeError, IndexError):
-            final_gap = 0.0
-            lower_bound = None
-            upper_bound = None
-        
-        try:
-            execution_time = results['solver'][0]['Time']
-        except (KeyError, IndexError):
-            execution_time = None
-            
-        # Get objective function value
-        obj_value = pyo.value(concrete_model.Obj)
-        
-        if verbose >= 1:
-            print(f"Objective function value for EV {ev}: {obj_value}")
-            if final_gap is not None and verbose >= 2:
-                print(f"Final gap: {final_gap:.6f}")
-            if execution_time is not None and verbose >= 2:
-                print(f"Execution time: {execution_time:.2f} seconds")
 
+    # Handle the case where no solution object exists
+    if results.solver.status != pyo.SolverStatus.ok and results.solver.status != pyo.SolverStatus.aborted:
         if verbose >= 1:
-            print(f"\nExtracting solution data for EV {ev}...")
-        solution_data = extract_solution_data(concrete_model)
-        if verbose >= 1:
-            print(f"Solution data extracted successfully for EV {ev}!")
-        
-        # Save solution data to Excel if file path provided
-        if output_excel_file:
-            if verbose >= 1:
-                print(f"\nSaving solution data for EV {ev} to {output_excel_file}...")
-            try:
-                save_solution_data(solution_data, output_excel_file)
-                if verbose >= 1:
-                    print(f"Solution data for EV {ev} saved successfully!")
-            except Exception as e:
-                if verbose >= 1:
-                    print(f"Error saving solution data for EV {ev}: {e}")
-        
-        # Create solution map visualization if file path provided
-        if output_image_file:
-            if verbose >= 1:
-                print(f"\nCreating solution map visualization for EV {ev}: {output_image_file}...")
-            try:
-                create_solution_map(solution_data, input_data, output_image_file, input_coordinates_file, ev=ev)
-                if verbose >= 1:
-                    print(f"Solution map for EV {ev} created successfully!")
-            except Exception as e:
-                if verbose >= 1:
-                    print(f"Error creating solution map for EV {ev}: {e}")
-        
-        # Return results summary
-        results_summary = {
-            'ev': ev,
-            'solution_data': solution_data,
-            'solver_status': results.solver.status,
-            'termination_condition': results.solver.termination_condition,
-            'objective_value': obj_value,
-            'final_gap': final_gap,
-            'execution_time': execution_time,
-            'lower_bound': lower_bound,
-            'upper_bound': upper_bound
-        }
-        
-        return results_summary
-        
-    elif results.solver.termination_condition == pyo.TerminationCondition.infeasible:
-        if verbose >= 1:
-            print(f"\nModel for EV {ev} is infeasible!")
-        return {'ev': ev, 'solver_status': 'infeasible'}
-        
-    elif results.solver.termination_condition == pyo.TerminationCondition.unbounded:
-        if verbose >= 1:
-            print(f"\nModel for EV {ev} is unbounded!")
-        return {'ev': ev, 'solver_status': 'unbounded'}
-        
-    else:
-        if verbose >= 1:
-            print(f"\nSolver for EV {ev} terminated with condition: {results.solver.termination_condition}")
-            print(f"No optimal solution found for EV {ev}.")
+            print(f"\nSolver returned no solution for EV {ev} :(")
+            print(f"\tStatus: {results.solver.status}")
+            print(f"\tTermination condition: {results.solver.termination_condition}")
         return {'ev': ev, 'solver_status': 'no_solution'}
+
+    # At this point, a solution object should exist
+    if verbose >= 1:
+        print(f"\nSolver returned a solution for EV {ev}! :)")
+        print(f"\tStatus: {results.solver.status}")
+        print(f"\tTermination condition: {results.solver.termination_condition}")
+
+    # Extract solution information
+    try:
+        lower_bound = results['problem'][0]['Lower bound']
+        upper_bound = results['problem'][0]['Upper bound']
+        if lower_bound is not None and lower_bound != 0:
+            final_gap = (upper_bound - lower_bound) / abs(lower_bound)
+        else:
+            final_gap = 0.0
+    except (KeyError, TypeError, IndexError):
+        final_gap = 0.0
+        lower_bound = None
+        upper_bound = None
+
+    try:
+        execution_time = results['solver'][0]['Time']
+    except (KeyError, IndexError):
+        execution_time = None
+
+    # Get objective function value
+    obj_value = pyo.value(concrete_model.Obj)
+
+    if verbose >= 1:
+        print(f"Objective function value for EV {ev}: {obj_value}")
+        if final_gap is not None and verbose >= 2:
+            print(f"Final gap: {final_gap:.6f}")
+        if execution_time is not None and verbose >= 2:
+            print(f"Execution time: {execution_time:.2f} seconds")
+
+    if verbose >= 1:
+        print(f"\nExtracting solution data for EV {ev}...")
+    solution_data = extract_solution_data(concrete_model)
+    if verbose >= 1:
+        print(f"Solution data extracted successfully for EV {ev}!")
+
+    # Save solution data to Excel if file path provided
+    if output_excel_file:
+        if verbose >= 1:
+            print(f"\nSaving solution data for EV {ev} to {output_excel_file}...")
+        try:
+            save_solution_data(solution_data, output_excel_file)
+            if verbose >= 1:
+                print(f"Solution data for EV {ev} saved successfully!")
+        except Exception as e:
+            if verbose >= 1:
+                print(f"Error saving solution data for EV {ev}: {e}")
+
+    # Create solution map visualization if file path provided
+    if output_image_file:
+        if verbose >= 1:
+            print(f"\nCreating solution map visualization for EV {ev}: {output_image_file}...")
+        try:
+            create_solution_map(solution_data, input_data, output_image_file, input_coordinates_file, ev=ev)
+            if verbose >= 1:
+                print(f"Solution map for EV {ev} created successfully!")
+        except Exception as e:
+            if verbose >= 1:
+                print(f"Error creating solution map for EV {ev}: {e}")
+
+    # Return results summary
+    ev_results = {
+        'ev': ev,
+        'solution_data': solution_data,
+        'solver_status': results.solver.status,
+        'termination_condition': results.solver.termination_condition,
+        'objective_value': obj_value,
+        'final_gap': final_gap,
+        'execution_time': execution_time,
+        'lower_bound': lower_bound,
+        'upper_bound': upper_bound
+    }
+
+    return ev_results
 
 
 def solve_for_all_evs(input_excel_file, output_prefix=None, input_coordinates_file=None, solver="gurobi", time_limit=300, verbose=1):
@@ -305,7 +294,8 @@ if __name__ == "__main__":
         input_excel_file=input_excel_file,
         output_prefix=output_prefix,
         input_coordinates_file=input_coordinates_file,
-        verbose=1
+        time_limit=15,
+        verbose=2
     )
     print("Final Results:", results)
 

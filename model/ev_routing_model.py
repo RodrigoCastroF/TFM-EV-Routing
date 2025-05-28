@@ -85,12 +85,26 @@ def get_ev_routing_abstract_model():
     # Objective function
     # ----
 
-    # TODO: replace with the actual objective function
+    def c34_objective_function(m):
+        # Charging cost component
+        charging_cost = sum(
+            m.pChargingPrice[charging_station] *
+            m.pChargingPower[charging_station] *
+            m.vTimeCharging[charging_station] *
+            m.pChargerEfficiencyRate[charging_station]
+            for charging_station in m.sChargingStations
+        )
 
-    def objective_function(m):
-        return sum(m.v01VisitIntersection[intersection] for intersection in m.sIntersections)
+        # Delay penalty component
+        delay_penalty = sum(
+            m.pDelayPenalty[delivery_point] *
+            m.vTimeDelay[delivery_point]
+            for delivery_point in m.sDeliveryPoints
+        )
 
-    m.Obj = pyo.Objective(rule=objective_function, sense=pyo.minimize)
+        return charging_cost + delay_penalty
+
+    m.Obj = pyo.Objective(rule=c34_objective_function, sense=pyo.minimize)
 
     # ----
     # Navigation constraints
