@@ -351,7 +351,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
 
 
 if __name__ == "__main__":
-    linearize_constraints = False
+    linearize_constraints = True
     input_excel_file = "../data/37-intersection map.xlsx"
     output_prefix = "../data/37-intersection map LIN" if linearize_constraints else "../data/37-intersection map"
     
@@ -364,7 +364,7 @@ if __name__ == "__main__":
         linearize_constraints=linearize_constraints,
         ev=1,
         model_prefix=output_prefix,
-        tuned_params_file="../data/tuned_params_1.prm"
+        # tuned_params_file="../data/tuned_params_1.prm"
     )
     print("Final Results:", results)
 
