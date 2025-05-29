@@ -3,7 +3,7 @@ import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
 
-def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
+def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
     """
     Solve the EV routing problem for a single EV.
     
@@ -12,6 +12,7 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
         ev: EV number
         output_excel_file: Path to save Excel solution (optional)
         output_image_file: Path to save solution map image (optional)
+        model_prefix: Prefix for saving model in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
         time_limit: Time limit in seconds (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
@@ -31,6 +32,19 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     if verbose >= 1:
         print(f"Creating concrete model instance for EV {ev}...")
     concrete_model = abstract_model.create_instance(input_data)
+    
+    # Save model in MPS format if requested
+    if model_prefix:
+        model_file = f"{model_prefix} EV{ev} Model.mps"
+        if verbose >= 1:
+            print(f"Saving concrete model for EV {ev} to {model_file}...")
+        try:
+            concrete_model.write(model_file)
+            if verbose >= 1:
+                print(f"Model for EV {ev} saved successfully in MPS format!")
+        except Exception as e:
+            if verbose >= 1:
+                print(f"Error saving model for EV {ev}: {e}")
     
     # Basic model information
     if verbose >= 1:
@@ -149,13 +163,14 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     return ev_results
 
 
-def solve_for_all_evs(input_excel_file, output_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
+def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
     """
     Solve the EV routing problem for all EVs in the dataset.
     
     Args:
         input_excel_file: Path to input Excel file
         output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
+        model_prefix: Prefix for saving models in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
         time_limit: Time limit in seconds per EV (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
@@ -202,6 +217,7 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, solver="gurobi", tim
             ev=ev,
             output_excel_file=output_excel_file,
             output_image_file=output_image_file,
+            model_prefix=model_prefix,
             solver=solver,
             time_limit=time_limit,
             verbose=verbose,
@@ -223,13 +239,14 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, solver="gurobi", tim
     return all_results
 
 
-def main(input_excel_file, output_prefix=None, solver="gurobi", ev=None, time_limit=300, verbose=1, linearize_constraints=False):
+def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, time_limit=300, verbose=1, linearize_constraints=False):
     """
     Main function to solve EV routing problem.
     
     Args:
         input_excel_file: Path to input Excel file
         output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
+        model_prefix: Prefix for saving model in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
         ev: Specific EV to solve for (if None, solve for all EVs)
         time_limit: Time limit in seconds (default: 300)
@@ -265,6 +282,7 @@ def main(input_excel_file, output_prefix=None, solver="gurobi", ev=None, time_li
             ev=ev,
             output_excel_file=output_excel_file,
             output_image_file=output_image_file,
+            model_prefix=model_prefix,
             solver=solver,
             time_limit=time_limit,
             verbose=verbose,
@@ -278,6 +296,7 @@ def main(input_excel_file, output_prefix=None, solver="gurobi", ev=None, time_li
         return solve_for_all_evs(
             input_excel_file=input_excel_file,
             output_prefix=output_prefix,
+            model_prefix=model_prefix,
             solver=solver,
             time_limit=time_limit,
             verbose=verbose,
@@ -296,7 +315,9 @@ if __name__ == "__main__":
         output_prefix=output_prefix,
         time_limit=15,
         verbose=2,
-        linearize_constraints=linearize_constraints
+        linearize_constraints=linearize_constraints,
+        ev=1,
+        model_prefix=output_prefix
     )
     print("Final Results:", results)
 
