@@ -273,9 +273,9 @@ def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, 
         info_text = []
         if time_arr is not None and time_dep is not None:
             if abs(time_arr - time_dep) < eps:  # Values are essentially identical
-                info_text.append(f"T: {time_arr:.{decimal_precision}f}")
+                info_text.append(f"Time: {time_arr:.{decimal_precision}f}")
             else:
-                info_text.append(f"T: {time_arr:.{decimal_precision}f}→{time_dep:.{decimal_precision}f}")
+                info_text.append(f"Time: {time_arr:.{decimal_precision}f}→{time_dep:.{decimal_precision}f}")
         if soc_arr is not None and soc_dep is not None:
             if abs(soc_arr - soc_dep) < eps:  # Values are essentially identical
                 info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}")

@@ -57,12 +57,6 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
     # Parameter to find path ID given origin and destination nodes
     m.pPath = pyo.Param(m.sIntersections, m.sIntersections, within=m.sPaths)
 
-    # Parameters used in the linearized version
-    if linearize_constraints:
-        m.pMinSoCDeparture = pyo.Param(within=pyo.NonNegativeReals, default=0)
-        m.pMaxSoCDeparture = pyo.Param(within=pyo.NonNegativeReals, default=24)
-        m.pMinTimeWeight = pyo.Param(within=pyo.NonNegativeReals, default=0.001)
-
     # ----
     # Variables
     # ----
@@ -85,7 +79,8 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
     m.vTimeDelay = pyo.Var(m.sDeliveryPoints, within=pyo.NonNegativeReals)
     
     # MTZ variables for subtour elimination
-    m.vOrderVisited = pyo.Var(m.sIntersections, within=pyo.NonNegativeReals)
+    # -> These are actually not necessary, see [[Update - 2025-05-29]]
+    # m.vOrderVisited = pyo.Var(m.sIntersections, within=pyo.NonNegativeReals)
 
     # Auxiliary variables for linearization
     if linearize_constraints:
@@ -116,13 +111,7 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
             for delivery_point in m.sDeliveryPoints
         )
 
-        # Prevent the model from artificially inflating the time when linearized
-        if linearize_constraints:
-            time_penalty = m.pMinTimeWeight * m.vTimeArrival[m.pEndingPoint]
-        else:
-            time_penalty = 0
-
-        return charging_cost + delay_penalty + time_penalty
+        return charging_cost + delay_penalty
 
     m.Obj = pyo.Objective(rule=c34_objective_function, sense=pyo.minimize)
 
@@ -203,40 +192,41 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
 
     # cn2, cn3 and cn4: Miller-Tucker-Zemlin (MTZ) formulation for subtour elimination
     # See [[Issue - Loops in navigation]]
+    # -> These are actually not necessary, see [[Update - 2025-05-29]]
     
-    def cn2_mtz_subtour_elimination(m, path):
-        origin = m.pOriginIntersection[path]
-        destination = m.pDestinationIntersection[path]
-        
-        # Skip constraint if origin is the starting point (acts as depot in TSP)
-        if origin == m.pStartingPoint:
-            return pyo.Constraint.Skip
-            
-        return (
-            m.vOrderVisited[origin] - m.vOrderVisited[destination] + 1 
-            <= (m.pNumIntersections - 1) * (1 - m.v01TravelPath[path])
-        )
-
-    m.cn2_mtz_subtour_elimination = pyo.Constraint(
-        m.sPaths, rule=cn2_mtz_subtour_elimination
-    )
-    
-    def cn3_mtz_order_lower_bound(m, intersection):
-        if intersection == m.pStartingPoint:
-            return m.vOrderVisited[intersection] == 1
-        else:
-            return m.vOrderVisited[intersection] >= 2
-
-    m.cn3_mtz_order_lower_bound = pyo.Constraint(
-        m.sIntersections, rule=cn3_mtz_order_lower_bound
-    )
-
-    def cn4_mtz_order_upper_bound(m, intersection):
-        return m.vOrderVisited[intersection] <= m.pNumIntersections
-
-    m.cn4_mtz_order_upper_bound = pyo.Constraint(
-        m.sIntersections, rule=cn4_mtz_order_upper_bound
-    )
+    # def cn2_mtz_subtour_elimination(m, path):
+    #     origin = m.pOriginIntersection[path]
+    #     destination = m.pDestinationIntersection[path]
+    #
+    #     # Skip constraint if origin is the starting point (acts as depot in TSP)
+    #     if origin == m.pStartingPoint:
+    #         return pyo.Constraint.Skip
+    #
+    #     return (
+    #         m.vOrderVisited[origin] - m.vOrderVisited[destination] + 1
+    #         <= (m.pNumIntersections - 1) * (1 - m.v01TravelPath[path])
+    #     )
+    #
+    # m.cn2_mtz_subtour_elimination = pyo.Constraint(
+    #     m.sPaths, rule=cn2_mtz_subtour_elimination
+    # )
+    #
+    # def cn3_mtz_order_lower_bound(m, intersection):
+    #     if intersection == m.pStartingPoint:
+    #         return m.vOrderVisited[intersection] == 1
+    #     else:
+    #         return m.vOrderVisited[intersection] >= 2
+    #
+    # m.cn3_mtz_order_lower_bound = pyo.Constraint(
+    #     m.sIntersections, rule=cn3_mtz_order_lower_bound
+    # )
+    #
+    # def cn4_mtz_order_upper_bound(m, intersection):
+    #     return m.vOrderVisited[intersection] <= m.pNumIntersections
+    #
+    # m.cn4_mtz_order_upper_bound = pyo.Constraint(
+    #     m.sIntersections, rule=cn4_mtz_order_upper_bound
+    # )
 
     # ----
     # Battery constraints
@@ -291,7 +281,7 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
         
         if linearize_constraints:
             # Linearized version using auxiliary variables
-            return m.vSoCArrival[intersection] <= sum(
+            return m.vSoCArrival[intersection] == sum(
                 m.vXiSoC[path] - m.v01TravelPath[path] * (
                     m.pPowerConsAtAvgSpeed[path] * (m.pDistanceAtAvgSpeed[path] / m.pAvgSpeed[path]) +
                     (1 / m.pAccelerationEfficiency - m.pBrakingEfficiency) * m.pKineticEnergy[path]
@@ -318,7 +308,8 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
 
     def c44_soc_ending_point(m):
         # Multiplying by the binary variable here is unnecessary since the ending point is always visited
-        return m.vSoCDeparture[m.pEndingPoint] == m.v01VisitIntersection[m.pEndingPoint] * m.pStartingSoC
+        # We have to use >= instead of == here, see [[Update - 2025-05-29]]
+        return m.vSoCDeparture[m.pEndingPoint] >= m.v01VisitIntersection[m.pEndingPoint] * m.pStartingSoC
 
     m.c44_soc_ending_point = pyo.Constraint(
         rule=c44_soc_ending_point
@@ -342,7 +333,7 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
         
         if linearize_constraints:
             # Linearized version using auxiliary variables
-            return m.vTimeArrival[intersection] >= sum(
+            return m.vTimeArrival[intersection] == sum(
                 m.vZetaTime[path] + m.v01TravelPath[path] * (
                     (m.pDistanceAtAvgSpeed[path] / m.pAvgSpeed[path]) +
                     m.pAccelerationBrakingTime[path]
@@ -442,22 +433,24 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
         # These implement: vXiSoC[path] = v01TravelPath[path] * vSoCDeparture[origin_of_path]
         
         def cA7_xi_lower_bound(m, path):
-            return m.vXiSoC[path] >= m.pMinSoCDeparture * m.v01TravelPath[path]
+            # The lower bound is 0 instead of pMinSoC, see [[Update - 2025-05-29]]
+            return m.vXiSoC[path] >= 0
         
         m.cA7_xi_lower_bound = pyo.Constraint(
             m.sPaths, rule=cA7_xi_lower_bound
         )
         
         def cA7_xi_upper_bound(m, path):
-            return m.vXiSoC[path] <= m.pMaxSoCDeparture * m.v01TravelPath[path]
+            return m.vXiSoC[path] <= m.pMaxSoC * m.v01TravelPath[path]
         
         m.cA7_xi_upper_bound = pyo.Constraint(
             m.sPaths, rule=cA7_xi_upper_bound
         )
         
         def cA6_soc_minus_xi_lower_bound(m, path):
+            # The lower bound is 0 instead of pMinSoC, see [[Update - 2025-05-29]]
             origin = m.pOriginIntersection[path]
-            return m.vSoCDeparture[origin] - m.vXiSoC[path] >= m.pMinSoCDeparture * (1 - m.v01TravelPath[path])
+            return m.vSoCDeparture[origin] - m.vXiSoC[path] >= 0
         
         m.cA6_soc_minus_xi_lower_bound = pyo.Constraint(
             m.sPaths, rule=cA6_soc_minus_xi_lower_bound
@@ -465,7 +458,7 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
 
         def cA6_soc_minus_xi_upper_bound(m, path):
             origin = m.pOriginIntersection[path]
-            return m.vSoCDeparture[origin] - m.vXiSoC[path] <= m.pMaxSoCDeparture * (1 - m.v01TravelPath[path])
+            return m.vSoCDeparture[origin] - m.vXiSoC[path] <= m.pMaxSoC * (1 - m.v01TravelPath[path])
 
         m.cA6_soc_minus_xi_upper_bound = pyo.Constraint(
             m.sPaths, rule=cA6_soc_minus_xi_upper_bound
@@ -475,7 +468,8 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
         # These implement: vZetaTime[path] = v01TravelPath[path] * vTimeDeparture[origin_of_path]
         
         def cA11_zeta_lower_bound(m, path):
-            return m.vZetaTime[path] >= m.pStartingTime * m.v01TravelPath[path]
+            # The lower bound is 0 instead of pStartingTime, see [[Update - 2025-05-29]]
+            return m.vZetaTime[path] >= 0
         
         m.cA11_zeta_lower_bound = pyo.Constraint(
             m.sPaths, rule=cA11_zeta_lower_bound
@@ -489,8 +483,9 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
         )
         
         def cA10_time_minus_zeta_lower_bound(m, path):
+            # The lower bound is 0 instead of pStartingTime, see [[Update - 2025-05-29]]
             origin = m.pOriginIntersection[path]
-            return m.vTimeDeparture[origin] - m.vZetaTime[path] >= m.pStartingTime * (1 - m.v01TravelPath[path])
+            return m.vTimeDeparture[origin] - m.vZetaTime[path] >= 0
         
         m.cA10_time_minus_zeta_lower_bound = pyo.Constraint(
             m.sPaths, rule=cA10_time_minus_zeta_lower_bound

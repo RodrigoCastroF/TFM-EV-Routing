@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import pandas as pd
 from pathlib import Path
+from openpyxl import load_workbook, Workbook
 
 
 def extract_node_coordinates(image_path, excel_file_path, num_nodes):
@@ -87,6 +88,7 @@ def extract_node_coordinates(image_path, excel_file_path, num_nodes):
 def save_coordinates_to_excel(coordinates, excel_file_path):
     """
     Save coordinates to an Excel file as a new "Coordinates" sheet.
+    Preserves all existing sheets with their formatting, formulas, and colors.
     
     Parameters
     ----------
@@ -108,27 +110,42 @@ def save_coordinates_to_excel(coordinates, excel_file_path):
     
     coords_df = pd.DataFrame(coord_data)
     
-    # Read existing Excel file and add the new sheet
     excel_file = Path(excel_file_path)
     
-    # Read all existing sheets
-    existing_sheets = {}
+    # Load existing workbook or create new one
     if excel_file.exists():
-        with pd.ExcelFile(excel_file_path) as xls:
-            for sheet_name in xls.sheet_names:
-                existing_sheets[sheet_name] = pd.read_excel(xls, sheet_name=sheet_name)
+        try:
+            workbook = load_workbook(excel_file_path)
+        except Exception as e:
+            print(f"Warning: Could not load existing workbook ({e}). Creating new one.")
+            workbook = Workbook()
+    else:
+        workbook = Workbook()
     
-    # Write all sheets back including the new coordinates sheet
-    with pd.ExcelWriter(excel_file_path, engine='openpyxl') as writer:
-        # Write existing sheets
-        for sheet_name, df in existing_sheets.items():
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-        
-        # Write coordinates sheet
-        coords_df.to_excel(writer, sheet_name='Coordinates', index=False)
+    # Remove the "Coordinates" sheet if it already exists
+    if 'Coordinates' in workbook.sheetnames:
+        workbook.remove(workbook['Coordinates'])
+    
+    # Create a new "Coordinates" sheet
+    coords_sheet = workbook.create_sheet('Coordinates')
+    
+    # Add headers
+    coords_sheet['A1'] = 'Node'
+    coords_sheet['B1'] = 'X'
+    coords_sheet['C1'] = 'Y'
+    
+    # Add data
+    for i, (node_id, (x, y)) in enumerate(sorted(coordinates.items()), start=2):
+        coords_sheet[f'A{i}'] = node_id
+        coords_sheet[f'B{i}'] = x
+        coords_sheet[f'C{i}'] = y
+    
+    # Save the workbook (preserves all existing sheets with their formatting)
+    workbook.save(excel_file_path)
     
     print(f"\nCoordinates saved to sheet 'Coordinates' in: {excel_file}")
     print(f"Captured {len(coordinates)} nodes")
+    print("All existing sheets and their formatting have been preserved.")
 
 
 if __name__ == "__main__":
