@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import json
+import pandas as pd
 from pathlib import Path
 
 
-def extract_node_coordinates(image_path, output_path, num_nodes):
+def extract_node_coordinates(image_path, excel_file_path, num_nodes):
     """
     Interactive tool to extract node coordinates by clicking on an image.
     
@@ -12,8 +12,8 @@ def extract_node_coordinates(image_path, output_path, num_nodes):
     ----------
     image_path : str
         Path to the reference image
-    output_path : str
-        Path to save the coordinates JSON file
+    excel_file_path : str
+        Path to the Excel file where coordinates will be added as a new sheet
     num_nodes : int
         Expected number of nodes to click
     """
@@ -63,13 +63,8 @@ def extract_node_coordinates(image_path, output_path, num_nodes):
     
     def onkey(event):
         if coordinates:
-            # Save coordinates to JSON file
-            output_file = Path(output_path)
-            with open(output_file, 'w') as f:
-                json.dump(coordinates, f, indent=2)
-            
-            print(f"\nCoordinates saved to: {output_file}")
-            print(f"Captured {len(coordinates)} nodes")
+            # Save coordinates to Excel file as a new sheet
+            save_coordinates_to_excel(coordinates, excel_file_path)
             plt.close()
     
     # Connect event handlers
@@ -81,7 +76,7 @@ def extract_node_coordinates(image_path, output_path, num_nodes):
     print(f"1. Click on each intersection in numerical order (1 to {num_nodes})")
     print(f"2. The script will mark each clicked point with a red dot and number")
     print(f"3. Press any key when you're done to save coordinates")
-    print(f"4. Coordinates will be saved to: {output_path}")
+    print(f"4. Coordinates will be added to: {excel_file_path}")
     print(f"\nStarting with node 1...")
     
     plt.show()
@@ -89,15 +84,62 @@ def extract_node_coordinates(image_path, output_path, num_nodes):
     return coordinates
 
 
+def save_coordinates_to_excel(coordinates, excel_file_path):
+    """
+    Save coordinates to an Excel file as a new "Coordinates" sheet.
+    
+    Parameters
+    ----------
+    coordinates : dict
+        Dictionary with node IDs as keys and (x, y) tuples as values
+    excel_file_path : str
+        Path to the Excel file
+    """
+    
+    # Create a DataFrame from coordinates
+    coord_data = []
+    for node_id in sorted(coordinates.keys()):
+        x, y = coordinates[node_id]
+        coord_data.append({
+            'Node': node_id,
+            'X': x,
+            'Y': y
+        })
+    
+    coords_df = pd.DataFrame(coord_data)
+    
+    # Read existing Excel file and add the new sheet
+    excel_file = Path(excel_file_path)
+    
+    # Read all existing sheets
+    existing_sheets = {}
+    if excel_file.exists():
+        with pd.ExcelFile(excel_file_path) as xls:
+            for sheet_name in xls.sheet_names:
+                existing_sheets[sheet_name] = pd.read_excel(xls, sheet_name=sheet_name)
+    
+    # Write all sheets back including the new coordinates sheet
+    with pd.ExcelWriter(excel_file_path, engine='openpyxl') as writer:
+        # Write existing sheets
+        for sheet_name, df in existing_sheets.items():
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+        
+        # Write coordinates sheet
+        coords_df.to_excel(writer, sheet_name='Coordinates', index=False)
+    
+    print(f"\nCoordinates saved to sheet 'Coordinates' in: {excel_file}")
+    print(f"Captured {len(coordinates)} nodes")
+
+
 if __name__ == "__main__":
 
     # Paths
     image_path = "../data/37-intersection map.png"
-    output_path = "../data/37-intersection map Coordinates.json"
+    excel_file_path = "../data/37-intersection map.xlsx"
     num_nodes = 38  # Including ending point (duplicate of starting point)
     
     # Extract coordinates
-    coords = extract_node_coordinates(image_path, output_path, num_nodes=num_nodes)
+    coords = extract_node_coordinates(image_path, excel_file_path, num_nodes=num_nodes)
     
     if coords:
         print(f"\nExtracted coordinates for {len(coords)} nodes:")

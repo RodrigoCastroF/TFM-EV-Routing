@@ -109,20 +109,18 @@ def save_solution_data(solution_data, file_path: str):
         paths_df.to_excel(writer, sheet_name='sPaths', index=False)
 
 
-def create_solution_map(solution_data, input_data, file_path: str, coordinates_path: str = None, ev: int = 1, eps: float = 1e-5, decimal_precision: int = 1):
+def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, eps: float = 1e-5, decimal_precision: int = 1):
     """
     Create a visual map representation of the routing solution.
     
     Parameters
     ----------
     solution_data: dict
-        A dictionary containing the solution data from extract_solution_data().
+        A dictionary containing the solution data from extract_solution_data.
     input_data: dict
-        The input data dictionary from get_routing_map_data.
+        The input data dictionary from filter_map_data_for_ev, which includes coordinates.
     file_path: str
         The path where the image should be saved (should end with .png).
-    coordinates_path: str, optional
-        The path to the JSON file containing node coordinates. If None, uses automatic layout.
     ev: int
         The EV number for which to show delivery points.
     eps: float
@@ -137,6 +135,7 @@ def create_solution_map(solution_data, input_data, file_path: str, coordinates_p
     paths = paths_data['sPaths'][None]
     delivery_points = paths_data['sDeliveryPoints'][None]
     charging_stations = paths_data['sChargingStations'][None]
+    coordinates = paths_data.get('coordinates')
     
     # Extract solution data
     intersections_df = solution_data['intersections_df']
@@ -169,16 +168,11 @@ def create_solution_map(solution_data, input_data, file_path: str, coordinates_p
             G.add_edge(origin, dest)
             edge_types[edge] = path_type
     
-    # Try to load predefined coordinates, fallback to automatic layout
-    if coordinates_path and Path(coordinates_path).exists():
-        # Load predefined coordinates
-        with open(coordinates_path, 'r') as f:
-            coord_data = json.load(f)
-        
-        # Convert to the format expected by networkx (string keys to int, normalize coordinates)
+    # Try to use coordinates from input_data, fallback to automatic layout
+    if coordinates:
+        # Use coordinates from input_data
         pos = {}
-        for node_str, (x, y) in coord_data.items():
-            node_id = int(node_str)
+        for node_id, (x, y) in coordinates.items():
             if node_id in intersections:
                 pos[node_id] = (x, y)
         
@@ -197,7 +191,7 @@ def create_solution_map(solution_data, input_data, file_path: str, coordinates_p
                 x, y = pos[node]
                 pos[node] = (2 * (x - x_min) / x_range - 1, 2 * (y - y_min) / y_range - 1)
         
-        print("Using predefined node coordinates from", coordinates_path)
+        print("Using predefined node coordinates from input data")
     else:
         # Fallback to automatic layout
         print("No predefined coordinates found, using automatic layout")

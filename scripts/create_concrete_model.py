@@ -3,7 +3,7 @@ import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
 
-def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=None, input_coordinates_file=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
+def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
     """
     Solve the EV routing problem for a single EV.
     
@@ -12,7 +12,6 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
         ev: EV number
         output_excel_file: Path to save Excel solution (optional)
         output_image_file: Path to save solution map image (optional)
-        input_coordinates_file: Path to coordinates file for visualization (optional)
         solver: Solver to use (default: "gurobi")
         time_limit: Time limit in seconds (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
@@ -127,7 +126,7 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
         if verbose >= 1:
             print(f"\nCreating solution map visualization for EV {ev}: {output_image_file}...")
         try:
-            create_solution_map(solution_data, input_data, output_image_file, input_coordinates_file, ev=ev)
+            create_solution_map(solution_data, input_data, output_image_file, ev=ev)
             if verbose >= 1:
                 print(f"Solution map for EV {ev} created successfully!")
         except Exception as e:
@@ -150,14 +149,13 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     return ev_results
 
 
-def solve_for_all_evs(input_excel_file, output_prefix=None, input_coordinates_file=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
+def solve_for_all_evs(input_excel_file, output_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
     """
     Solve the EV routing problem for all EVs in the dataset.
     
     Args:
         input_excel_file: Path to input Excel file
         output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
-        input_coordinates_file: Path to coordinates file for visualization (optional)
         solver: Solver to use (default: "gurobi")
         time_limit: Time limit in seconds per EV (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
@@ -204,7 +202,6 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, input_coordinates_fi
             ev=ev,
             output_excel_file=output_excel_file,
             output_image_file=output_image_file,
-            input_coordinates_file=input_coordinates_file,
             solver=solver,
             time_limit=time_limit,
             verbose=verbose,
@@ -226,14 +223,13 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, input_coordinates_fi
     return all_results
 
 
-def main(input_excel_file, output_prefix=None, input_coordinates_file=None, solver="gurobi", ev=None, time_limit=300, verbose=1, linearize_constraints=False):
+def main(input_excel_file, output_prefix=None, solver="gurobi", ev=None, time_limit=300, verbose=1, linearize_constraints=False):
     """
     Main function to solve EV routing problem.
     
     Args:
         input_excel_file: Path to input Excel file
         output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
-        input_coordinates_file: Path to coordinates file for visualization (optional)
         solver: Solver to use (default: "gurobi")
         ev: Specific EV to solve for (if None, solve for all EVs)
         time_limit: Time limit in seconds (default: 300)
@@ -269,7 +265,6 @@ def main(input_excel_file, output_prefix=None, input_coordinates_file=None, solv
             ev=ev,
             output_excel_file=output_excel_file,
             output_image_file=output_image_file,
-            input_coordinates_file=input_coordinates_file,
             solver=solver,
             time_limit=time_limit,
             verbose=verbose,
@@ -283,7 +278,6 @@ def main(input_excel_file, output_prefix=None, input_coordinates_file=None, solv
         return solve_for_all_evs(
             input_excel_file=input_excel_file,
             output_prefix=output_prefix,
-            input_coordinates_file=input_coordinates_file,
             solver=solver,
             time_limit=time_limit,
             verbose=verbose,
@@ -292,17 +286,15 @@ def main(input_excel_file, output_prefix=None, input_coordinates_file=None, solv
 
 
 if __name__ == "__main__":
-    linearize_constraints = True
+    linearize_constraints = False
     input_excel_file = "../data/37-intersection map.xlsx"
-    input_coordinates_file = "../data/37-intersection map Coordinates.json"
     output_prefix = "../data/37-intersection map LIN" if linearize_constraints else "../data/37-intersection map"
     
     # Solve for all EVs
     results = main(
         input_excel_file=input_excel_file,
         output_prefix=output_prefix,
-        input_coordinates_file=input_coordinates_file,
-        time_limit=300,
+        time_limit=15,
         verbose=2,
         linearize_constraints=linearize_constraints
     )

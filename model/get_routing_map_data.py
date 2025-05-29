@@ -13,7 +13,7 @@ def load_excel_map_data(file_path: str) -> dict:
     Returns
     -------
     map_data: dict
-        The raw map data loaded from Excel, containing all dataframes, metadata, and list of EVs.
+        The raw map data loaded from Excel, containing all dataframes, metadata, list of EVs, and coordinates.
     """
 
     # Read sheets from the Excel file
@@ -21,6 +21,18 @@ def load_excel_map_data(file_path: str) -> dict:
     paths_df = pd.read_excel(file_path, sheet_name="sPaths")
     delivery_points_df = pd.read_excel(file_path, sheet_name="sDeliveryPoints")
     charging_stations_df = pd.read_excel(file_path, sheet_name="sChargingStations")
+    
+    # Try to read coordinates if the sheet exists
+    coordinates = None
+    try:
+        coordinates_df = pd.read_excel(file_path, sheet_name="Coordinates")
+        # Convert to dictionary format: {node_id: (x, y)}
+        coordinates = {}
+        for _, row in coordinates_df.iterrows():
+            coordinates[int(row['Node'])] = (row['X'], row['Y'])
+    except Exception as e:
+        print(f"Warning: Could not read coordinates from Excel file: {e}")
+        print("Coordinates will not be available for visualization")
 
     # Function to clean column names by taking only the first word
     def clean_column_name(col_name):
@@ -39,6 +51,7 @@ def load_excel_map_data(file_path: str) -> dict:
         'paths_df': paths_df,
         'delivery_points_df': delivery_points_df,
         'charging_stations_df': charging_stations_df,
+        'coordinates': coordinates,
         'clean_column_name': clean_column_name,
         'evs': evs
     }
@@ -60,7 +73,7 @@ def filter_map_data_for_ev(map_data: dict, ev: int) -> dict:
     Returns
     -------
     input_data: dict
-        The input data for the model in the format required by Pyomo.
+        The input data for the model in the format required by Pyomo, including coordinates.
     """
 
     # Extract dataframes from map_data
@@ -68,6 +81,7 @@ def filter_map_data_for_ev(map_data: dict, ev: int) -> dict:
     paths_df = map_data['paths_df']
     delivery_points_df = map_data['delivery_points_df']
     charging_stations_df = map_data['charging_stations_df']
+    coordinates = map_data['coordinates']
     clean_column_name = map_data['clean_column_name']
 
     # Filter delivery points by EV
@@ -91,6 +105,7 @@ def filter_map_data_for_ev(map_data: dict, ev: int) -> dict:
         'sPaths': {None: paths},
         'sDeliveryPoints': {None: delivery_points},
         'sChargingStations': {None: charging_stations},
+        'coordinates': coordinates,  # Add coordinates to input_data
     }}
 
     # Process unindexed parameters (scalar values)
