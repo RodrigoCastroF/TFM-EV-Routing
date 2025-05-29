@@ -3,7 +3,7 @@ import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
 
-def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
+def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
     """
     Solve the EV routing problem for a single EV.
     
@@ -17,6 +17,7 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
         time_limit: Time limit in seconds (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
         linearize_constraints: Whether to use linearized constraints (default: False)
+        tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
     
     Returns:
         Dictionary with solution results
@@ -56,7 +57,8 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     
     # Create solver instance
     if verbose >= 1:
-        print(f"\nSetting up {solver} solver for EV {ev}...")
+        tuned_msg = f" with tuned parameters from {tuned_params_file}" if tuned_params_file else ""
+        print(f"\nSetting up {solver} solver for EV {ev}{tuned_msg}...")
     opt = SolverFactory(solver)
     
     # Set time limit based on solver
@@ -65,6 +67,45 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
         opt.options[time_limit_option[solver]] = time_limit
         if verbose >= 2:
             print(f"Time limit set to {time_limit} seconds")
+    
+    # Load tuned parameters for Gurobi if provided
+    if tuned_params_file and solver == "gurobi":
+        import os
+        if os.path.exists(tuned_params_file):
+            if verbose >= 1:
+                print(f"Loading tuned parameters from {tuned_params_file}...")
+            try:
+                # Read the parameter file and apply to solver options
+                with open(tuned_params_file, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#'):
+                            parts = line.split()
+                            if len(parts) >= 2:
+                                param = parts[0]
+                                value = parts[1]
+                                
+                                # Convert value to appropriate type
+                                try:
+                                    if '.' in value:
+                                        value = float(value)
+                                    else:
+                                        value = int(value)
+                                except ValueError:
+                                    pass  # Keep as string
+                                
+                                opt.options[param] = value
+                                if verbose >= 2:
+                                    print(f"  Set {param} = {value}")
+                
+                if verbose >= 1:
+                    print("Tuned parameters loaded successfully!")
+            except Exception as e:
+                if verbose >= 1:
+                    print(f"Warning: Could not load tuned parameters: {e}")
+        else:
+            if verbose >= 1:
+                print(f"Warning: Tuned parameters file not found: {tuned_params_file}")
     
     # Solve the model
     if verbose >= 1:
@@ -104,7 +145,7 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
 
     try:
         execution_time = results['solver'][0]['Time']
-    except (KeyError, IndexError):
+    except (KeyError, IndexError, AttributeError):
         execution_time = None
 
     # Get objective function value
@@ -163,7 +204,7 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     return ev_results
 
 
-def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False):
+def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
     """
     Solve the EV routing problem for all EVs in the dataset.
     
@@ -175,6 +216,7 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, s
         time_limit: Time limit in seconds per EV (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
         linearize_constraints: Whether to use linearized constraints (default: False)
+        tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
     
     Returns:
         Dictionary with results for all EVs
@@ -221,7 +263,8 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, s
             solver=solver,
             time_limit=time_limit,
             verbose=verbose,
-            linearize_constraints=linearize_constraints
+            linearize_constraints=linearize_constraints,
+            tuned_params_file=tuned_params_file
         )
         
         all_results[ev] = ev_results
@@ -239,7 +282,7 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, s
     return all_results
 
 
-def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, time_limit=300, verbose=1, linearize_constraints=False):
+def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
     """
     Main function to solve EV routing problem.
     
@@ -252,6 +295,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         time_limit: Time limit in seconds (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
         linearize_constraints: Whether to use linearized constraints (default: False)
+        tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
     
     Returns:
         Dictionary with results
@@ -286,7 +330,8 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
             solver=solver,
             time_limit=time_limit,
             verbose=verbose,
-            linearize_constraints=linearize_constraints
+            linearize_constraints=linearize_constraints,
+            tuned_params_file=tuned_params_file
         )
     else:
         # Solve for all EVs
@@ -300,7 +345,8 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
             solver=solver,
             time_limit=time_limit,
             verbose=verbose,
-            linearize_constraints=linearize_constraints
+            linearize_constraints=linearize_constraints,
+            tuned_params_file=tuned_params_file
         )
 
 
@@ -317,7 +363,8 @@ if __name__ == "__main__":
         verbose=2,
         linearize_constraints=linearize_constraints,
         ev=1,
-        model_prefix=output_prefix
+        model_prefix=output_prefix,
+        tuned_params_file="../data/tuned_params_1.prm"
     )
     print("Final Results:", results)
 
