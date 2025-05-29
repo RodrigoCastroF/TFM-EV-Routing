@@ -14,6 +14,7 @@ if __name__ == "__main__":
         'TuneTimeLimit': 3600 * hours_tuning,
         'TuneTrials': 1,
         'TimeLimit': 60,  # Never solve for more than this
+        #  'TuneJobs': 8,  # Run this number of threads in parallel --> Not allowed in the academic license...
     }
 
     model = gp.read(model_path)
