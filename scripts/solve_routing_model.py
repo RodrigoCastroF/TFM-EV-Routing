@@ -1,6 +1,7 @@
 from model import load_excel_map_data, filter_map_data_for_ev, get_ev_routing_abstract_model, extract_solution_data, save_solution_data, create_solution_map
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
+import pandas as pd
 
 
 def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
@@ -274,7 +275,7 @@ def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="g
     return all_results
 
 
-def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, charging_prices=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
+def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
     """
     Main function to solve EV routing problem.
     
@@ -284,7 +285,8 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         model_prefix: Prefix for saving model in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
         ev: Specific EV to solve for (if None, solve for all EVs)
-        charging_prices: Dictionary to override the values of pChargingPrice from the Excel file (default: None)
+        scenario: Scenario number to use for charging prices (requires scenarios_csv_file)
+        scenarios_csv_file: Path to CSV file containing scenarios with charging prices
         time_limit: Time limit in seconds (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
         linearize_constraints: Whether to use linearized constraints (default: False)
@@ -293,6 +295,32 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
     Returns:
         Dictionary with results
     """
+    
+    # Handle scenario-based charging prices
+    charging_prices = None
+    if scenario is not None:
+        if scenarios_csv_file is None:
+            raise ValueError("scenarios_csv_file must be provided when scenario is specified")
+        if verbose >= 1:
+            print(f"Loading charging prices for scenario {scenario} from {scenarios_csv_file}...")
+        
+        # Load scenario charging prices
+        df = pd.read_csv(scenarios_csv_file)
+        scenario_row = df[df['scenario'] == scenario]
+        if scenario_row.empty:
+            raise ValueError(f"Scenario {scenario} not found in {scenarios_csv_file}")
+        
+        # Extract charging prices (exclude the 'scenario' column)
+        charging_stations = [col for col in df.columns if col != 'scenario']
+        charging_prices = {}
+        for station in charging_stations:
+            charging_prices[int(station)] = float(scenario_row[station].iloc[0])
+        if verbose >= 1:
+            print(f"Charging prices for scenario {scenario}: {charging_prices}")
+        
+        # Update output prefix to include scenario
+        if output_prefix:
+            output_prefix = f"{output_prefix} S{scenario}"
     
     # Load data from Excel file once
     if verbose >= 1:
@@ -350,20 +378,25 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
 
 
 if __name__ == "__main__":
+
     linearize_constraints = True
     solver = "gurobi"
+
     input_excel_file = "../data/37-intersection map.xlsx"
     output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
-    
+    scenarios_csv_file = "../data/scenarios.csv"
+
     # Solve for all EVs
     results = main(
-        input_excel_file=input_excel_file,
-        output_prefix=output_prefix,
+        scenario=2,  # Remove to use baseline scenario (equivalent to scenario 0)
+        ev=1,  # Remove to solve for all EVs
+        output_prefix=output_prefix,  # Remove to avoid saving files
+        linearize_constraints=linearize_constraints,
+        solver=solver,
         time_limit=15,
         verbose=2,
-        linearize_constraints=linearize_constraints,
-        ev=1,
-        solver=solver
+        input_excel_file=input_excel_file,
+        scenarios_csv_file=scenarios_csv_file,
         # model_prefix=output_prefix,
         # tuned_params_file="../data/tuned_params_1.prm"
     )
