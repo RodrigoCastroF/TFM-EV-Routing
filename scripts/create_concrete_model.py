@@ -351,10 +351,10 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
 
 
 if __name__ == "__main__":
-    linearize_constraints = True
-    solver = "cplex"
+    linearize_constraints = False
+    solver = "gurobi"
     input_excel_file = "../data/37-intersection map.xlsx"
-    output_prefix = f"../data/37-intersection map {'LIN' if linearize_constraints else ''} {'CPLEX' if solver == 'cplex' else ''}"
+    output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
     
     # Solve for all EVs
     results = main(
