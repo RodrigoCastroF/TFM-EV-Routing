@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def load_excel_map_data(file_path: str) -> dict:
+def load_excel_map_data(file_path: str, charging_prices: dict = None, verbose: int = 0) -> dict:
     """
     Load data from an Excel file for the EV routing optimization model.
 
@@ -9,6 +9,11 @@ def load_excel_map_data(file_path: str) -> dict:
     ----------
     file_path: str
         The path to the Excel file (.xlsx) containing the data.
+    charging_prices: dict, optional
+        Dictionary with format {charging_station: charging_price} to override 
+        the pChargingPrice values from the Excel file. Default is None.
+    verbose: int
+        Verbosity level.
 
     Returns
     -------
@@ -41,6 +46,24 @@ def load_excel_map_data(file_path: str) -> dict:
     # Clean column names for all dataframes
     for df in [paths_df, delivery_points_df, charging_stations_df]:
         df.columns = [clean_column_name(col) for col in df.columns]
+
+    # Override charging prices if provided
+    if charging_prices is not None:
+        # Create a mapping from charging station intersection to row index
+        station_to_index = {}
+        for idx, row in charging_stations_df.iterrows():
+            station_intersection = row['pStationIntersection']
+            station_to_index[station_intersection] = idx
+        
+        # Update charging prices for stations in the dictionary
+        for station, price in charging_prices.items():
+            if station in station_to_index:
+                row_idx = station_to_index[station]
+                charging_stations_df.loc[row_idx, 'pChargingPrice'] = price
+                if verbose >= 1:
+                    print(f"Updated charging price for station {station} to {price}")
+            else:
+                print(f"Warning: Charging station {station} not found in data, skipping price update")
 
     # Extract list of unique EVs from delivery points
     evs = sorted(delivery_points_df["EV"].unique().tolist())

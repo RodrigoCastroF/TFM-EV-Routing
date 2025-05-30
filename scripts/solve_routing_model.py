@@ -3,12 +3,12 @@ import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 
 
-def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
+def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
     """
     Solve the EV routing problem for a single EV.
     
     Args:
-        input_data: Filtered data for the specific EV
+        map_data: Raw map data object returned by load_excel_map_data
         ev: EV number
         output_excel_file: Path to save Excel solution (optional)
         output_image_file: Path to save solution map image (optional)
@@ -22,6 +22,13 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     Returns:
         Dictionary with solution results
     """
+    
+    # Filter data for the specific EV
+    if verbose >= 1:
+        print(f"Filtering data for EV {ev}...")
+    input_data = filter_map_data_for_ev(map_data, ev)
+    if verbose >= 2:
+        print("Input data filtered successfully")
     
     # Get the abstract model
     if verbose >= 1:
@@ -204,12 +211,12 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     return ev_results
 
 
-def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
+def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
     """
     Solve the EV routing problem for all EVs in the dataset.
     
     Args:
-        input_excel_file: Path to input Excel file
+        map_data: Raw map data object returned by load_excel_map_data
         output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
         model_prefix: Prefix for saving models in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
@@ -221,15 +228,7 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, s
     Returns:
         Dictionary with results for all EVs
     """
-    
-    # Load data from Excel file
-    if verbose >= 1:
-        print(f"Loading data from {input_excel_file}...")
-    map_data = load_excel_map_data(input_excel_file)
-    if verbose >= 1:
-        print("Raw map data loaded successfully")
-        print("List of EVs:", map_data["evs"])
-    
+
     all_results = {}
     
     # Solve for each EV
@@ -238,13 +237,6 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, s
             print(f"\n{'='*50}")
             print(f"Processing EV {ev}")
             print(f"{'='*50}")
-        
-        # Filter data for specific EV
-        if verbose >= 1:
-            print(f"Filtering data for EV {ev}...")
-        input_data = filter_map_data_for_ev(map_data, ev)
-        if verbose >= 2:
-            print("Input data filtered successfully")
         
         # Generate output file paths if prefix provided
         output_excel_file = None
@@ -255,7 +247,7 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, s
         
         # Solve for this EV
         ev_results = solve_for_one_ev(
-            input_data=input_data,
+            map_data=map_data,
             ev=ev,
             output_excel_file=output_excel_file,
             output_image_file=output_image_file,
@@ -282,7 +274,7 @@ def solve_for_all_evs(input_excel_file, output_prefix=None, model_prefix=None, s
     return all_results
 
 
-def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
+def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, charging_prices=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
     """
     Main function to solve EV routing problem.
     
@@ -292,6 +284,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         model_prefix: Prefix for saving model in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
         ev: Specific EV to solve for (if None, solve for all EVs)
+        charging_prices: Dictionary to override the values of pChargingPrice from the Excel file (default: None)
         time_limit: Time limit in seconds (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
         linearize_constraints: Whether to use linearized constraints (default: False)
@@ -301,18 +294,24 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         Dictionary with results
     """
     
+    # Load data from Excel file once
+    if verbose >= 1:
+        print(f"Loading data from {input_excel_file}...")
+    map_data = load_excel_map_data(input_excel_file, charging_prices=charging_prices, verbose=verbose)
+    if verbose >= 1:
+        print("Raw map data loaded successfully")
+        print("List of EVs:", map_data["evs"])
+        print("Charging prices:", map_data["charging_stations_df"]["pChargingPrice"].tolist())
+    
     if ev is not None:
         # Solve for specific EV
         if verbose >= 1:
             print(f"Solving for specific EV: {ev}")
         
-        # Load and filter data
-        map_data = load_excel_map_data(input_excel_file)
+        # Check if EV exists in data
         if ev not in map_data["evs"]:
             print(f"Error: EV {ev} not found in data. Available EVs: {map_data['evs']}")
             return None
-        
-        input_data = filter_map_data_for_ev(map_data, ev)
         
         # Generate output file paths if prefix provided
         output_excel_file = None
@@ -322,7 +321,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
             output_image_file = f"{output_prefix} EV{ev} Solution Map.png"
         
         return solve_for_one_ev(
-            input_data=input_data,
+            map_data=map_data,
             ev=ev,
             output_excel_file=output_excel_file,
             output_image_file=output_image_file,
@@ -339,7 +338,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
             print("Solving for all EVs")
         
         return solve_for_all_evs(
-            input_excel_file=input_excel_file,
+            map_data=map_data,
             output_prefix=output_prefix,
             model_prefix=model_prefix,
             solver=solver,
@@ -351,7 +350,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
 
 
 if __name__ == "__main__":
-    linearize_constraints = False
+    linearize_constraints = True
     solver = "gurobi"
     input_excel_file = "../data/37-intersection map.xlsx"
     output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
