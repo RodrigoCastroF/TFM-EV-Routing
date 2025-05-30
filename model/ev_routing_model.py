@@ -247,6 +247,24 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
         m.sIntersections, rule=c24_soc_arrival_upper_bound
     )
 
+    # Impose the same limits on SoC departure
+    # This is only necessary in the non-linear model, since the linearized one already has cA6_soc_minus_xi_upper_bound
+    # See [[Update - 2025-05-30]]
+    if not linearize_constraints:
+        def c24_soc_departure_lower_bound(m, intersection):
+            return m.vSoCDeparture[intersection] >= m.v01VisitIntersection[intersection] * m.pMinSoC
+
+        m.c24_soc_departure_lower_bound = pyo.Constraint(
+            m.sIntersections, rule=c24_soc_departure_lower_bound
+        )
+
+        def c24_soc_departure_upper_bound(m, intersection):
+            return m.vSoCDeparture[intersection] <= m.v01VisitIntersection[intersection] * m.pMaxSoC
+        
+        m.c24_soc_departure_upper_bound = pyo.Constraint(
+            m.sIntersections, rule=c24_soc_departure_upper_bound
+        )
+
     def c25_soc_departure_charging_station(m, charging_station):
         return (
             m.vSoCDeparture[charging_station] == 
