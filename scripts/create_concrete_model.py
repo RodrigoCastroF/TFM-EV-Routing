@@ -62,7 +62,7 @@ def solve_for_one_ev(input_data, ev, output_excel_file=None, output_image_file=N
     opt = SolverFactory(solver)
     
     # Set time limit based on solver
-    time_limit_option = {"cbc": "seconds", "gurobi": "timeLimit", "glpk": "tmlim"}
+    time_limit_option = {"cbc": "seconds", "gurobi": "timeLimit", "glpk": "tmlim", "cplex": "timelimit"}
     if solver in time_limit_option:
         opt.options[time_limit_option[solver]] = time_limit
         if verbose >= 2:
@@ -352,8 +352,9 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
 
 if __name__ == "__main__":
     linearize_constraints = True
+    solver = "cplex"
     input_excel_file = "../data/37-intersection map.xlsx"
-    output_prefix = "../data/37-intersection map LIN" if linearize_constraints else "../data/37-intersection map"
+    output_prefix = f"../data/37-intersection map {'LIN' if linearize_constraints else ''} {'CPLEX' if solver == 'cplex' else ''}"
     
     # Solve for all EVs
     results = main(
@@ -363,7 +364,8 @@ if __name__ == "__main__":
         verbose=2,
         linearize_constraints=linearize_constraints,
         ev=1,
-        model_prefix=output_prefix,
+        solver=solver
+        # model_prefix=output_prefix,
         # tuned_params_file="../data/tuned_params_1.prm"
     )
     print("Final Results:", results)
