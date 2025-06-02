@@ -2,6 +2,34 @@ from model import load_excel_map_data, filter_map_data_for_ev, get_ev_routing_ab
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 import pandas as pd
+import sys
+import os
+from datetime import datetime
+
+
+class TeeOutput:
+    """Class to write output to both console and file simultaneously."""
+    
+    def __init__(self, file_path):
+        self.terminal = sys.stdout
+        self.log_file = None
+        if file_path is not None:
+            self.log_file = open(file_path, 'w', encoding='utf-8')
+    
+    def write(self, message):
+        self.terminal.write(message)
+        if self.log_file:
+            self.log_file.write(message)
+            self.log_file.flush()  # Ensure immediate writing to file
+    
+    def flush(self):
+        self.terminal.flush()
+        if self.log_file:
+            self.log_file.flush()
+    
+    def close(self):
+        if self.log_file:
+            self.log_file.close()
 
 
 def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
@@ -78,7 +106,6 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
     
     # Load tuned parameters for Gurobi if provided
     if tuned_params_file and solver == "gurobi":
-        import os
         if os.path.exists(tuned_params_file):
             if verbose >= 1:
                 print(f"Loading tuned parameters from {tuned_params_file}...")
@@ -386,19 +413,50 @@ if __name__ == "__main__":
     output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
     scenarios_csv_file = "../data/scenarios.csv"
 
-    # Solve for all EVs
-    results = main(
-        scenario=2,  # Remove to use baseline scenario (equivalent to scenario 0)
-        ev=1,  # Remove to solve for all EVs
-        output_prefix=output_prefix,  # Remove to avoid saving files
-        linearize_constraints=linearize_constraints,
-        solver=solver,
-        time_limit=15,
-        verbose=2,
-        input_excel_file=input_excel_file,
-        scenarios_csv_file=scenarios_csv_file,
-        # model_prefix=output_prefix,
-        # tuned_params_file="../data/tuned_params_1.prm"
-    )
-    print("Final Results:", results)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file_path = f"../data/routing_solver_output_{timestamp}.txt"
+    # log_file_path = None
+    
+    # Set up output redirection to both console and file
+    if log_file_path:
+        os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+    tee_output = TeeOutput(log_file_path)
+    original_stdout = sys.stdout
+    sys.stdout = tee_output
+    
+    try:
+        print(f"EV Routing Solver Output - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("=" * 60)
+
+        # Solve for all EVs
+        results = main(
+            scenario=2,  # Remove to use baseline scenario (equivalent to scenario 0)
+            ev=1,  # Remove to solve for all EVs
+            output_prefix=output_prefix,  # Remove to avoid saving files
+            linearize_constraints=linearize_constraints,
+            solver=solver,
+            time_limit=15,
+            verbose=2,
+            input_excel_file=input_excel_file,
+            scenarios_csv_file=scenarios_csv_file,
+            # model_prefix=output_prefix,
+            # tuned_params_file="../data/tuned_params_1.prm"
+        )
+        print("Final Results:", results)
+        
+        print("\n" + "=" * 60)
+        if log_file_path:
+            print(f"Output saved to: {log_file_path}")
+        
+    except Exception as e:
+        print(f"Error during execution: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    finally:
+        # Restore original stdout and close the log file
+        sys.stdout = original_stdout
+        tee_output.close()
+        if log_file_path:
+            print(f"All output has been saved to: {log_file_path}")
 

@@ -1,0 +1,227 @@
+EV Routing Solver Output - 2025-06-02 17:00:52
+============================================================
+Loading charging prices for scenario 2 from ../data/scenarios.csv...
+Charging prices for scenario 2: {11: 0.294, 14: 0.235, 15: 0.72, 26: 0.561, 37: 0.625}
+Loading data from ../data/37-intersection map.xlsx...
+Updated charging price for station 11 to 0.294
+Updated charging price for station 14 to 0.235
+Updated charging price for station 15 to 0.72
+Updated charging price for station 26 to 0.561
+Updated charging price for station 37 to 0.625
+Raw map data loaded successfully
+List of EVs: [1, 2, 3]
+Charging prices: [0.294, 0.235, 0.72, 0.561, 0.625]
+Solving for specific EV: 1
+Filtering data for EV 1...
+Input data filtered successfully
+Creating abstract model for EV 1 with linearized constraints...
+Creating concrete model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Time limit set to 15 seconds
+Solving the model for EV 1...
+Set parameter Username
+Set parameter LicenseID to value 2633644
+Academic license - for non-commercial use only - expires 2026-03-07
+Read LP format model from file C:\Users\rodri\AppData\Local\Temp\tmpje0m41at.pyomo.lp
+Reading time = 0.02 seconds
+x1: 1660 rows, 703 columns, 4148 nonzeros
+Set parameter TimeLimit to value 15
+Gurobi Optimizer version 12.0.1 build v12.0.1rc0 (win64 - Windows 11.0 (26100.2))
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12650H, instruction set [SSE2|AVX|AVX2]
+Thread count: 10 physical cores, 16 logical processors, using up to 16 threads
+
+Non-default parameters:
+TimeLimit  15
+
+Optimize a model with 1660 rows, 703 columns and 4148 nonzeros
+Model fingerprint: 0x62673851
+Variable types: 494 continuous, 209 integer (209 binary)
+Coefficient statistics:
+  Matrix range     [4e-02, 2e+01]
+  Objective range  [1e+00, 1e+02]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e-01, 2e+01]
+Presolve removed 527 rows and 129 columns
+Presolve time: 0.02s
+Presolved: 1133 rows, 574 columns, 4847 nonzeros
+Variable types: 382 continuous, 192 integer (192 binary)
+
+Root relaxation: objective -2.775558e-17, 279 iterations, 0.00 seconds (0.01 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    0.00000    0   42          -    0.00000      -     -    0s
+H    0     0                     559.0684529    0.00000   100%     -    0s
+     0     0    0.00000    0   48  559.06845    0.00000   100%     -    0s
+     0     0    0.00000    0   53  559.06845    0.00000   100%     -    0s
+     0     0    0.00000    0   45  559.06845    0.00000   100%     -    0s
+     0     0    0.00000    0   45  559.06845    0.00000   100%     -    0s
+H    0     0                     251.8921455    0.00000   100%     -    0s
+     0     0    0.00000    0   44  251.89215    0.00000   100%     -    0s
+H    0     0                     241.9312001    0.00000   100%     -    0s
+     0     0    0.00000    0   44  241.93120    0.00000   100%     -    0s
+H    0     0                     234.3432411    0.00000   100%     -    0s
+     0     0    0.00000    0   49  234.34324    0.00000   100%     -    0s
+     0     0    0.00000    0   49  234.34324    0.00000   100%     -    0s
+     0     2    0.00000    0   49  234.34324    0.00000   100%     -    0s
+H   26    71                      75.3239559    0.00000   100%  53.6    0s
+H   61    71                      74.2235609    0.00000   100%  50.0    0s
+H  399   395                      53.6174203    0.00000   100%  41.1    0s
+H  796   533                      53.4967262    0.00000   100%  33.4    0s
+H 1846   666                      12.6917233    0.00000   100%  25.8    0s
+H 3085   728                      12.6576104    0.00000   100%  21.9    1s
+H 3086   728                      12.6432636    0.00000   100%  21.9    1s
+H 3087   720                      11.2468949    0.00000   100%  21.9    1s
+H 3094   720                      10.7929549    0.00000   100%  21.9    1s
+H 3101   753                      10.0889914    0.00000   100%  21.9    1s
+H 3171   753                      10.0212820    0.00000   100%  21.9    1s
+H 3317   753                       9.9262044    0.00000   100%  21.7    1s
+H 4704   907                       9.7475452    0.00000   100%  20.5    1s
+H 5482  1025                       9.6411979    0.00000   100%  20.6    1s
+H 5595  1022                       9.0977119    0.00000   100%  20.5    1s
+H 5801   976                       8.9758723    0.00000   100%  20.5    2s
+H 5809   932                       8.8695250    0.00000   100%  20.5    2s
+H 6223  1160                       8.6352681    0.00000   100%  24.4    3s
+H 6822  1022                       8.5179964    0.00000   100%  26.6    3s
+H 6845   972                       8.3987212    0.00000   100%  26.7    3s
+  8745  1163    1.39902   37   27    8.39872    0.00000   100%  30.7    5s
+H 8803  1162                       8.2704769    0.00000   100%  31.0    5s
+H 9542  1245                       8.1598251    0.00000   100%  32.2    5s
+H 9619  1221                       6.9692218    0.00000   100%  32.1    5s
+H13246  2004                       6.8585700    0.00000   100%  36.6    7s
+H13877  2029                       6.5283403    0.00000   100%  37.1    7s
+ 20182  2970     cutoff   30         6.52834    0.00000   100%  38.9   10s
+ 30265  4697    0.00000   38   40    6.52834    0.00000   100%  41.2   15s
+
+Cutting planes:
+  Gomory: 2
+  Cover: 5
+  Implied bound: 24
+  Projected implied bound: 5
+  MIR: 8
+  Flow cover: 40
+  GUB cover: 1
+  Inf proof: 1
+  RLT: 2
+  Relax-and-lift: 6
+
+Explored 31473 nodes (1306018 simplex iterations) in 15.03 seconds (12.15 work units)
+Thread count was 16 (of 16 available processors)
+
+Solution count 10: 6.52834 6.85857 6.96922 ... 8.97587
+
+Time limit reached
+Best objective 6.528340276989e+00, best bound 5.329070518201e-15, gap 100.0000%
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+SOLVER RESULTS for EV 1:
+
+Problem: 
+- Name: x1
+  Lower bound: 5.329070518200751e-15
+  Upper bound: 6.528340276989175
+  Number of objectives: 1
+  Number of constraints: 1660
+  Number of variables: 703
+  Number of binary variables: 209
+  Number of integer variables: 209
+  Number of continuous variables: 494
+  Number of nonzeros: 4148
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 15.02999997138977
+  Error rc: 0
+  Time: 15.20384407043457
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0
+
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 6.528340276989175
+Final gap: 100.0%
+Execution time: 15.20 seconds
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Saving solution data for EV 1 to ../data/37-intersection map LIN S2 EV1 Solution.xlsx...
+Solution data for EV 1 saved successfully!
+
+Creating solution map visualization for EV 1: ../data/37-intersection map LIN S2 EV1 Solution Map.png...
+Using predefined node coordinates from input data
+Solution map for EV 1 created successfully!
+Final Results: {'ev': 1, 'solution_data': {'intersections_df':     intersection  v01VisitIntersection  ...  vTimeCharging  vTimeDelay
+0              1                   1.0  ...            NaN         NaN
+1              2                   1.0  ...            NaN         0.0
+2              3                   0.0  ...            NaN         NaN
+3              4                   0.0  ...            NaN         NaN
+4              5                   0.0  ...            NaN         NaN
+5              6                   0.0  ...            NaN         NaN
+6              7                   1.0  ...            NaN         NaN
+7              8                   1.0  ...            NaN         NaN
+8              9                   1.0  ...            NaN         0.0
+9             10                   1.0  ...            NaN         NaN
+10            11                   0.0  ...       0.000000         NaN
+11            12                   0.0  ...            NaN         NaN
+12            13                   0.0  ...            NaN         NaN
+13            14                   1.0  ...       2.953104         NaN
+14            15                   1.0  ...       0.000000         NaN
+15            16                   1.0  ...            NaN         NaN
+16            17                   0.0  ...            NaN         NaN
+17            18                   0.0  ...            NaN         NaN
+18            19                   1.0  ...            NaN         0.0
+19            20                   0.0  ...            NaN         NaN
+20            21                   1.0  ...            NaN         NaN
+21            22                   0.0  ...            NaN         NaN
+22            23                   1.0  ...            NaN         NaN
+23            24                   1.0  ...            NaN         NaN
+24            25                   1.0  ...            NaN         0.0
+25            26                   0.0  ...       0.000000         NaN
+26            27                   0.0  ...            NaN         NaN
+27            28                   0.0  ...            NaN         NaN
+28            29                   0.0  ...            NaN         NaN
+29            30                   1.0  ...            NaN         0.0
+30            31                   1.0  ...            NaN         NaN
+31            32                   0.0  ...            NaN         NaN
+32            33                   0.0  ...            NaN         NaN
+33            34                   0.0  ...            NaN         NaN
+34            35                   0.0  ...            NaN         NaN
+35            36                   1.0  ...            NaN         NaN
+36            37                   1.0  ...       0.986707         NaN
+37            38                   1.0  ...            NaN         NaN
+
+[38 rows x 9 columns], 'paths_df':      pOriginIntersection  pDestinationIntersection  ...    vXiSoC  vZetaTime
+0                      1                         8  ...  0.000000   0.000000
+1                      1                        10  ...  0.000000   0.000000
+2                      2                         1  ...  0.000000   0.000000
+3                      2                         5  ...  0.000000   0.000000
+4                      2                         7  ...  9.735539   9.779658
+..                   ...                       ...  ...       ...        ...
+161                   20                        38  ...  0.000000   0.000000
+162                   22                        38  ...  0.000000   0.000000
+163                   26                        38  ...  0.000000   0.000000
+164                   38                        23  ...  0.000000   0.000000
+165                   38                        25  ...  0.000000   0.000000
+
+[166 rows x 5 columns]}, 'solver_status': <SolverStatus.aborted: 'aborted'>, 'termination_condition': <TerminationCondition.maxTimeLimit: 'maxTimeLimit'>, 'objective_value': 6.528340276989175, 'final_gap': 0.9999999999999992, 'execution_time': 15.20384407043457, 'lower_bound': 5.329070518200751e-15, 'upper_bound': 6.528340276989175}
+
+============================================================
+Output saved to: ../data/routing_solver_output_20250602_170052.txt
