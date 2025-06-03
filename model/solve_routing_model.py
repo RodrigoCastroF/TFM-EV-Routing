@@ -1,6 +1,7 @@
 from .get_routing_map_data import filter_map_data_for_ev
 from .get_routing_abstract_model import get_ev_routing_abstract_model
 from .save_ev_solution_data import extract_solution_data, save_solution_data, create_solution_map
+from .save_scenario_solution_data import create_scenario_analysis_plots
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 import os
@@ -274,5 +275,20 @@ def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="g
                 print(f"EV {ev}: Objective = {results['objective_value']:.2f}")
             else:
                 print(f"EV {ev}: {results.get('solver_status', 'unknown status')}")
+
+    # Create scenario analysis plots if output prefix is provided
+    if output_prefix:
+        if verbose >= 1:
+            print(f"\n{'=' * 50}")
+            print("Creating scenario analysis plots...")
+            print(f"{'=' * 50}")
+        try:
+            output_plot_file = f"{output_prefix} Scenario Analysis.png"
+            create_scenario_analysis_plots(all_results, map_data, output_plot_file, verbose=verbose)
+            if verbose >= 1:
+                print("Scenario analysis plots created successfully!")
+        except Exception as e:
+            if verbose >= 1:
+                print(f"Error creating scenario analysis plots: {e}")
 
     return all_results

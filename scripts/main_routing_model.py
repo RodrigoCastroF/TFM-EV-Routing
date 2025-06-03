@@ -39,7 +39,10 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
         model_prefix: Prefix for saving model in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
-        ev: Specific EV to solve for (if None, solve for all EVs)
+        ev: Specific EV(s) to solve for. Can be:
+            - None: solve for all EVs using solve_for_all_evs
+            - int: solve for a single EV using solve_for_one_ev
+            - list of int: solve for each EV in the list using solve_for_one_ev
         scenario: Scenario number to use for charging prices (requires scenarios_csv_file)
         scenarios_csv_file: Path to CSV file containing scenarios with charging prices
         time_limit: Time limit in seconds (default: 300)
@@ -48,7 +51,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
     
     Returns:
-        Dictionary with results
+        Dictionary with results (single result for one EV, list of results for multiple EVs)
     """
     
     # Handle scenario-based charging prices
@@ -86,37 +89,8 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         print("List of EVs:", map_data["evs"])
         print("Charging prices:", map_data["charging_stations_df"]["pChargingPrice"].tolist())
     
-    if ev is not None:
-        # Solve for specific EV
-        if verbose >= 1:
-            print(f"Solving for specific EV: {ev}")
-        
-        # Check if EV exists in data
-        if ev not in map_data["evs"]:
-            print(f"Error: EV {ev} not found in data. Available EVs: {map_data['evs']}")
-            return None
-        
-        # Generate output file paths if prefix provided
-        output_excel_file = None
-        output_image_file = None
-        if output_prefix:
-            output_excel_file = f"{output_prefix} EV{ev} Solution.xlsx"
-            output_image_file = f"{output_prefix} EV{ev} Solution Map.png"
-        
-        return solve_for_one_ev(
-            map_data=map_data,
-            ev=ev,
-            output_excel_file=output_excel_file,
-            output_image_file=output_image_file,
-            model_prefix=model_prefix,
-            solver=solver,
-            time_limit=time_limit,
-            verbose=verbose,
-            linearize_constraints=linearize_constraints,
-            tuned_params_file=tuned_params_file
-        )
-    else:
-        # Solve for all EVs
+    if ev is None:
+        # Solve for all EVs using solve_for_all_evs
         if verbose >= 1:
             print("Solving for all EVs")
         
@@ -130,6 +104,57 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
             linearize_constraints=linearize_constraints,
             tuned_params_file=tuned_params_file
         )
+    else:
+        # Convert single EV to list for uniform handling
+        ev_list = [ev] if isinstance(ev, int) else ev
+        
+        # Validate all EVs exist in data
+        invalid_evs = [e for e in ev_list if e not in map_data["evs"]]
+        if invalid_evs:
+            raise ValueError(f"EVs {invalid_evs} not found in data. Available EVs: {map_data['evs']}")
+        
+        if verbose >= 1:
+            print(f"Solving for EV(s): {ev_list}")
+        
+        # Solve for each EV in the list
+        results = []
+        for current_ev in ev_list:
+
+            if verbose >= 1:
+                print("\n\n", "=" * 60, sep="")
+                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                print(f"EV Routing Solver Output - Scenario {scenario}, EV {current_ev} - {now}")
+                print("=" * 60, "\n", sep="")
+
+            # Generate output file paths if prefix provided
+            output_excel_file = None
+            output_image_file = None
+            if output_prefix:
+                output_excel_file = f"{output_prefix} EV{current_ev} Solution.xlsx"
+                output_image_file = f"{output_prefix} EV{current_ev} Solution Map.png"
+            
+            result = solve_for_one_ev(
+                map_data=map_data,
+                ev=current_ev,
+                output_excel_file=output_excel_file,
+                output_image_file=output_image_file,
+                model_prefix=model_prefix,
+                solver=solver,
+                time_limit=time_limit,
+                verbose=verbose,
+                linearize_constraints=linearize_constraints,
+                tuned_params_file=tuned_params_file
+            )
+            results.append(result)
+
+            if verbose >= 1:
+                print("Final Results:", result)
+                if log_file_path:
+                    print(f"Output saved to: {log_file_path}")
+                print("\n" + "=" * 60)
+        
+        # Return single result for single EV, list of results for multiple EVs
+        return results[0] if isinstance(ev, int) else results
 
 
 if __name__ == "__main__":
@@ -137,11 +162,13 @@ if __name__ == "__main__":
     linearize_constraints = True
     solver = "gurobi"
     scenarios = [0]
-    evs = [1]
+    # evs = [1]
+    evs = None  # Solve for all EVs
     time_limit = 15
 
     input_excel_file = "../data/37-intersection map.xlsx"
     output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
+    # output_prefix = None  # Avoid saving files
     scenarios_csv_file = "../data/scenarios.csv"
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -157,29 +184,19 @@ if __name__ == "__main__":
     
     try:
         for scenario in scenarios:
-            for ev in evs:
-                print("\n\n", "=" * 60, sep="")
-                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print(f"EV Routing Solver Output - Scenario {scenario}, EV {ev} - {now}")
-                print("=" * 60, "\n", sep="")
-                results = main(
-                    scenario=scenario,  # Remove to use baseline scenario (equivalent to scenario 0)
-                    ev=ev,  # Remove to solve for all EVs
-                    output_prefix=output_prefix,  # Remove to avoid saving files
-                    linearize_constraints=linearize_constraints,
-                    solver=solver,
-                    time_limit=time_limit,
-                    verbose=2,
-                    input_excel_file=input_excel_file,
-                    scenarios_csv_file=scenarios_csv_file,
-                    # model_prefix=output_prefix,
-                    # tuned_params_file="../data/tuned_params_1.prm"
-                )
-                print("Final Results:", results)
-
-        if log_file_path:
-            print(f"Output saved to: {log_file_path}")
-        print("\n" + "=" * 60)
+            main(
+                scenario=scenario,
+                ev=evs,
+                output_prefix=output_prefix,
+                linearize_constraints=linearize_constraints,
+                solver=solver,
+                time_limit=time_limit,
+                verbose=2,
+                input_excel_file=input_excel_file,
+                scenarios_csv_file=scenarios_csv_file,
+                # model_prefix=output_prefix,
+                # tuned_params_file="../data/tuned_params_1.prm"
+            )
         
     except Exception as e:
         print(f"Error during execution: {e}")

@@ -52,6 +52,9 @@ def load_excel_map_data(file_path: str, charging_prices: dict = None, verbose: i
     # Clean column names for all dataframes
     for df in [paths_df, delivery_points_df, charging_stations_df]:
         df.columns = [clean_column_name(col) for col in df.columns]
+    
+    # Clean the index names in unindexed_df
+    unindexed_df.index = [clean_column_name(idx) for idx in unindexed_df.index]
 
     # Override charging prices if provided
     if charging_prices is not None:
@@ -139,7 +142,7 @@ def filter_map_data_for_ev(map_data: dict, ev: int) -> dict:
 
     # Process unindexed parameters (scalar values)
     for idx, row in unindexed_df.iterrows():
-        param_name = clean_column_name(idx)
+        param_name = idx  # idx is already cleaned in load_excel_map_data
         value = row["Value"].item()
         input_data[None][param_name] = {None: value}
     input_data[None]['pNumIntersections'] = {None: len(intersections)}
