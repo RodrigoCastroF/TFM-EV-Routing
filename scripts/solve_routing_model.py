@@ -408,6 +408,9 @@ if __name__ == "__main__":
 
     linearize_constraints = True
     solver = "gurobi"
+    scenarios = [0, 1, 2]
+    evs = [1, 2, 3]
+    time_limit = 3600
 
     input_excel_file = "../data/37-intersection map.xlsx"
     output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
@@ -425,28 +428,30 @@ if __name__ == "__main__":
     sys.stdout = tee_output
     
     try:
-        print(f"EV Routing Solver Output - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print("=" * 60)
+        for scenario in scenarios:
+            for ev in evs:
+                print("\n\n", "=" * 60, sep="")
+                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                print(f"EV Routing Solver Output - Scenario {scenario}, EV {ev} - {now}")
+                print("=" * 60, "\n", sep="")
+                results = main(
+                    scenario=scenario,  # Remove to use baseline scenario (equivalent to scenario 0)
+                    ev=ev,  # Remove to solve for all EVs
+                    # output_prefix=output_prefix,  # Remove to avoid saving files
+                    linearize_constraints=linearize_constraints,
+                    solver=solver,
+                    time_limit=time_limit,
+                    verbose=2,
+                    input_excel_file=input_excel_file,
+                    scenarios_csv_file=scenarios_csv_file,
+                    # model_prefix=output_prefix,
+                    # tuned_params_file="../data/tuned_params_1.prm"
+                )
+                print("Final Results:", results)
 
-        # Solve for all EVs
-        results = main(
-            scenario=2,  # Remove to use baseline scenario (equivalent to scenario 0)
-            ev=1,  # Remove to solve for all EVs
-            output_prefix=output_prefix,  # Remove to avoid saving files
-            linearize_constraints=linearize_constraints,
-            solver=solver,
-            time_limit=15,
-            verbose=2,
-            input_excel_file=input_excel_file,
-            scenarios_csv_file=scenarios_csv_file,
-            # model_prefix=output_prefix,
-            # tuned_params_file="../data/tuned_params_1.prm"
-        )
-        print("Final Results:", results)
-        
-        print("\n" + "=" * 60)
         if log_file_path:
             print(f"Output saved to: {log_file_path}")
+        print("\n" + "=" * 60)
         
     except Exception as e:
         print(f"Error during execution: {e}")
