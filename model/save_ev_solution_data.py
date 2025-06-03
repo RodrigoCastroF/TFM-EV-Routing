@@ -1,8 +1,12 @@
+"""
+These functions extract and represent the solution for a single EV
+"""
+
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import json
 from pathlib import Path
 
 

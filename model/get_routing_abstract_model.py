@@ -1,3 +1,7 @@
+"""
+This script defines the abstract EV routing model with Pyomo
+"""
+
 import pyomo.environ as pyo
 
 

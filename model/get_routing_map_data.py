@@ -1,3 +1,9 @@
+"""
+These functions handle the input data of the routing model,
+loading the map data of a scenario and filtering it for a single EV
+"""
+
+
 import pandas as pd
 
 

@@ -1,41 +1,16 @@
-from model import load_excel_map_data, filter_map_data_for_ev, get_ev_routing_abstract_model, extract_solution_data, save_solution_data, create_solution_map
+from .get_routing_map_data import filter_map_data_for_ev
+from .get_routing_abstract_model import get_ev_routing_abstract_model
+from .save_ev_solution_data import extract_solution_data, save_solution_data, create_solution_map
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
-import pandas as pd
-import sys
 import os
-from datetime import datetime
 
 
-class TeeOutput:
-    """Class to write output to both console and file simultaneously."""
-    
-    def __init__(self, file_path):
-        self.terminal = sys.stdout
-        self.log_file = None
-        if file_path is not None:
-            self.log_file = open(file_path, 'w', encoding='utf-8')
-    
-    def write(self, message):
-        self.terminal.write(message)
-        if self.log_file:
-            self.log_file.write(message)
-            self.log_file.flush()  # Ensure immediate writing to file
-    
-    def flush(self):
-        self.terminal.flush()
-        if self.log_file:
-            self.log_file.flush()
-    
-    def close(self):
-        if self.log_file:
-            self.log_file.close()
-
-
-def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
+def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=None, model_prefix=None, solver="gurobi",
+                     time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
     """
     Solve the EV routing problem for a single EV.
-    
+
     Args:
         map_data: Raw map data object returned by load_excel_map_data
         ev: EV number
@@ -47,29 +22,29 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
         linearize_constraints: Whether to use linearized constraints (default: False)
         tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
-    
+
     Returns:
         Dictionary with solution results
     """
-    
+
     # Filter data for the specific EV
     if verbose >= 1:
         print(f"Filtering data for EV {ev}...")
     input_data = filter_map_data_for_ev(map_data, ev)
     if verbose >= 2:
         print("Input data filtered successfully")
-    
+
     # Get the abstract model
     if verbose >= 1:
         constraint_type = "linearized" if linearize_constraints else "quadratic"
         print(f"Creating abstract model for EV {ev} with {constraint_type} constraints...")
     abstract_model = get_ev_routing_abstract_model(linearize_constraints=linearize_constraints)
-    
+
     # Create a concrete instance using the data
     if verbose >= 1:
         print(f"Creating concrete model instance for EV {ev}...")
     concrete_model = abstract_model.create_instance(input_data)
-    
+
     # Save model in MPS format if requested
     if model_prefix:
         model_file = f"{model_prefix} EV{ev} Model.mps"
@@ -82,7 +57,7 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
         except Exception as e:
             if verbose >= 1:
                 print(f"Error saving model for EV {ev}: {e}")
-    
+
     # Basic model information
     if verbose >= 1:
         print(f"\nModel Information for EV {ev}:")
@@ -90,20 +65,20 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
         print(f"Number of paths: {len(concrete_model.sPaths)}")
         print(f"Number of delivery points: {len(concrete_model.sDeliveryPoints)}")
         print(f"Number of charging stations: {len(concrete_model.sChargingStations)}")
-    
+
     # Create solver instance
     if verbose >= 1:
         tuned_msg = f" with tuned parameters from {tuned_params_file}" if tuned_params_file else ""
         print(f"\nSetting up {solver} solver for EV {ev}{tuned_msg}...")
     opt = SolverFactory(solver)
-    
+
     # Set time limit based on solver
     time_limit_option = {"cbc": "seconds", "gurobi": "timeLimit", "glpk": "tmlim", "cplex": "timelimit"}
     if solver in time_limit_option:
         opt.options[time_limit_option[solver]] = time_limit
         if verbose >= 2:
             print(f"Time limit set to {time_limit} seconds")
-    
+
     # Load tuned parameters for Gurobi if provided
     if tuned_params_file and solver == "gurobi":
         if os.path.exists(tuned_params_file):
@@ -119,7 +94,7 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
                             if len(parts) >= 2:
                                 param = parts[0]
                                 value = parts[1]
-                                
+
                                 # Convert value to appropriate type
                                 try:
                                     if '.' in value:
@@ -128,11 +103,11 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
                                         value = int(value)
                                 except ValueError:
                                     pass  # Keep as string
-                                
+
                                 opt.options[param] = value
                                 if verbose >= 2:
                                     print(f"  Set {param} = {value}")
-                
+
                 if verbose >= 1:
                     print("Tuned parameters loaded successfully!")
             except Exception as e:
@@ -141,12 +116,12 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
         else:
             if verbose >= 1:
                 print(f"Warning: Tuned parameters file not found: {tuned_params_file}")
-    
+
     # Solve the model
     if verbose >= 1:
         print(f"Solving the model for EV {ev}...")
     results = opt.solve(concrete_model, tee=(verbose >= 2))
-    
+
     if verbose >= 2:
         print(f"\nSOLVER RESULTS for EV {ev}:")
         print(results)
@@ -239,10 +214,11 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
     return ev_results
 
 
-def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
+def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1,
+                      linearize_constraints=False, tuned_params_file=None):
     """
     Solve the EV routing problem for all EVs in the dataset.
-    
+
     Args:
         map_data: Raw map data object returned by load_excel_map_data
         output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
@@ -252,27 +228,27 @@ def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="g
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
         linearize_constraints: Whether to use linearized constraints (default: False)
         tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
-    
+
     Returns:
         Dictionary with results for all EVs
     """
 
     all_results = {}
-    
+
     # Solve for each EV
     for ev in map_data["evs"]:
         if verbose >= 1:
-            print(f"\n{'='*50}")
+            print(f"\n{'=' * 50}")
             print(f"Processing EV {ev}")
-            print(f"{'='*50}")
-        
+            print(f"{'=' * 50}")
+
         # Generate output file paths if prefix provided
         output_excel_file = None
         output_image_file = None
         if output_prefix:
             output_excel_file = f"{output_prefix} EV{ev} Solution.xlsx"
             output_image_file = f"{output_prefix} EV{ev} Solution Map.png"
-        
+
         # Solve for this EV
         ev_results = solve_for_one_ev(
             map_data=map_data,
@@ -286,182 +262,17 @@ def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="g
             linearize_constraints=linearize_constraints,
             tuned_params_file=tuned_params_file
         )
-        
+
         all_results[ev] = ev_results
-    
+
     if verbose >= 1:
-        print(f"\n{'='*50}")
+        print(f"\n{'=' * 50}")
         print("SUMMARY OF ALL EVs")
-        print(f"{'='*50}")
+        print(f"{'=' * 50}")
         for ev, results in all_results.items():
             if 'objective_value' in results:
                 print(f"EV {ev}: Objective = {results['objective_value']:.2f}")
             else:
                 print(f"EV {ev}: {results.get('solver_status', 'unknown status')}")
-    
+
     return all_results
-
-
-def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
-    """
-    Main function to solve EV routing problem.
-    
-    Args:
-        input_excel_file: Path to input Excel file
-        output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
-        model_prefix: Prefix for saving model in MPS format (optional, e.g., "../models/optimization")
-        solver: Solver to use (default: "gurobi")
-        ev: Specific EV to solve for (if None, solve for all EVs)
-        scenario: Scenario number to use for charging prices (requires scenarios_csv_file)
-        scenarios_csv_file: Path to CSV file containing scenarios with charging prices
-        time_limit: Time limit in seconds (default: 300)
-        verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
-        linearize_constraints: Whether to use linearized constraints (default: False)
-        tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
-    
-    Returns:
-        Dictionary with results
-    """
-    
-    # Handle scenario-based charging prices
-    charging_prices = None
-    if scenario is not None:
-        if scenarios_csv_file is None:
-            raise ValueError("scenarios_csv_file must be provided when scenario is specified")
-        if verbose >= 1:
-            print(f"Loading charging prices for scenario {scenario} from {scenarios_csv_file}...")
-        
-        # Load scenario charging prices
-        df = pd.read_csv(scenarios_csv_file)
-        scenario_row = df[df['scenario'] == scenario]
-        if scenario_row.empty:
-            raise ValueError(f"Scenario {scenario} not found in {scenarios_csv_file}")
-        
-        # Extract charging prices (exclude the 'scenario' column)
-        charging_stations = [col for col in df.columns if col != 'scenario']
-        charging_prices = {}
-        for station in charging_stations:
-            charging_prices[int(station)] = float(scenario_row[station].iloc[0])
-        if verbose >= 1:
-            print(f"Charging prices for scenario {scenario}: {charging_prices}")
-        
-        # Update output prefix to include scenario
-        if output_prefix:
-            output_prefix = f"{output_prefix} S{scenario}"
-    
-    # Load data from Excel file once
-    if verbose >= 1:
-        print(f"Loading data from {input_excel_file}...")
-    map_data = load_excel_map_data(input_excel_file, charging_prices=charging_prices, verbose=verbose)
-    if verbose >= 1:
-        print("Raw map data loaded successfully")
-        print("List of EVs:", map_data["evs"])
-        print("Charging prices:", map_data["charging_stations_df"]["pChargingPrice"].tolist())
-    
-    if ev is not None:
-        # Solve for specific EV
-        if verbose >= 1:
-            print(f"Solving for specific EV: {ev}")
-        
-        # Check if EV exists in data
-        if ev not in map_data["evs"]:
-            print(f"Error: EV {ev} not found in data. Available EVs: {map_data['evs']}")
-            return None
-        
-        # Generate output file paths if prefix provided
-        output_excel_file = None
-        output_image_file = None
-        if output_prefix:
-            output_excel_file = f"{output_prefix} EV{ev} Solution.xlsx"
-            output_image_file = f"{output_prefix} EV{ev} Solution Map.png"
-        
-        return solve_for_one_ev(
-            map_data=map_data,
-            ev=ev,
-            output_excel_file=output_excel_file,
-            output_image_file=output_image_file,
-            model_prefix=model_prefix,
-            solver=solver,
-            time_limit=time_limit,
-            verbose=verbose,
-            linearize_constraints=linearize_constraints,
-            tuned_params_file=tuned_params_file
-        )
-    else:
-        # Solve for all EVs
-        if verbose >= 1:
-            print("Solving for all EVs")
-        
-        return solve_for_all_evs(
-            map_data=map_data,
-            output_prefix=output_prefix,
-            model_prefix=model_prefix,
-            solver=solver,
-            time_limit=time_limit,
-            verbose=verbose,
-            linearize_constraints=linearize_constraints,
-            tuned_params_file=tuned_params_file
-        )
-
-
-if __name__ == "__main__":
-
-    linearize_constraints = True
-    solver = "gurobi"
-    scenarios = [0, 1, 2]
-    evs = [1, 2, 3]
-    time_limit = 3600
-
-    input_excel_file = "../data/37-intersection map.xlsx"
-    output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
-    scenarios_csv_file = "../data/scenarios.csv"
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file_path = f"../data/routing_solver_output_{timestamp}.txt"
-    # log_file_path = None
-    
-    # Set up output redirection to both console and file
-    if log_file_path:
-        os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
-    tee_output = TeeOutput(log_file_path)
-    original_stdout = sys.stdout
-    sys.stdout = tee_output
-    
-    try:
-        for scenario in scenarios:
-            for ev in evs:
-                print("\n\n", "=" * 60, sep="")
-                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print(f"EV Routing Solver Output - Scenario {scenario}, EV {ev} - {now}")
-                print("=" * 60, "\n", sep="")
-                results = main(
-                    scenario=scenario,  # Remove to use baseline scenario (equivalent to scenario 0)
-                    ev=ev,  # Remove to solve for all EVs
-                    # output_prefix=output_prefix,  # Remove to avoid saving files
-                    linearize_constraints=linearize_constraints,
-                    solver=solver,
-                    time_limit=time_limit,
-                    verbose=2,
-                    input_excel_file=input_excel_file,
-                    scenarios_csv_file=scenarios_csv_file,
-                    # model_prefix=output_prefix,
-                    # tuned_params_file="../data/tuned_params_1.prm"
-                )
-                print("Final Results:", results)
-
-        if log_file_path:
-            print(f"Output saved to: {log_file_path}")
-        print("\n" + "=" * 60)
-        
-    except Exception as e:
-        print(f"Error during execution: {e}")
-        import traceback
-        traceback.print_exc()
-    
-    finally:
-        # Restore original stdout and close the log file
-        sys.stdout = original_stdout
-        tee_output.close()
-        if log_file_path:
-            print(f"All output has been saved to: {log_file_path}")
-
