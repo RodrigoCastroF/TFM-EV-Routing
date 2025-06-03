@@ -108,7 +108,7 @@ def extract_aggregated_demand(all_ev_results, map_data, eps=1e-5, verbose=0):
     return result_df
 
 
-def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, eps: float = 1e-5, verbose: int = 0):
+def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, aggregated_demand: pd.DataFrame = None, eps: float = 1e-5, verbose: int = 0):
     """
     Create a figure with individual plots for each EV trajectory and one plot for aggregated demand.
     
@@ -118,6 +118,8 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, eps
         map_data: Original map data dictionary returned by load_excel_map_data, 
                  containing charging station parameters and delivery points
         file_path: str - Path where the figure should be saved (should end with .png)
+        aggregated_demand: pd.DataFrame - Aggregated demand data from extract_aggregated_demand function
+                          If None, it will be calculated
         eps: float - Tolerance for considering binary variables as 1 (default: 1e-5)
         verbose: int - Level of verbosity (0: no print, 1+: print details)
     """
@@ -409,8 +411,10 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, eps
     # Plot aggregated demand as the last subplot
     ax = axes[len(valid_evs)]  # Get the last subplot
     
-    # Pass the verbose parameter to extract_aggregated_demand
-    demand_df = extract_aggregated_demand(all_ev_results, map_data, eps, verbose)
+    # Calculate aggregated demand if not provided
+    if aggregated_demand is None:
+        # Pass the verbose parameter to extract_aggregated_demand
+        aggregated_demand = extract_aggregated_demand(all_ev_results, map_data, eps, verbose)
     
     # Prepare data for stacked bar chart
     # Apply the starting time offset to the demand dataframe
@@ -421,7 +425,7 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, eps
     for t in range(24):
         actual_hour = t % 24
         # Filter rows for current time period
-        period_data = demand_df[demand_df['time_period'] == t].copy()
+        period_data = aggregated_demand[aggregated_demand['time_period'] == t].copy()
         period_data['actual_hour'] = actual_hour
         demand_df_adjusted = pd.concat([demand_df_adjusted, period_data], ignore_index=True)
     

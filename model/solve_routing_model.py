@@ -1,7 +1,7 @@
 from .get_routing_map_data import filter_map_data_for_ev
 from .get_routing_abstract_model import get_ev_routing_abstract_model
 from .save_ev_solution_data import extract_solution_data, save_solution_data, create_solution_map
-from .save_scenario_solution_data import create_scenario_analysis_plots
+from .save_scenario_solution_data import extract_aggregated_demand, create_scenario_analysis_plots
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 import os
@@ -276,6 +276,22 @@ def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="g
             else:
                 print(f"EV {ev}: {results.get('solver_status', 'unknown status')}")
 
+    if verbose >= 1:
+        print(f"\n{'=' * 50}")
+        print("Extracting aggregated demand...")
+        print(f"{'=' * 50}")
+    
+    # Extract aggregated demand for all EVs
+    try:
+        aggregated_demand = extract_aggregated_demand(all_results, map_data, verbose=verbose)
+        if verbose >= 1:
+            print("Aggregated demand extracted successfully!")
+    except Exception as e:
+        if verbose >= 1:
+            print(f"Error extracting aggregated demand: {e}")
+        aggregated_demand = None
+    all_results["aggregated_demand"] = aggregated_demand
+
     # Create scenario analysis plots if output prefix is provided
     if output_prefix:
         if verbose >= 1:
@@ -284,7 +300,7 @@ def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="g
             print(f"{'=' * 50}")
         try:
             output_plot_file = f"{output_prefix} Scenario Analysis.png"
-            create_scenario_analysis_plots(all_results, map_data, output_plot_file, verbose=verbose)
+            create_scenario_analysis_plots(all_results, map_data, output_plot_file, aggregated_demand=aggregated_demand, verbose=verbose)
             if verbose >= 1:
                 print("Scenario analysis plots created successfully!")
         except Exception as e:

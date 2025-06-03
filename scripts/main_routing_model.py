@@ -30,7 +30,7 @@ class TeeOutput:
             self.log_file.close()
 
 
-def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
+def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None, training_data=None):
     """
     Main function to solve EV routing problem.
     
@@ -49,6 +49,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
         linearize_constraints: Whether to use linearized constraints (default: False)
         tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
+        training_data: Path to save aggregated demand data as CSV (optional)
     
     Returns:
         Dictionary with results (single result for one EV, list of results for multiple EVs)
@@ -94,7 +95,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         if verbose >= 1:
             print("Solving for all EVs")
         
-        return solve_for_all_evs(
+        results = solve_for_all_evs(
             map_data=map_data,
             output_prefix=output_prefix,
             model_prefix=model_prefix,
@@ -104,6 +105,43 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
             linearize_constraints=linearize_constraints,
             tuned_params_file=tuned_params_file
         )
+        
+        # Save aggregated demand data to CSV if training_data is provided
+        if training_data and "aggregated_demand" in results:
+            aggregated_demand = results["aggregated_demand"]
+            if aggregated_demand is not None:
+                # Add scenario column
+                scenario_value = 0 if scenario is None else scenario
+                aggregated_demand['scenario'] = scenario_value
+                
+                # Convert charging_station to integer
+                aggregated_demand['charging_station'] = aggregated_demand['charging_station'].astype(int)
+                
+                # Reorder columns to match required format
+                columns_order = ['scenario', 'charging_station', 'time_period', 'aggregated_demand']
+                aggregated_demand = aggregated_demand[columns_order]
+                
+                # Save to CSV
+                if verbose >= 1:
+                    print(f"\nSaving aggregated demand data to {training_data}...")
+                try:
+                    # Create directory if it doesn't exist
+                    os.makedirs(os.path.dirname(training_data), exist_ok=True)
+                    
+                    # Check if file exists to determine if headers should be written
+                    file_exists = os.path.isfile(training_data)
+                    
+                    # Write to CSV (append if file exists)
+                    aggregated_demand.to_csv(training_data, mode='a' if file_exists else 'w', 
+                                           index=False, header=not file_exists)
+                    
+                    if verbose >= 1:
+                        print(f"Aggregated demand data saved successfully to {training_data}")
+                except Exception as e:
+                    if verbose >= 1:
+                        print(f"Error saving aggregated demand data: {e}")
+        
+        return results
     else:
         # Convert single EV to list for uniform handling
         ev_list = [ev] if isinstance(ev, int) else ev
@@ -159,6 +197,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
 
 if __name__ == "__main__":
 
+    # Configuration
     linearize_constraints = True
     solver = "gurobi"
     scenarios = [0]
@@ -166,11 +205,16 @@ if __name__ == "__main__":
     evs = None  # Solve for all EVs
     time_limit = 15
 
+    # Input files
     input_excel_file = "../data/37-intersection map.xlsx"
-    output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
-    # output_prefix = None  # Avoid saving files
     scenarios_csv_file = "../data/scenarios.csv"
 
+    # Output files
+    output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
+    # output_prefix = None  # Avoid saving files
+    training_data_path = "../data/training_data.csv"
+
+    # Detailed logging
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file_path = f"../data/routing_solver_output_{timestamp}.txt"
     # log_file_path = None
@@ -194,6 +238,7 @@ if __name__ == "__main__":
                 verbose=2,
                 input_excel_file=input_excel_file,
                 scenarios_csv_file=scenarios_csv_file,
+                training_data=training_data_path,
                 # model_prefix=output_prefix,
                 # tuned_params_file="../data/tuned_params_1.prm"
             )
