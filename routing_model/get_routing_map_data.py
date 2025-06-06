@@ -1,5 +1,5 @@
 """
-These functions handle the input data of the routing model,
+These functions handle the input data of the routing routing_model,
 loading the map data of a scenario and filtering it for a single EV
 """
 
@@ -9,7 +9,7 @@ import pandas as pd
 
 def load_excel_map_data(file_path: str, charging_prices: dict = None, verbose: int = 0) -> dict:
     """
-    Load data from an Excel file for the EV routing optimization model.
+    Load data from an Excel file for the EV routing optimization routing_model.
 
     Parameters
     ----------
@@ -105,7 +105,7 @@ def filter_map_data_for_ev(map_data: dict, ev: int) -> dict:
     Returns
     -------
     input_data: dict
-        The input data for the model in the format required by Pyomo, including coordinates.
+        The input data for the routing_model in the format required by Pyomo, including coordinates.
     """
 
     # Extract dataframes from map_data

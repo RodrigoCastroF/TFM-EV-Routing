@@ -194,6 +194,13 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, agg
         # Create expanded trajectory points to split intersections where EV spends time
         expanded_trajectory = []
         
+        # Create a mapping of intersections to their charging status for this EV
+        charging_status_map = {}
+        for _, row in visited_intersections.iterrows():
+            intersection = row['intersection']
+            is_charging = intersection in charging_stations and abs(row['v01Charge'] - 1) < eps
+            charging_status_map[intersection] = is_charging
+        
         for _, row in visited_intersections.iterrows():
             intersection = row['intersection']
             time_arr = row['vTimeArrival']
@@ -201,19 +208,20 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, agg
             soc_arr = row['vSoCArrival']
             soc_dep = row['vSoCDeparture']
             
+            # Check if this is a location where the EV spends time
+            is_charging = charging_status_map[intersection]
+            is_delivery = intersection in current_ev_delivery_points
+            
             # Always add arrival point
             arrival_point = {
                 'intersection': intersection,
                 'time': time_arr,
                 'soc': soc_arr,
                 'is_arrival': True,
-                'is_departure': False
+                'is_departure': False,
+                'is_charging': is_charging
             }
             expanded_trajectory.append(arrival_point)
-            
-            # Check if this is a location where the EV spends time
-            is_charging = intersection in charging_stations and abs(row['v01Charge'] - 1) < eps
-            is_delivery = intersection in current_ev_delivery_points
             
             # If the EV spends time at this location, also add departure point as separate point
             if is_charging or is_delivery:
@@ -224,7 +232,8 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, agg
                         'time': time_dep,
                         'soc': soc_dep,
                         'is_arrival': False,
-                        'is_departure': True
+                        'is_departure': True,
+                        'is_charging': is_charging
                     }
                     expanded_trajectory.append(departure_point)
         
@@ -238,6 +247,7 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, agg
             
             # Determine segment color based on activity
             intersection = current_point['intersection']
+            is_charging = current_point['is_charging']
             
             # Skip if this is a departure and the next point is not at a different intersection
             # This means it's the same intersection (arrival → departure)
@@ -245,7 +255,7 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, agg
                 current_point['intersection'] == next_point['intersection']):
                 continue
                 
-            if intersection in charging_stations and not current_point['is_departure']:
+            if intersection in charging_stations and is_charging and not current_point['is_departure']:
                 # Use the same color as in the second plot for this charging station
                 segment_color = station_color_map[intersection]
             elif intersection in current_ev_delivery_points and not current_point['is_departure']:
@@ -273,9 +283,11 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, agg
             soc_point = point['soc']
             is_arrival = point['is_arrival']
             is_departure = point['is_departure']
+            is_charging = point['is_charging']
             
             # Determine marker style based on intersection type and arrival/departure
-            if intersection in charging_stations:
+            if intersection in charging_stations and is_charging:
+                # Only use charging station markers if EV actually charges here
                 if is_arrival:
                     marker = '^'  # triangle up for arrival
                     marker_color = station_color_map[intersection]
@@ -286,18 +298,23 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, agg
                     marker_color = station_color_map[intersection]
                     marker_edge = 'darkblue'
                     marker_label = f"Departure CS {int(intersection)}"
-            elif intersection in all_delivery_points:
+            elif intersection in all_delivery_points and intersection in current_ev_delivery_points:
+                # Only use delivery point markers if this is the current EV's delivery point
                 if is_arrival:
                     marker = '^'  # triangle up for arrival
-                    marker_color = 'orange' if intersection in current_ev_delivery_points else 'lightgray'
-                    marker_edge = 'darkorange' if intersection in current_ev_delivery_points else 'gray'
+                    marker_color = 'orange'
+                    marker_edge = 'darkorange'
                     marker_label = f"Arrival DP {int(intersection)}"
                 else:
                     marker = 'v'  # triangle down for departure
-                    marker_color = 'orange' if intersection in current_ev_delivery_points else 'lightgray'
-                    marker_edge = 'darkorange' if intersection in current_ev_delivery_points else 'gray'
+                    marker_color = 'orange'
+                    marker_edge = 'darkorange'
                     marker_label = f"Departure DP {int(intersection)}"
             else:
+                # Use regular intersection marker for:
+                # - Charging stations where EV doesn't charge
+                # - Delivery points not belonging to current EV
+                # - Regular intersections
                 marker = 'o'  # circle for regular intersections
                 marker_color = 'lightgray'
                 marker_edge = 'gray'
@@ -311,7 +328,7 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, agg
             label_text = f"{int(intersection)}"
             
             # Set label color based on intersection type
-            if intersection in charging_stations:
+            if intersection in charging_stations and is_charging:
                 label_color = station_color_map[intersection]
             elif intersection in current_ev_delivery_points:
                 label_color = 'orange'
@@ -345,7 +362,8 @@ def create_scenario_analysis_plots(all_ev_results, map_data, file_path: str, agg
                 soc_end = next_point['soc']
                 
                 # Draw vertical line for the activity
-                if intersection in charging_stations:
+                is_charging = current_point['is_charging']
+                if intersection in charging_stations and is_charging:
                     # Vertical charging activity
                     ax.plot([time_start, time_end], [soc_start, soc_end], 
                             color=station_color_map[intersection], linewidth=3, 

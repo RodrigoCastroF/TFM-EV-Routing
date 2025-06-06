@@ -12,12 +12,12 @@ from pathlib import Path
 
 def extract_solution_data(model_instance):
     """
-    Extract solution data from a solved Pyomo model instance.
+    Extract solution data from a solved Pyomo routing_model instance.
 
     Parameters
     ----------
     model_instance: pyomo.core.base.PyomoModel.ConcreteModel
-        A solved Pyomo model instance containing the solution values.
+        A solved Pyomo routing_model instance containing the solution values.
     """
 
     # Helper function to safely get variable value
@@ -94,7 +94,7 @@ def extract_solution_data(model_instance):
 
 def save_solution_data(solution_data, file_path: str):
     """
-    Save the solution data from a solved Pyomo model instance to an Excel file.
+    Save the solution data from a solved Pyomo routing_model instance to an Excel file.
 
     Parameters
     ----------

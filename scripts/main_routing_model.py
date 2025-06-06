@@ -1,4 +1,4 @@
-from model import load_excel_map_data, solve_for_one_ev, solve_for_all_evs
+from routing_model import load_excel_map_data, solve_for_one_ev, solve_for_all_evs
 import pandas as pd
 import sys
 import os
@@ -37,7 +37,7 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
     Args:
         input_excel_file: Path to input Excel file
         output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
-        model_prefix: Prefix for saving model in MPS format (optional, e.g., "../models/optimization")
+        model_prefix: Prefix for saving routing_model in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
         ev: Specific EV(s) to solve for. Can be:
             - None: solve for all EVs using solve_for_all_evs
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     # Configuration
     linearize_constraints = True
     solver = "gurobi"
-    scenarios = [0]
+    scenarios = [1]
     # evs = [1]
     evs = None  # Solve for all EVs
     time_limit = 15

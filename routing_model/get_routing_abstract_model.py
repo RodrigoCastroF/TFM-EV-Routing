@@ -1,5 +1,5 @@
 """
-This script defines the abstract EV routing model with Pyomo
+This script defines the abstract EV routing routing_model with Pyomo
 """
 
 import pyomo.environ as pyo
@@ -252,7 +252,7 @@ def get_ev_routing_abstract_model(linearize_constraints=False):
     )
 
     # Impose the same limits on SoC departure
-    # This is only necessary in the non-linear model, since the linearized one already has cA6_soc_minus_xi_upper_bound
+    # This is only necessary in the non-linear routing_model, since the linearized one already has cA6_soc_minus_xi_upper_bound
     # See [[Update - 2025-05-30]]
     if not linearize_constraints:
         def c24_soc_departure_lower_bound(m, intersection):

@@ -17,7 +17,7 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
         ev: EV number
         output_excel_file: Path to save Excel solution (optional)
         output_image_file: Path to save solution map image (optional)
-        model_prefix: Prefix for saving model in MPS format (optional, e.g., "../models/optimization")
+        model_prefix: Prefix for saving routing_model in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
         time_limit: Time limit in seconds (default: 300)
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
@@ -35,31 +35,31 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
     if verbose >= 2:
         print("Input data filtered successfully")
 
-    # Get the abstract model
+    # Get the abstract routing_model
     if verbose >= 1:
         constraint_type = "linearized" if linearize_constraints else "quadratic"
-        print(f"Creating abstract model for EV {ev} with {constraint_type} constraints...")
+        print(f"Creating abstract routing_model for EV {ev} with {constraint_type} constraints...")
     abstract_model = get_ev_routing_abstract_model(linearize_constraints=linearize_constraints)
 
     # Create a concrete instance using the data
     if verbose >= 1:
-        print(f"Creating concrete model instance for EV {ev}...")
+        print(f"Creating concrete routing_model instance for EV {ev}...")
     concrete_model = abstract_model.create_instance(input_data)
 
-    # Save model in MPS format if requested
+    # Save routing_model in MPS format if requested
     if model_prefix:
         model_file = f"{model_prefix} EV{ev} Model.mps"
         if verbose >= 1:
-            print(f"Saving concrete model for EV {ev} to {model_file}...")
+            print(f"Saving concrete routing_model for EV {ev} to {model_file}...")
         try:
             concrete_model.write(model_file)
             if verbose >= 1:
                 print(f"Model for EV {ev} saved successfully in MPS format!")
         except Exception as e:
             if verbose >= 1:
-                print(f"Error saving model for EV {ev}: {e}")
+                print(f"Error saving routing_model for EV {ev}: {e}")
 
-    # Basic model information
+    # Basic routing_model information
     if verbose >= 1:
         print(f"\nModel Information for EV {ev}:")
         print(f"Number of intersections: {len(concrete_model.sIntersections)}")
@@ -118,9 +118,9 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
             if verbose >= 1:
                 print(f"Warning: Tuned parameters file not found: {tuned_params_file}")
 
-    # Solve the model
+    # Solve the routing_model
     if verbose >= 1:
-        print(f"Solving the model for EV {ev}...")
+        print(f"Solving the routing_model for EV {ev}...")
     results = opt.solve(concrete_model, tee=(verbose >= 2))
 
     if verbose >= 2:
