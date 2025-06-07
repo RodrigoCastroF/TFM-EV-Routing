@@ -394,4 +394,4 @@ def check_model_master(model_master, print_model = True):
                     if row['task'] == 'binary':
                         print(f"The outcome '{row['outcome']}' is a probability")
                 else: 
-                    print(f"\Warning: {row['outcome']} does not appear as constraint or objective term.")
+                    print(f"\\Warning: {row['outcome']} does not appear as constraint or objective term.")

@@ -128,13 +128,13 @@ def initialize_model(model_choice, task, cv_folds, parameter_grid, gs_metric, se
         if model_choice == "rf":
             param_grid = parameter_grid if parameter_grid is not None else {
                 'n_estimators': [250,500],
-                'max_features': ['auto'],
+                'max_features': ['sqrt'],
                 'max_depth' : [6,7,8]
             }
         else:
             param_grid = parameter_grid if parameter_grid is not None else {
                 'n_estimators': [10,25],
-                'max_features': ['auto'],
+                'max_features': ['sqrt'],
                 'max_depth' : [2,3,4]
             }
 

@@ -123,7 +123,7 @@ class ConstraintLearning(object):
         is not in the constraints.
         threshold: right-hand side of the constraints.
         '''
-        constraints = pd.DataFrame(columns=columns)
+        constraint_list = []
         ID = 1
         for leaf in leaf_nodes:
             node = leaf
@@ -157,7 +157,7 @@ class ConstraintLearning(object):
                 elif class_c == 'multiclass':
                     print('Under Development')
 
-                constraints = constraints.append(constraint)
+                constraint_list.append(constraint)
 
                 node = parent_node
                 # check if the parent_node is a root node
@@ -167,6 +167,10 @@ class ConstraintLearning(object):
                     parent_node = self.__learner.get_parent(node_index=node)
             ID += 1
 
+        if constraint_list:
+            constraints = pd.concat(constraint_list, ignore_index=True)
+        else:
+            constraints = pd.DataFrame(columns=columns)
         return constraints
 
     def __find_path_skTree(self, node_numb, path, leaf, children_left, children_right):
@@ -191,11 +195,11 @@ class ConstraintLearning(object):
         '''
         This functions transform the list of nodes composing a path into a set of constraints
         '''
-        constraints_leaf = pd.DataFrame(columns=columns)
+        constraint_list = []
         for index, node in enumerate(path):
-            constraint = pd.DataFrame(data=np.zeros(len(columns)).reshape(1, -1), columns=columns)
             # We check if we are not in the leaf
             if node != leaf:
+                constraint = pd.DataFrame(data=np.zeros(len(columns)).reshape(1, -1), columns=columns)
                 # Do we go under or over the threshold ?
                 if (children_left[node] == path[index + 1]):
                     constraint[column_names[feature[node]]] = 1
@@ -204,7 +208,12 @@ class ConstraintLearning(object):
                     constraint[column_names[feature[node]]] = -1
                     constraint['threshold'] = -(threshold[node] + 0.000001)
                 constraint['ID'] = ID
-                constraints_leaf = constraints_leaf.append(constraint)
+                constraint_list.append(constraint)
+        
+        if constraint_list:
+            constraints_leaf = pd.concat(constraint_list, ignore_index=True)
+        else:
+            constraints_leaf = pd.DataFrame(columns=columns)
         return constraints_leaf
 
     def constraint_extrapolation_skTree(self, class_c):
@@ -219,13 +228,13 @@ class ConstraintLearning(object):
         threshold = self.__learner.tree_.threshold
 
         # Leaves
-        leave_id = self.__learner.apply(self.__data)
+        leave_id = self.__learner.apply(self.__data.values)
         if class_c == 'multiclass':
             columns_classes = [f'prediction_class_{i}' for i in range(len(self.__learner.tree_.value[leave_id[0]][0]))]
             columns = ['ID'] + [feature for feature in self.get_features_list()] + ['threshold'] + columns_classes
         else:
             columns = ['ID'] + [feature for feature in self.get_features_list()] + ['threshold', 'prediction']
-        constraints = pd.DataFrame(columns=columns)
+        constraint_list = []
         for i, leaf in enumerate(np.unique(leave_id)):
             path_leaf = []
             self.__find_path_skTree(0, path_leaf, leaf, children_left, children_right)
@@ -239,8 +248,13 @@ class ConstraintLearning(object):
                 # for i, class_name in enumerate(columns_classes):
                 #     constraints_leaf[class_name] = self.__learner.tree_.value[leaf][0, i]/sum(self.__learner.tree_.value[leaf][0])
                 print('Under Development')
-            constraints = constraints.append(constraints_leaf)
+            if not constraints_leaf.empty:
+                constraint_list.append(constraints_leaf)
 
+        if constraint_list:
+            constraints = pd.concat(constraint_list, ignore_index=True)
+        else:
+            constraints = pd.DataFrame(columns=columns)
         return constraints
 
     def constraint_extrapolation_SVM(self, class_c):
@@ -259,7 +273,7 @@ class ConstraintLearning(object):
 
     def constraint_extrapolation_skRF(self, class_c):
         columns = ['Tree_id', 'ID'] + [feature for feature in self.get_features_list()] + ['threshold', 'prediction']
-        constraints = pd.DataFrame(columns=columns)
+        constraint_list = []
         for tree_id, tree in enumerate(self.__learner):
             children_left = tree.tree_.children_left
             children_right = tree.tree_.children_right
@@ -267,7 +281,7 @@ class ConstraintLearning(object):
             threshold = tree.tree_.threshold
 
             # Leaves
-            leave_id = tree.apply(self.__data)
+            leave_id = tree.apply(self.__data.values)
 
             for i, leaf in enumerate(np.unique(leave_id)):
                 path_leaf = []
@@ -281,15 +295,20 @@ class ConstraintLearning(object):
                     # constraints_leaf['prediction'] = np.round(self.__learner.tree_.value[leaf].item())
                 elif class_c == 'multiclass':
                     # for i, class_name in enumerate(columns_classes):
-                    #     constraints_leaf[class_name] = self.__learner.tree_.value[leaf][0, i]/sum(self.__learner.tree_.value[leaf][0])
+                    #     constraints_leaf[class_name] = self.__learner.tree_.value[leaf][0, i]/sum(tree.tree_.value[leaf][0])
                     print('Under Development')
-                constraints = constraints.append(constraints_leaf)
+                if not constraints_leaf.empty:
+                    constraint_list.append(constraints_leaf)
 
+        if constraint_list:
+            constraints = pd.concat(constraint_list, ignore_index=True)
+        else:
+            constraints = pd.DataFrame(columns=columns)
         return constraints
 
     def constraint_extrapolation_skGBM(self, class_c):
         columns = ['Tree_id', 'ID'] + [feature for feature in self.get_features_list()] + ['threshold', 'prediction', 'initial_prediction', 'learning_rate']
-        constraints = pd.DataFrame(columns=columns)
+        constraint_list = []
         for tree_id, tree_array in enumerate(self.__learner.estimators_):
             tree = tree_array.item()
             children_left = tree.tree_.children_left
@@ -298,7 +317,7 @@ class ConstraintLearning(object):
             threshold = tree.tree_.threshold
 
             # Leaves
-            leave_id = tree.apply(self.__data)
+            leave_id = tree.apply(self.__data.values)
 
             for i, leaf in enumerate(np.unique(leave_id)):
                 path_leaf = []
@@ -314,7 +333,13 @@ class ConstraintLearning(object):
                     constraints_leaf['prediction'] = tree.tree_.value[leaf].item()
                     constraints_leaf['initial_prediction'] = 0
                     constraints_leaf['learning_rate'] = self.__learner.learning_rate
-                constraints = constraints.append(constraints_leaf)
+                if not constraints_leaf.empty:
+                    constraint_list.append(constraints_leaf)
+        
+        if constraint_list:
+            constraints = pd.concat(constraint_list, ignore_index=True)
+        else:
+            constraints = pd.DataFrame(columns=columns)
         return constraints
 
     def constraint_extrapolation_skEN(self, class_c):
