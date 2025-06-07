@@ -1,6 +1,8 @@
 """
 This is an example of the OptiCL library created by its authors:
 https://github.com/hwiberg/OptiCL/blob/main/notebooks/Pipeline/Model_Embedding.ipynb
+
+The script was modified to ensure feasibility in the embedded constraints
 """
 
 # %% [markdown]
@@ -74,6 +76,10 @@ task_type = 'continuous' # we are considering a regression problem
 # %%
 seed = 1
 
+# Create results directory if it doesn't exist
+if not os.path.exists('results'):
+    os.makedirs('results')
+
 for outcome in outcome_list:
     print('Running models for outcome: %s' % outcome)
     for alg in alg_list:
@@ -131,13 +137,23 @@ model_master = opticl.model_selection(performance,
 
 # %%
 y_medians = y_train.melt().groupby('variable').median()
+y_maxes = y_train.melt().groupby('variable').max()
+print(f"Y medians: {y_medians['value'].to_dict()}")
+print(f"Y maxes: {y_maxes['value'].to_dict()}")
+
 model_master['lb'] = None
 model_master['ub'] = None
 model_master['SCM_counterfactuals'] = None
 model_master['features'] = [[col for col in X_train.columns]]*len(model_master.index)
-model_master.loc[model_master['outcome']=='y0', 'ub'] = y_medians.loc['y0','value']
-model_master.loc[model_master['outcome']=='y1', 'ub'] = y_medians.loc['y1','value']
-model_master
+
+# Try using 75th percentile instead of median for less restrictive bounds
+y_75th = y_train.melt().groupby('variable').quantile(0.75)
+print(f"Y 75th percentiles: {y_75th['value'].to_dict()}")
+
+model_master.loc[model_master['outcome']=='y0', 'ub'] = y_75th.loc['y0','value']
+model_master.loc[model_master['outcome']=='y1', 'ub'] = y_75th.loc['y1','value']
+print("Model master:")
+print(model_master.to_string())
 
 # %% [markdown]
 # ### Initialize optimization model
@@ -152,10 +168,16 @@ sample = pd.DataFrame({'col0':[-.05],
 # %%
 model_pyo = ConcreteModel()
 
-## We will create our x decision variables.
+## We will create our x decision variables with reasonable bounds
 N = X_train.columns
 N_fixed = sample.columns
-model_pyo.x = Var(N, domain=Reals)
+# Add bounds to prevent unbounded problem - using conservative bounds
+# Let's try tighter bounds first to ensure feasibility
+x_min = -10  # conservative lower bound
+x_max = 10   # conservative upper bound
+print(f"Setting variable bounds: x_min = {x_min:.3f}, x_max = {x_max:.3f}")
+print(f"Training data range: min = {X_train.min().min():.3f}, max = {X_train.max().max():.3f}")
+model_pyo.x = Var(N, domain=Reals, bounds=(x_min, x_max))
 
 ## Fix the contextual features specified in 'sample'
 def fix_value(model_pyo, index):
@@ -164,10 +186,23 @@ def fix_value(model_pyo, index):
 model_pyo.add_component('constr1_fixedvals', Constraint(N_fixed, rule=fix_value))
 
 ## Specify known constraints
+print(f"Number of variables: {len(N)}")
+print(f"Fixed variables: {list(N_fixed)} with values: {[sample.loc[0,col] for col in N_fixed]}")
+print(f"Sum of fixed values: {sum(sample.loc[0,col] for col in N_fixed)}")
 model_pyo.add_component('constr_known1', Constraint(expr=sum(model_pyo.x[i] for i in N) <= 1))
 
 ## Specify any non-learned objective components - none here 
 model_pyo.OBJ = Objective(expr=0, sense=minimize)
+
+# Test if the base model (without ML constraints) is feasible
+print("Testing base model feasibility...")
+opt_test = SolverFactory('gurobi')
+test_results = opt_test.solve(model_pyo)
+print(f"Base model termination condition: {test_results.solver.termination_condition}")
+if test_results.solver.termination_condition == TerminationCondition.optimal:
+    print("Base model is feasible!")
+else:
+    print("Base model is infeasible - issue with domain constraints")
 
 # %%
 final_model_pyo = opticl.optimization_MIP(model_pyo, model_pyo.x, model_master, X_train, tr = True)
@@ -177,8 +212,44 @@ final_model_pyo = opticl.optimization_MIP(model_pyo, model_pyo.x, model_master, 
 opt = SolverFactory('gurobi')
 results = opt.solve(final_model_pyo) 
 
+print(f"Final optimization termination condition: {results.solver.termination_condition}")
+print(f"Solver status: {results.solver.status}")
+
 # %%
-print("Objective value: %.3f" % final_model_pyo.OBJ())
+if results.solver.termination_condition == TerminationCondition.optimal:
+    print("Objective value: %.3f" % final_model_pyo.OBJ())
+else:
+    print("Optimization failed!")
+    print(f"Termination condition: {results.solver.termination_condition}")
+    if hasattr(results.solver, 'message'):
+        print(f"Solver message: {results.solver.message}")
+    
+    # Try to diagnose the issue
+    print("\nTrying to solve without constraints bounds...")
+    # Create a copy without the tight constraint bounds
+    model_master_relaxed = model_master.copy()
+    model_master_relaxed['ub'] = None  # Remove upper bounds
+    
+    final_model_relaxed = opticl.optimization_MIP(model_pyo, model_pyo.x, model_master_relaxed, X_train, tr = True)
+    results_relaxed = opt.solve(final_model_relaxed)
+    print(f"Relaxed model termination condition: {results_relaxed.solver.termination_condition}")
+    
+    if results_relaxed.solver.termination_condition == TerminationCondition.optimal:
+        print("Issue is with the constraint bounds being too tight!")
+        print("Objective value with relaxed bounds: %.3f" % final_model_relaxed.OBJ())
+        
+        # Show the optimal values to understand why original bounds were infeasible
+        x_sol_relaxed = getattr(final_model_relaxed, 'x')
+        print("\nOptimal X values with relaxed bounds:")
+        for index in N:
+            val = x_sol_relaxed[index].value
+            print("Feature %s: value = %.3f" % (index, val))
+    else:
+        print("Issue is with the ML model constraints themselves")
+    
+    # Don't continue with the rest of the code if optimization failed
+    import sys
+    sys.exit(1)
 
 print("\nX values: ")
 x_sol = getattr(final_model_pyo, 'x')

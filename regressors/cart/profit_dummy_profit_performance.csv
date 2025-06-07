@@ -1,0 +1,2 @@
+save_path,seed,cv_folds,task,parameters,best_params,valid_score,train_score,train_r2,test_score,test_r2,outcome,alg
+../regressors\cart\profit_dummy_profit_model.csv,42,2,continuous,"{'max_depth': [3, 4, 5, 6, 7, 8, 9, 10], 'min_samples_leaf': [0.02, 0.04, 0.06], 'max_features': [0.4, 0.6, 0.8, 1.0]}","{'max_depth': 3, 'max_features': 0.4, 'min_samples_leaf': 0.02}",-27.53787566595831,0.0,1.0,0.0,1.0,profit,cart

@@ -171,57 +171,6 @@ if all_performance:
     plt.savefig(f'results/{version}_all_algorithms_comparison.png', dpi=300, bbox_inches='tight')
     plt.show()
     
-    # Create detailed plot for best algorithm
-    print(f"\nCreating detailed visualization for best algorithm ({best_alg})...")
-    
-    plt.figure(figsize=(12, 8))
-    
-    # Get best model predictions
-    y_predicted_best = best_model.predict(X_plot)
-    
-    # Plot the analytical function
-    plt.plot(x_plot, y_analytical, 'b-', linewidth=3, label='Analytical: y = x² + 2x', alpha=0.9)
-    
-    # Plot the best model predictions
-    plt.plot(x_plot, y_predicted_best, 'r--', linewidth=3, 
-            label=f'Best Model ({best_alg.upper()}) Prediction', alpha=0.9)
-    
-    # Plot training data points
-    plt.scatter(X_train['x'], y_train, alpha=0.3, s=20, c='gray', label='Training Data')
-    
-    # Plot test data points
-    plt.scatter(X_test['x'], y_test, alpha=0.5, s=20, c='orange', label='Test Data')
-    
-    # Mark the analytical minimum
-    plt.plot(-1, -1, 'go', markersize=12, label='Analytical Minimum (x=-1, y=-1)')
-    
-    # Calculate and display prediction accuracy statistics
-    mse_best = np.mean((y_analytical - y_predicted_best)**2)
-    mae_best = np.mean(np.abs(y_analytical - y_predicted_best))
-    max_error_best = np.max(np.abs(y_analytical - y_predicted_best))
-    
-    plt.xlabel('x', fontsize=12)
-    plt.ylabel('y', fontsize=12)
-    plt.title(f'Best Algorithm ({best_alg.upper()}) vs Analytical Function\n' + 
-              f'R² = {best_alg_row["test_r2"]:.4f}, MSE = {mse_best:.6f}, MAE = {mae_best:.6f}', 
-              fontsize=14)
-    plt.legend(fontsize=10)
-    plt.grid(True, alpha=0.3)
-    plt.xlim(-3, 3)
-    
-    # Save the plot
-    plt.tight_layout()
-    plt.savefig(f'results/{version}_best_algorithm_{best_alg}.png', dpi=300, bbox_inches='tight')
-    plt.show()
-    
-    print(f"\nPrediction accuracy for best algorithm ({best_alg}) on plotting range [-3, 3]:")
-    print(f"Mean Squared Error: {mse_best:.6f}")
-    print(f"Mean Absolute Error: {mae_best:.6f}")
-    print(f"Maximum Absolute Error: {max_error_best:.6f}")
-    
-    # Set up optimization model using the best performing algorithm
-    print(f"\nSetting up optimization with best algorithm: {best_alg}")
-    
     # Create model_master dataframe for opticl using best algorithm
     best_perf = performance_df[performance_df['alg'] == best_alg]
     performance_for_selection = pd.DataFrame([{
@@ -244,7 +193,7 @@ if all_performance:
     model_master['features'] = [['x']] * len(model_master.index)
     
     print(f"\nModel master configuration:")
-    print(model_master)
+    print(model_master.to_string())
     
     # Initialize optimization model
     model_pyo = ConcreteModel()

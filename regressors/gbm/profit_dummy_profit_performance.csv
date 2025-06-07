@@ -1,0 +1,2 @@
+save_path,seed,cv_folds,task,parameters,best_params,valid_score,train_score,train_r2,test_score,test_r2,outcome,alg
+../regressors\gbm\profit_dummy_profit_model.csv,42,2,continuous,"{'learning_rate': [0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2], 'max_depth': [2, 3, 4, 5], 'n_estimators': [20]}","{'learning_rate': 0.01, 'max_depth': 2, 'n_estimators': 20}",-27.53787566595831,4.6055152778823105,0.33102824143032317,4.6055152778823105,0.33102824143032317,profit,gbm

@@ -250,7 +250,9 @@ def run_model(train_x, y_train, test_x, y_test, model_choice, outcome, task, cv_
               seed = 1, save_path = '../results/', save = False, shap = False, 
               # weights = []
               parameter_grid = None,
-              metric = None
+              metric = None,
+              save_pickle = True,
+              pickle_dir = 'results'
               ):
     assert task in ['multiclass','binary','continuous']
     assert model_choice in ['linear','cart','rf','rf_shallow','xgb', 'gbm', 'iai','iai-single','svm','mlp']
@@ -270,10 +272,15 @@ def run_model(train_x, y_train, test_x, y_test, model_choice, outcome, task, cv_
     else: 
         gs.fit(train_x, y_train)
 
-    filename = 'results/'+model_choice+'_'+outcome+'_trained.pkl'
-    with open(filename, 'wb') as f:
-        print(f'saving... {filename}')
-        pickle.dump(gs.best_estimator_, f)
+    if save_pickle:
+        # Create pickle directory if it doesn't exist
+        os.makedirs(pickle_dir, exist_ok=True)
+        filename = os.path.join(pickle_dir, f'{model_choice}_{outcome}_trained.pkl')
+        with open(filename, 'wb') as f:
+            print(f'saving... {filename}')
+            pickle.dump(gs.best_estimator_, f)
+    else:
+        print("Skipping pickle file creation")
         # if len(weights) > 0:
         #     print("Applying sample weights")
         #     gs.fit(train_x, y_train, sample_weight = weights)
