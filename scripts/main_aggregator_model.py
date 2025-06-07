@@ -1,5 +1,5 @@
 """
-Main script for solving the aggregator model
+Main script for solving the aggregator model with embedded OptiCL regression
 """
 
 from aggregator_model import solve_aggregator_model
@@ -33,14 +33,21 @@ class TeeOutput:
             self.log_file.close()
 
 
-def main(input_excel_file, output_excel_file=None, solver="gurobi", time_limit=300, verbose=1, log_file=None):
+def main(input_excel_file, performance_csv_file, training_data_csv_file, trust_region=True, output_excel_file=None,
+         solver="gurobi", time_limit=300, verbose=1, log_file=None):
     """
-    Main function to solve the aggregator optimization problem.
+    Main function to solve the aggregator optimization problem with embedded regression.
     
     Parameters
     ----------
     input_excel_file: str
         Path to the input Excel file containing aggregator data.
+    performance_csv_file: str
+        Path to the CSV file containing performance comparison of regression models.
+    training_data_csv_file: str
+        Path to the CSV file containing training data for the regression models.
+    trust_region: bool
+        If True, solutions are restricted to lie in the trust region (the domain of the training data)
     output_excel_file: str, optional
         Path to save the solution Excel file (optional).
     solver: str
@@ -68,13 +75,16 @@ def main(input_excel_file, output_excel_file=None, solver="gurobi", time_limit=3
         if verbose >= 1:
             print("=" * 60)
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            print(f"Aggregator Model Solver - {now}")
+            print(f"Aggregator Model Solver with OptiCL - {now}")
             print("=" * 60)
             print()
 
         # Solve the aggregator model
         results = solve_aggregator_model(
             input_excel_file=input_excel_file,
+            performance_csv_file=performance_csv_file,
+            training_data_csv_file=training_data_csv_file,
+            trust_region=trust_region,
             output_excel_file=output_excel_file,
             solver=solver,
             time_limit=time_limit,
@@ -85,14 +95,17 @@ def main(input_excel_file, output_excel_file=None, solver="gurobi", time_limit=3
             print("\nFinal Results:")
             print(f"  Solver status: {results.get('solver_status', 'unknown')}")
             if 'objective_value' in results:
-                print(f"  Total profit: ${results['objective_value']:.2f}")
+                print(f"  Predicted profit: ${results['objective_value']:.2f}")
             if 'execution_time' in results and results['execution_time']:
                 print(f"  Execution time: {results['execution_time']:.2f} seconds")
             
             if 'charging_prices' in results:
                 print("  Optimal charging prices:")
                 for station, price in results['charging_prices'].items():
-                    print(f"    Station {station}: ${price:.3f}/kWh")
+                    if price is not None:
+                        print(f"    Station {station}: ${price:.3f}/kWh")
+                    else:
+                        print(f"    Station {station}: UNKNOWN/NOT SET")
             
             if output_excel_file:
                 print(f"  Solution saved to: {output_excel_file}")
@@ -116,18 +129,27 @@ if __name__ == "__main__":
     solver = "gurobi"  # or "cbc", "glpk", "cplex"
     time_limit = 15  # seconds
     verbose = 2  # 0=silent, 1=basic, 2=detailed
+    trust_region = True
 
-    # Output files
+    # Input files
     input_excel_file = "../data/37-intersection map Aggregator.xlsx"
+    performance_csv_file = "../regressors/profit_dummy_performance_comparison.csv"
+    training_data_csv_file = "../regressors/profit_dummy_training_data.csv"
+    
+    # Output files
     output_excel_file = "../data/37-intersection map Aggregator Solution.xlsx"
 
     # Detailed logging
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file_path = f"../data/aggregator_solver_output_{timestamp}.txt"
     
-    # Check if input file exists
+    # Check if input files exist
     if not os.path.exists(input_excel_file):
         raise FileNotFoundError(f"Error: Input file not found: {input_excel_file}")
+    if not os.path.exists(performance_csv_file):
+        raise FileNotFoundError(f"Error: Performance CSV file not found: {performance_csv_file}")
+    if not os.path.exists(training_data_csv_file):
+        raise FileNotFoundError(f"Error: Training data CSV file not found: {training_data_csv_file}")
     
     # Create output directory if it doesn't exist
     if output_excel_file:
@@ -138,6 +160,9 @@ if __name__ == "__main__":
     # Run the main function
     main(
         input_excel_file=input_excel_file,
+        performance_csv_file=performance_csv_file,
+        training_data_csv_file=training_data_csv_file,
+        trust_region=trust_region,
         output_excel_file=output_excel_file,
         solver=solver,
         time_limit=time_limit,

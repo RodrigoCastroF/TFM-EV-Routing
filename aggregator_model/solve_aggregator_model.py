@@ -1,22 +1,30 @@
 """
-This function solves the aggregator model by combining data loading, model creation, solving, and solution saving
+This function solves the simplified aggregator model with embedded OptiCL regression
 """
 
 from .get_aggregator_map_data import load_aggregator_excel_data
-from .get_aggregator_abstract_model import get_aggregator_abstract_model
 from .save_aggregator_solution_data import extract_aggregator_solution_data, save_aggregator_solution_data
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
+import pandas as pd
+import opticl
 
 
-def solve_aggregator_model(input_excel_file, output_excel_file=None, solver="gurobi", time_limit=300, verbose=1):
+def solve_aggregator_model(input_excel_file, performance_csv_file, training_data_csv_file, trust_region=True,
+                          output_excel_file=None, solver="gurobi", time_limit=300, verbose=1):
     """
-    Solve the aggregator optimization problem.
+    Solve the simplified aggregator optimization problem with embedded regression model.
 
     Parameters
     ----------
     input_excel_file: str
-        Path to the input Excel file containing aggregator data.
+        Path to the input Excel file containing aggregator data (charging station bounds).
+    performance_csv_file: str
+        Path to the CSV file containing performance comparison of regression models.
+    training_data_csv_file: str
+        Path to the CSV file containing training data for the regression models.
+    trust_region: bool
+        If True, solutions are restricted to lie in the trust region (the domain of the training data)
     output_excel_file: str, optional
         Path to save the solution Excel file (optional).
     solver: str
@@ -32,113 +40,148 @@ def solve_aggregator_model(input_excel_file, output_excel_file=None, solver="gur
         Dictionary with solution results including objective value and solution data.
     """
 
-    # Load data from Excel file
+    # Load charging station bounds from Excel file
     if verbose >= 1:
         print(f"Loading aggregator data from {input_excel_file}...")
     input_data = load_aggregator_excel_data(input_excel_file, verbose=verbose)
+    charging_stations = input_data[None]['sChargingStations'][None]
+    min_prices = input_data[None]['pMinChargingPrice']
+    max_prices = input_data[None]['pMaxChargingPrice']
+    
     if verbose >= 1:
-        print("Aggregator data loaded successfully")
+        print(f"Loaded {len(charging_stations)} charging stations: {charging_stations}")
 
-    # Get the abstract model
+    # Load regression model data
     if verbose >= 1:
-        print("Creating abstract aggregator model...")
-    abstract_model = get_aggregator_abstract_model()
-
-    # Create a concrete instance using the data
+        print(f"Loading regression model data...")
+    performance_df = pd.read_csv(performance_csv_file)
+    training_data = pd.read_csv(training_data_csv_file)
+    feature_columns = [col for col in training_data.columns if col != 'profit']
+    X_train = training_data[feature_columns]
+    
     if verbose >= 1:
-        print("Creating concrete model instance...")
-    concrete_model = abstract_model.create_instance(input_data)
+        print(f"Available algorithms: {performance_df['alg'].tolist()}")
+        print(f"Feature columns: {feature_columns}")
 
-    # Basic model information
+    # Select best regression model
+    best_row = performance_df.loc[performance_df['test_r2'].idxmax()]
+    best_alg = best_row['alg']
     if verbose >= 1:
-        print(f"\nModel Information:")
-        print(f"Number of charging stations: {len(concrete_model.sChargingStations)}")
-        print(f"Number of time periods: {len(concrete_model.sTimePeriods)}")
-        print(f"Charging stations: {list(concrete_model.sChargingStations)}")
-        print(f"Time periods: {list(concrete_model.sTimePeriods)}")
+        print(f"Selected best algorithm: {best_alg} (R² = {best_row['test_r2']:.4f})")
 
-    # Create solver instance
+    # Prepare OptiCL model selection
+    performance_for_selection = pd.DataFrame([{
+        'alg': best_alg,
+        'outcome': 'profit',
+        'valid_score': best_row['valid_score'],
+        'save_path': best_row['save_path'],
+        'task': 'continuous',
+        'seed': best_row['seed']
+    }])
+    
+    model_master = opticl.model_selection(performance_for_selection, 
+                                          constraints_embed=[], 
+                                          objectives_embed={'profit': 1})
+    model_master['lb'] = None
+    model_master['ub'] = None  
+    model_master['SCM_counterfactuals'] = None
+    model_master['features'] = [feature_columns] * len(model_master.index)
     if verbose >= 1:
-        print(f"\nSetting up {solver} solver...")
-    opt = SolverFactory(solver)
+        print("\nModel master:")
+        print(model_master.to_string())
 
-    # Set time limit based on solver
-    time_limit_option = {"cbc": "seconds", "gurobi": "timeLimit", "glpk": "tmlim", "cplex": "timelimit"}
-    if solver in time_limit_option:
-        opt.options[time_limit_option[solver]] = time_limit
+    # Create concrete model from scratch following OptiCL pattern
+    if verbose >= 1:
+        print("\nCreating concrete model...")
+    
+    model = pyo.ConcreteModel()
+    
+    # Create variable names and bounds
+    var_names = [f'rc_{station}' for station in charging_stations]
+    bounds_dict = {}
+    for station in charging_stations:
+        var_name = f'rc_{station}'
+        min_price = min_prices[station]
+        max_price = max_prices[station]
+        bounds_dict[var_name] = (min_price, max_price)
         if verbose >= 2:
-            print(f"Time limit set to {time_limit} seconds")
+            print(f"Variable {var_name} will have bounds [{min_price}, {max_price}]")
+
+    # Create indexed variable following OptiCL pattern
+    model.x = pyo.Var(var_names, domain=pyo.Reals, 
+                      bounds=lambda m, var_name: bounds_dict[var_name])
+
+    # Placeholder objective (will be replaced by OptiCL)
+    model.OBJ = pyo.Objective(expr=0, sense=pyo.maximize)
+
+    # Embed regression model using OptiCL
+    if verbose >= 1:
+        print("Embedding regression model with OptiCL...")
+    
+    final_model = opticl.optimization_MIP(model, model.x, model_master, X_train, tr=trust_region)
+    
+    if verbose >= 1:
+        print(f"Model created with {len(list(final_model.component_objects(pyo.Constraint)))} constraints")
 
     # Solve the model
     if verbose >= 1:
-        print("Solving the aggregator model...")
-    results = opt.solve(concrete_model, tee=(verbose >= 2))
+        print(f"Solving with {solver}...")
+    
+    opt = SolverFactory(solver)
+    time_limit_option = {"cbc": "seconds", "gurobi": "timeLimit", "glpk": "tmlim", "cplex": "timelimit"}
+    if solver in time_limit_option:
+        opt.options[time_limit_option[solver]] = time_limit
 
-    if verbose >= 2:
-        print(f"\nSOLVER RESULTS:")
-        print(results)
+    results = opt.solve(final_model, tee=(verbose >= 2))
 
-    # Handle the case where no solution object exists
-    if results.solver.status != pyo.SolverStatus.ok and results.solver.status != pyo.SolverStatus.aborted:
+    # Process results
+    if results.solver.status not in [pyo.SolverStatus.ok, pyo.SolverStatus.aborted]:
         if verbose >= 1:
-            print(f"\nSolver returned no solution :(")
-            print(f"\tStatus: {results.solver.status}")
-            print(f"\tTermination condition: {results.solver.termination_condition}")
-        return {'solver_status': 'no_solution'}
-
-    # At this point, a solution object should exist
-    if verbose >= 1:
-        print(f"\nSolver returned a solution! :)")
-        print(f"\tStatus: {results.solver.status}")
-        print(f"\tTermination condition: {results.solver.termination_condition}")
-
-    # Extract solution information
-    try:
-        execution_time = results['solver'][0]['Time']
-    except (KeyError, IndexError, AttributeError):
-        execution_time = None
-
-    # Get objective function value
-    obj_value = pyo.value(concrete_model.Obj)
+            print(f"Solver failed: {results.solver.status}")
+        return {'solver_status': 'failed'}
 
     if verbose >= 1:
-        print(f"Objective function value (total profit): ${obj_value:.2f}")
-        if execution_time is not None and verbose >= 2:
-            print(f"Execution time: {execution_time:.2f} seconds")
+        print(f"Solver status: {results.solver.status}")
+        print(f"Termination: {results.solver.termination_condition}")
 
-    # Display optimal charging prices
+    # Extract results
+    obj_value = pyo.value(final_model.OBJ)
+    charging_prices = {}
+    
+    for station in charging_stations:
+        var_name = f'rc_{station}'
+        try:
+            price = pyo.value(final_model.x[var_name])
+            charging_prices[station] = price
+        except (ValueError, AttributeError) as e:
+            charging_prices[station] = None
+
     if verbose >= 1:
-        print(f"\nOptimal charging prices:")
-        for station in concrete_model.sChargingStations:
-            price = pyo.value(concrete_model.vChargingPrice[station])
-            min_price = concrete_model.pMinChargingPrice[station]
-            max_price = concrete_model.pMaxChargingPrice[station]
-            print(f"  Station {station}: ${price:.3f}/kWh (range: ${min_price:.1f}-${max_price:.1f})")
+        print(f"Predicted profit: ${obj_value:.2f}")
+        print("Optimal charging prices:")
+        for station, price in charging_prices.items():
+            min_p = min_prices[station]
+            max_p = max_prices[station]
+            if price is not None:
+                print(f"  Station {station}: ${price:.3f}/kWh (range: ${min_p:.1f}-${max_p:.1f})")
+            else:
+                print(f"  Station {station}: UNKNOWN/NOT SET (range: ${min_p:.1f}-${max_p:.1f})")
 
+    # Extract solution data directly from the final model
     if verbose >= 1:
         print("Extracting solution data...")
-    solution_data = extract_aggregator_solution_data(concrete_model)
-    if verbose >= 1:
-        print("Solution data extracted successfully!")
-
-    # Save solution data to Excel if file path provided
+    
+    solution_data = extract_aggregator_solution_data(final_model, charging_stations, min_prices, max_prices)
+    
     if output_excel_file:
         if verbose >= 1:
-            print(f"\nSaving solution data to {output_excel_file}...")
-        try:
-            save_aggregator_solution_data(solution_data, output_excel_file)
-            if verbose >= 1:
-                print("Solution data saved successfully!")
-        except Exception as e:
-            if verbose >= 1:
-                print(f"Error saving solution data: {e}")
+            print(f"Saving solution to {output_excel_file}...")
+        save_aggregator_solution_data(solution_data, output_excel_file)
 
-    # Return results
     return {
         'solver_status': 'optimal',
         'objective_value': obj_value,
-        'execution_time': execution_time,
+        'execution_time': results.solver.time if hasattr(results.solver, 'time') else None,
         'solution_data': solution_data,
-        'charging_prices': {station: pyo.value(concrete_model.vChargingPrice[station]) 
-                           for station in concrete_model.sChargingStations}
+        'charging_prices': charging_prices
     }
