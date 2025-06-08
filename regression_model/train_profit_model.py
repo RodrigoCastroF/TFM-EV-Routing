@@ -198,6 +198,16 @@ def train_profit_regression_model(scenarios_file, demand_file, aggregator_excel_
         )
         cv_folds_adjusted = cv_folds
     
+    # Ensure feature names are preserved in DataFrames
+    if not isinstance(X_train, pd.DataFrame):
+        X_train = pd.DataFrame(X_train, columns=feature_columns)
+    if not isinstance(X_test, pd.DataFrame):
+        X_test = pd.DataFrame(X_test, columns=feature_columns)
+    if not isinstance(y_train, pd.Series):
+        y_train = pd.Series(y_train, name='profit')
+    if not isinstance(y_test, pd.Series):
+        y_test = pd.Series(y_test, name='profit')
+    
     all_performance = []
     
     # Train models for each algorithm
@@ -222,7 +232,8 @@ def train_profit_regression_model(scenarios_file, demand_file, aggregator_excel_
                                        parameter_grid=None,
                                        save_path=model_save,
                                        save=False,
-                                       save_pickle=False)  # Skip unnecessary pickle files
+                                       save_pickle=True,
+                                       pickle_dir=alg_dir)  # Save pickle files in algorithm folder
             
             # Save model for ConstraintLearning class (required for opticl optimization)
             constraintL = opticl.ConstraintLearning(X_train, pd.DataFrame(y_train), m, alg)

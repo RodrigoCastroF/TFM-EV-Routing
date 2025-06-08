@@ -8,7 +8,7 @@ from regression_model.train_profit_model import train_profit_regression_model
 def main():
     # File paths
     scenarios_file = "../data/scenarios.csv"
-    demand_file = "../data/training_data.csv"
+    demand_file = "../data/training_data_dummy.csv"
     aggregator_excel_file = "../data/37-intersection map Aggregator.xlsx"
     output_folder = "../regressors"
     prefix = "profit_dummy"
