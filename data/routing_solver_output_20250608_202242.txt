@@ -1,0 +1,567 @@
+Loading charging prices for scenario 1000 from ../data/scenarios.csv...
+Charging prices for scenario 1000: {11: 0.8, 14: 0.8, 15: 0.8, 26: 0.8, 37: 0.8}
+Loading data from ../data/37-intersection map.xlsx...
+Updated charging price for station 11 to 0.8
+Updated charging price for station 14 to 0.8
+Updated charging price for station 15 to 0.8
+Updated charging price for station 26 to 0.8
+Updated charging price for station 37 to 0.8
+Raw map data loaded successfully
+List of EVs: [1, 2, 3]
+Charging prices: [0.8, 0.8, 0.8, 0.8, 0.8]
+Solving for all EVs
+
+==================================================
+Processing EV 1
+==================================================
+Filtering data for EV 1...
+Input data filtered successfully
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Time limit set to 15 seconds
+Solving the routing_model for EV 1...
+Read LP format model from file C:\Users\rodri\AppData\Local\Temp\tmphritdgc8.pyomo.lp
+Reading time = 0.02 seconds
+x1: 1660 rows, 703 columns, 4148 nonzeros
+Set parameter TimeLimit to value 15
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 11.0 (26100.2))
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12650H, instruction set [SSE2|AVX|AVX2]
+Thread count: 10 physical cores, 16 logical processors, using up to 16 threads
+
+Non-default parameters:
+TimeLimit  15
+
+Optimize a model with 1660 rows, 703 columns and 4148 nonzeros
+Model fingerprint: 0xfec0b338
+Variable types: 494 continuous, 209 integer (209 binary)
+Coefficient statistics:
+  Matrix range     [4e-02, 2e+01]
+  Objective range  [3e+00, 1e+02]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e-01, 2e+01]
+Presolve removed 527 rows and 129 columns
+Presolve time: 0.02s
+Presolved: 1133 rows, 574 columns, 4847 nonzeros
+Variable types: 382 continuous, 192 integer (192 binary)
+
+Root relaxation: objective 0.000000e+00, 279 iterations, 0.01 seconds (0.01 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    0.00000    0   42          -    0.00000      -     -    0s
+H    0     0                     563.8650227    0.00000   100%     -    0s
+     0     0    0.00000    0   48  563.86502    0.00000   100%     -    0s
+     0     0    0.00000    0   53  563.86502    0.00000   100%     -    0s
+H    0     0                     536.1737172    0.00000   100%     -    0s
+     0     0    0.00000    0   37  536.17372    0.00000   100%     -    0s
+     0     0    0.00000    0   38  536.17372    0.00000   100%     -    0s
+H    0     0                     515.2024096    0.00000   100%     -    0s
+     0     0    0.00000    0   40  515.20241    0.00000   100%     -    0s
+     0     0    0.00000    0   40  515.20241    0.00000   100%     -    0s
+     0     0    0.00000    0   39  515.20241    0.00000   100%     -    0s
+     0     0    0.00000    0   39  515.20241    0.00000   100%     -    0s
+     0     0    0.00000    0   39  515.20241    0.00000   100%     -    0s
+     0     0    0.00000    0   39  515.20241    0.00000   100%     -    0s
+     0     2    0.00000    0   39  515.20241    0.00000   100%     -    0s
+H  214   234                     113.2690507    0.00000   100%  42.4    0s
+H  216   234                      88.2690507    0.00000   100%  42.7    0s
+H  221   234                      88.2506867    0.00000   100%  44.6    0s
+H  244   234                      66.9862174    0.00000   100%  43.3    0s
+H  495   368                      65.0883886    0.00000   100%  42.8    0s
+H  526   368                      25.8613066    0.00000   100%  43.7    0s
+H  544   449                      25.6770333    0.00000   100%  42.9    0s
+H  605   449                      25.4837217    0.00000   100%  43.0    0s
+H  690   554                      24.9374151    0.00000   100%  43.3    0s
+H  709   554                      21.8030236    0.00000   100%  42.8    0s
+H  847   604                      21.3224836    0.00000   100%  41.5    0s
+H  864   604                      20.7263681    0.00000   100%  41.6    0s
+H  877   604                      20.1901570    0.00000   100%  41.6    0s
+H  982   604                      19.9495615    0.00000   100%  40.2    0s
+H 1020   648                      19.4690215    0.00000   100%  39.5    0s
+H 1254   716                      18.9292282    0.00000   100%  39.1    0s
+H 1264   716                      18.5018172    0.00000   100%  39.1    0s
+H 2135  1250                      18.1688226    0.00000   100%  38.5    1s
+H 2136  1250                      17.9620235    0.00000   100%  38.5    1s
+H 2398  1289                      17.9620232    0.00000   100%  37.9    1s
+H 2402  1227                      16.8740640    0.00000   100%  37.8    1s
+H 4367  1351                      15.7498778    0.00000   100%  47.6    4s
+  5379  1350 infeasible   32        15.74988    0.00000   100%  48.2    5s
+ 16536  2414 infeasible   38        15.74988    0.00000   100%  41.3   10s
+ 22026  2980 infeasible   39        15.74988    0.00000   100%  41.9   15s
+
+Cutting planes:
+  Cover: 4
+  Implied bound: 43
+  Projected implied bound: 4
+  MIR: 7
+  Flow cover: 37
+  Inf proof: 5
+  RLT: 4
+  Relax-and-lift: 14
+  PSD: 1
+
+Explored 22783 nodes (959753 simplex iterations) in 15.04 seconds (9.36 work units)
+Thread count was 16 (of 16 available processors)
+
+Solution count 10: 15.7499 16.8741 17.962 ... 20.7264
+
+Time limit reached
+Best objective 1.574987784235e+01, best bound 8.881784197001e-15, gap 100.0000%
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+SOLVER RESULTS for EV 1:
+
+Problem: 
+- Name: x1
+  Lower bound: 8.881784197001252e-15
+  Upper bound: 15.749877842346653
+  Number of objectives: 1
+  Number of constraints: 1660
+  Number of variables: 703
+  Number of binary variables: 209
+  Number of integer variables: 209
+  Number of continuous variables: 494
+  Number of nonzeros: 4148
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 15.045000076293945
+  Error rc: 0
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0
+
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 15.749877842346653
+Final gap: 100.0%
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+==================================================
+Processing EV 2
+==================================================
+Filtering data for EV 2...
+Input data filtered successfully
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Time limit set to 15 seconds
+Solving the routing_model for EV 2...
+Read LP format model from file C:\Users\rodri\AppData\Local\Temp\tmpnh8b01u4.pyomo.lp
+Reading time = 0.03 seconds
+x1: 1660 rows, 703 columns, 4148 nonzeros
+Set parameter TimeLimit to value 15
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 11.0 (26100.2))
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12650H, instruction set [SSE2|AVX|AVX2]
+Thread count: 10 physical cores, 16 logical processors, using up to 16 threads
+
+Non-default parameters:
+TimeLimit  15
+
+Optimize a model with 1660 rows, 703 columns and 4148 nonzeros
+Model fingerprint: 0xbcb6746a
+Variable types: 494 continuous, 209 integer (209 binary)
+Coefficient statistics:
+  Matrix range     [4e-02, 2e+01]
+  Objective range  [3e+00, 1e+02]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e-01, 2e+01]
+Presolve removed 550 rows and 143 columns
+Presolve time: 0.04s
+Presolved: 1110 rows, 560 columns, 4717 nonzeros
+Variable types: 377 continuous, 183 integer (183 binary)
+Found heuristic solution: objective 320.0777779
+Found heuristic solution: objective 89.5375254
+
+Root relaxation: objective 0.000000e+00, 244 iterations, 0.01 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    0.00000    0   33   89.53753    0.00000   100%     -    0s
+     0     0    0.00000    0   36   89.53753    0.00000   100%     -    0s
+     0     0    0.00000    0   36   89.53753    0.00000   100%     -    0s
+     0     0    0.00000    0   37   89.53753    0.00000   100%     -    0s
+     0     0    0.00000    0   43   89.53753    0.00000   100%     -    0s
+     0     0    0.00000    0   42   89.53753    0.00000   100%     -    0s
+     0     0    0.00000    0   46   89.53753    0.00000   100%     -    0s
+     0     0    0.00000    0   37   89.53753    0.00000   100%     -    0s
+     0     0    0.00000    0   37   89.53753    0.00000   100%     -    0s
+     0     2    0.00000    0   23   89.53753    0.00000   100%     -    0s
+H   62    80                      89.0690970    0.00000   100%  58.5    0s
+H  567   436                      88.9523453    0.00000   100%  33.0    1s
+H  715   436                      88.5885570    0.00000   100%  30.0    1s
+H 1130   564                      88.4718054    0.00000   100%  26.0    1s
+H 1213   564                      76.0663414    0.00000   100%  25.4    1s
+H 1445   635                      60.6810979    0.00000   100%  24.9    1s
+H 1479   621                      34.7018899    0.00000   100%  24.6    1s
+H 2332   718                      34.5967331    0.00000   100%  23.1    1s
+H 3247   908                      33.8000634    0.00000   100%  23.2    2s
+H 3714   998                      33.2602701    0.00000   100%  23.0    2s
+  4774  1147    8.47939   24   35   33.26027    0.00000   100%  22.7    5s
+H 5377  1414                      22.3302380    0.00000   100%  27.1    6s
+* 5388  1356              37      21.2441381    0.00000   100%  27.2    6s
+H 5657  1256                      21.0373394    0.00000   100%  28.5    6s
+H 5698  1193                      20.3203906    0.00000   100%  28.7    6s
+H 5949  1234                      18.4586600    0.00000   100%  29.8    7s
+  9000  1474    5.27233   27   28   18.45866    0.00000   100%  35.1   10s
+ 17433  2652 infeasible   31        18.45866    0.00000   100%  42.0   15s
+
+Cutting planes:
+  Gomory: 1
+  Cover: 1
+  Implied bound: 22
+  Projected implied bound: 1
+  MIR: 11
+  Flow cover: 38
+  Inf proof: 1
+  RLT: 2
+  Relax-and-lift: 10
+
+Explored 17457 nodes (736547 simplex iterations) in 15.04 seconds (6.59 work units)
+Thread count was 16 (of 16 available processors)
+
+Solution count 10: 18.4587 20.3204 21.0373 ... 60.6811
+
+Time limit reached
+Best objective 1.845866001600e+01, best bound 3.552713678801e-15, gap 100.0000%
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+SOLVER RESULTS for EV 2:
+
+Problem: 
+- Name: x1
+  Lower bound: 3.552713678800501e-15
+  Upper bound: 18.45866001599852
+  Number of objectives: 1
+  Number of constraints: 1660
+  Number of variables: 703
+  Number of binary variables: 209
+  Number of integer variables: 209
+  Number of continuous variables: 494
+  Number of nonzeros: 4148
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 15.042999982833862
+  Error rc: 0
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0
+
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 18.45866001599852
+Final gap: 100.0%
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+==================================================
+Processing EV 3
+==================================================
+Filtering data for EV 3...
+Input data filtered successfully
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Time limit set to 15 seconds
+Solving the routing_model for EV 3...
+Read LP format model from file C:\Users\rodri\AppData\Local\Temp\tmp8k_7f5mn.pyomo.lp
+Reading time = 0.05 seconds
+x1: 1658 rows, 702 columns, 4145 nonzeros
+Set parameter TimeLimit to value 15
+Gurobi Optimizer version 12.0.2 build v12.0.2rc0 (win64 - Windows 11.0 (26100.2))
+
+CPU model: 12th Gen Intel(R) Core(TM) i7-12650H, instruction set [SSE2|AVX|AVX2]
+Thread count: 10 physical cores, 16 logical processors, using up to 16 threads
+
+Non-default parameters:
+TimeLimit  15
+
+Optimize a model with 1658 rows, 702 columns and 4145 nonzeros
+Model fingerprint: 0xdafc2b6a
+Variable types: 493 continuous, 209 integer (209 binary)
+Coefficient statistics:
+  Matrix range     [4e-02, 2e+01]
+  Objective range  [3e+00, 1e+02]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [3e-01, 2e+01]
+Presolve removed 523 rows and 127 columns
+Presolve time: 0.05s
+Presolved: 1135 rows, 575 columns, 4847 nonzeros
+Variable types: 382 continuous, 193 integer (193 binary)
+
+Root relaxation: objective 0.000000e+00, 225 iterations, 0.01 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0    0.00000    0   26          -    0.00000      -     -    0s
+     0     0    0.00000    0   25          -    0.00000      -     -    0s
+     0     0    0.00000    0   23          -    0.00000      -     -    0s
+     0     0    0.00000    0   44          -    0.00000      -     -    0s
+     0     0    0.00000    0   37          -    0.00000      -     -    0s
+     0     0    0.00000    0   34          -    0.00000      -     -    0s
+     0     0    0.00000    0   34          -    0.00000      -     -    0s
+     0     0    0.00000    0   28          -    0.00000      -     -    0s
+     0     0    0.00000    0   28          -    0.00000      -     -    0s
+     0     2    0.00000    0   24          -    0.00000      -     -    0s
+*  459   448              32     958.4757463    0.00000   100%  39.1    1s
+H  981   830                     779.9500533    0.00000   100%  35.2    1s
+H 1362   830                     653.6044056    0.00000   100%  32.5    1s
+H 1474  1115                     618.5678216    0.00000   100%  31.7    1s
+* 1633  1092              32      32.1634616    0.00000   100%  31.1    1s
+* 1974  1090              35      29.6198247    0.00000   100%  30.1    1s
+* 1977  1088              34      29.0142648    0.00000   100%  30.1    1s
+H 2467  1278                      28.6522315    0.00000   100%  29.9    1s
+H 2588  1269                      23.7389393    0.00000   100%  29.7    1s
+H 3166  1390                      23.7320077    0.00000   100%  29.3    3s
+H 3170  1323                      23.5510989    0.00000   100%  29.2    3s
+H 3170  1257                      23.5339110    0.00000   100%  29.2    3s
+H 3176  1199                      23.4171594    0.00000   100%  31.0    4s
+  3207  1235    0.00000   16   46   23.41716    0.00000   100%  31.4    5s
+H 3209  1174                      20.3985210    0.00000   100%  31.4    5s
+H 3296  1228                      16.9086076    0.00000   100%  32.4    5s
+H 3450  1237                      15.0107788    0.00000   100%  33.8    5s
+H 4882   969                      14.2230393    0.00000   100%  35.4    6s
+H 5921   683                      14.1795876    0.00000   100%  36.0    7s
+H 7536   891                      14.1312671    0.00000   100%  37.5    9s
+  9690  1345 infeasible   48        14.13127    0.00000   100%  38.8   10s
+ 16307  1903    5.02188   43   15   14.13127    0.00000   100%  43.3   15s
+
+Cutting planes:
+  Gomory: 7
+  Cover: 3
+  Implied bound: 22
+  Projected implied bound: 3
+  MIR: 4
+  Flow cover: 29
+  Inf proof: 2
+  Network: 1
+  RLT: 2
+  Relax-and-lift: 4
+
+Explored 16330 nodes (711064 simplex iterations) in 15.05 seconds (6.54 work units)
+Thread count was 16 (of 16 available processors)
+
+Solution count 10: 14.1313 14.1796 14.223 ... 23.732
+
+Time limit reached
+Best objective 1.413126712768e+01, best bound 8.881784197001e-15, gap 100.0000%
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+SOLVER RESULTS for EV 3:
+
+Problem: 
+- Name: x1
+  Lower bound: 8.881784197001252e-15
+  Upper bound: 14.1312671276796
+  Number of objectives: 1
+  Number of constraints: 1658
+  Number of variables: 702
+  Number of binary variables: 209
+  Number of integer variables: 209
+  Number of continuous variables: 493
+  Number of nonzeros: 4145
+  Sense: minimize
+Solver: 
+- Status: aborted
+  Return code: 0
+  Message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Termination condition: maxTimeLimit
+  Termination message: Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.
+  Wall time: 15.049000024795532
+  Error rc: 0
+Solution: 
+- number of solutions: 0
+  number of solutions displayed: 0
+
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 14.1312671276796
+Final gap: 100.0%
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+==================================================
+SUMMARY OF ALL EVs
+==================================================
+EV 1: Objective = 15.75
+EV 2: Objective = 18.46
+EV 3: Objective = 14.13
+
+==================================================
+Extracting aggregated demand...
+==================================================
+Raw aggregated demand results:
+     charging_station  time_period  aggregated_demand
+0                11.0            0           0.000000
+1                11.0            1           0.000000
+2                11.0            2           0.000000
+3                11.0            3           0.000000
+4                11.0            4           0.000000
+5                11.0            5           0.000000
+6                11.0            6           0.000000
+7                11.0            7           0.000000
+8                11.0            8           0.000000
+9                11.0            9           0.000000
+10               11.0           10           0.000000
+11               11.0           11           0.000000
+12               11.0           12           0.000000
+13               11.0           13           0.000000
+14               11.0           14           0.000000
+15               11.0           15           0.000000
+16               11.0           16           0.000000
+17               11.0           17           0.000000
+18               11.0           18           0.000000
+19               11.0           19           0.000000
+20               11.0           20           0.000000
+21               11.0           21           0.000000
+22               11.0           22           0.000000
+23               11.0           23           0.000000
+24               14.0            0           0.000000
+25               14.0            1           0.000000
+26               14.0            2           0.000000
+27               14.0            3           0.000000
+28               14.0            4           0.000000
+29               14.0            5           0.000000
+30               14.0            6           0.000000
+31               14.0            7           0.000000
+32               14.0            8           0.000000
+33               14.0            9           0.000000
+34               14.0           10           3.228807
+35               14.0           11          11.158428
+36               14.0           12          11.444256
+37               14.0           13           6.600000
+38               14.0           14           1.909789
+39               14.0           15           0.000000
+40               14.0           16           0.000000
+41               14.0           17           0.000000
+42               14.0           18           0.000000
+43               14.0           19           0.000000
+44               14.0           20           0.000000
+45               14.0           21           0.000000
+46               14.0           22           0.000000
+47               14.0           23           0.000000
+48               15.0            0           0.000000
+49               15.0            1           0.000000
+50               15.0            2           0.000000
+51               15.0            3           0.000000
+52               15.0            4           0.000000
+53               15.0            5           0.000000
+54               15.0            6           0.000000
+55               15.0            7           0.000000
+56               15.0            8           0.000000
+57               15.0            9           0.000000
+58               15.0           10           0.000000
+59               15.0           11           3.561167
+60               15.0           12           3.600000
+61               15.0           13           3.600000
+62               15.0           14           3.600000
+63               15.0           15           0.038833
+64               15.0           16           0.000000
+65               15.0           17           0.000000
+66               15.0           18           0.000000
+67               15.0           19           0.000000
+68               15.0           20           0.000000
+69               15.0           21           0.000000
+70               15.0           22           0.000000
+71               15.0           23           0.000000
+72               26.0            0           0.000000
+73               26.0            1           0.000000
+74               26.0            2           0.000000
+75               26.0            3           0.000000
+76               26.0            4           0.000000
+77               26.0            5           0.000000
+78               26.0            6           0.000000
+79               26.0            7           0.000000
+80               26.0            8           0.000000
+81               26.0            9           0.000000
+82               26.0           10           0.000000
+83               26.0           11           0.000000
+84               26.0           12           0.000000
+85               26.0           13           0.000000
+86               26.0           14           0.000000
+87               26.0           15           0.000000
+88               26.0           16           0.000000
+89               26.0           17           0.000000
+90               26.0           18           0.000000
+91               26.0           19           0.000000
+92               26.0           20           0.000000
+93               26.0           21           0.000000
+94               26.0           22           0.000000
+95               26.0           23           0.000000
+96               37.0            0           0.000000
+97               37.0            1           0.000000
+98               37.0            2           0.000000
+99               37.0            3           0.000000
+100              37.0            4           0.000000
+101              37.0            5           0.000000
+102              37.0            6           0.000000
+103              37.0            7           0.000000
+104              37.0            8           0.000000
+105              37.0            9           0.000000
+106              37.0           10           0.000000
+107              37.0           11           0.000000
+108              37.0           12           0.000000
+109              37.0           13           0.198894
+110              37.0           14           3.649986
+111              37.0           15           3.600000
+112              37.0           16           3.319040
+113              37.0           17           3.433254
+114              37.0           18           0.000000
+115              37.0           19           0.000000
+116              37.0           20           0.000000
+117              37.0           21           0.000000
+118              37.0           22           0.000000
+119              37.0           23           0.000000
+Aggregated demand extracted successfully!
+
+Saving aggregated demand data to ../data/training_data.csv...
+Aggregated demand data saved successfully to ../data/training_data.csv

@@ -200,7 +200,8 @@ if __name__ == "__main__":
     # Configuration
     linearize_constraints = True
     solver = "gurobi"
-    scenarios = [1]
+    # scenarios = list(range(2,1000))  # from scenario 2 to 999
+    scenarios = [1000]  # scenario with maximum prices
     # evs = [1]
     evs = None  # Solve for all EVs
     time_limit = 15
@@ -210,8 +211,8 @@ if __name__ == "__main__":
     scenarios_csv_file = "../data/scenarios.csv"
 
     # Output files
-    output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
-    # output_prefix = None  # Avoid saving files
+    # output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
+    output_prefix = None  # Avoid saving files
     training_data_path = "../data/training_data.csv"
 
     # Detailed logging
