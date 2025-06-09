@@ -215,14 +215,15 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
     return ev_results
 
 
-def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1,
+def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1,
                       linearize_constraints=False, tuned_params_file=None):
     """
     Solve the EV routing problem for all EVs in the dataset.
 
     Args:
         map_data: Raw map data object returned by load_excel_map_data
-        output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
+        output_prefix_solution: Prefix for solution files (e.g., "../data/37-intersection map")
+        output_prefix_image: Prefix for image files (e.g., "../data/37-intersection map")
         model_prefix: Prefix for saving models in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
         time_limit: Time limit in seconds per EV (default: 300)
@@ -243,12 +244,13 @@ def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="g
             print(f"Processing EV {ev}")
             print(f"{'=' * 50}")
 
-        # Generate output file paths if prefix provided
+        # Generate output file paths if prefixes provided
         output_excel_file = None
         output_image_file = None
-        if output_prefix:
-            output_excel_file = f"{output_prefix} EV{ev} Solution.xlsx"
-            output_image_file = f"{output_prefix} EV{ev} Solution Map.png"
+        if output_prefix_solution:
+            output_excel_file = f"{output_prefix_solution} EV{ev} Solution.xlsx"
+        if output_prefix_image:
+            output_image_file = f"{output_prefix_image} EV{ev} Solution Map.png"
 
         # Solve for this EV
         ev_results = solve_for_one_ev(
@@ -293,13 +295,13 @@ def solve_for_all_evs(map_data, output_prefix=None, model_prefix=None, solver="g
     all_results["aggregated_demand"] = aggregated_demand
 
     # Create scenario analysis plots if output prefix is provided
-    if output_prefix:
+    if output_prefix_image:
         if verbose >= 1:
             print(f"\n{'=' * 50}")
             print("Creating scenario analysis plots...")
             print(f"{'=' * 50}")
         try:
-            output_plot_file = f"{output_prefix} Scenario Analysis.png"
+            output_plot_file = f"{output_prefix_image} Scenario Analysis.png"
             create_scenario_analysis_plots(all_results, map_data, output_plot_file, aggregated_demand=aggregated_demand, verbose=verbose)
             if verbose >= 1:
                 print("Scenario analysis plots created successfully!")

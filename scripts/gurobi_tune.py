@@ -3,8 +3,8 @@ import gurobipy as gp
 
 if __name__ == "__main__":
 
-    model_path = "../data/37-intersection map LIN EV1 Model.mps"
-    parameters_prefix = "../data/37-intersection map LIN EV1 Tuned Parameters"
+    model_path = "../gurobi_parameters/37-intersection map LIN EV1 Model.mps"
+    parameters_prefix = "../gurobi_parameters/37-intersection map LIN EV1 Tuned Parameters"
     hours_tuning = 2
 
     params = {

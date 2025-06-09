@@ -3,40 +3,17 @@ import pandas as pd
 import sys
 import os
 from datetime import datetime
+from utils import TeeOutput
 
 
-class TeeOutput:
-    """Class to write output to both console and file simultaneously."""
-
-    def __init__(self, file_path):
-        self.terminal = sys.stdout
-        self.log_file = None
-        if file_path is not None:
-            self.log_file = open(file_path, 'w', encoding='utf-8')
-
-    def write(self, message):
-        self.terminal.write(message)
-        if self.log_file:
-            self.log_file.write(message)
-            self.log_file.flush()  # Ensure immediate writing to file
-
-    def flush(self):
-        self.terminal.flush()
-        if self.log_file:
-            self.log_file.flush()
-
-    def close(self):
-        if self.log_file:
-            self.log_file.close()
-
-
-def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None, training_data=None):
+def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None, training_data=None):
     """
     Main function to solve EV routing problem.
     
     Args:
         input_excel_file: Path to input Excel file
-        output_prefix: Prefix for output files (e.g., "../data/37-intersection map")
+        output_prefix_solution: Prefix for solution files (e.g., "../data/37-intersection map")
+        output_prefix_image: Prefix for image files (e.g., "../data/37-intersection map")
         model_prefix: Prefix for saving routing_model in MPS format (optional, e.g., "../models/optimization")
         solver: Solver to use (default: "gurobi")
         ev: Specific EV(s) to solve for. Can be:
@@ -77,9 +54,11 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         if verbose >= 1:
             print(f"Charging prices for scenario {scenario}: {charging_prices}")
         
-        # Update output prefix to include scenario
-        if output_prefix:
-            output_prefix = f"{output_prefix} S{scenario}"
+        # Update output prefixes to include scenario
+        if output_prefix_solution:
+            output_prefix_solution = f"{output_prefix_solution} S{scenario}"
+        if output_prefix_image:
+            output_prefix_image = f"{output_prefix_image} S{scenario}"
     
     # Load data from Excel file once
     if verbose >= 1:
@@ -97,7 +76,8 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
         
         results = solve_for_all_evs(
             map_data=map_data,
-            output_prefix=output_prefix,
+            output_prefix_solution=output_prefix_solution,
+            output_prefix_image=output_prefix_image,
             model_prefix=model_prefix,
             solver=solver,
             time_limit=time_limit,
@@ -123,20 +103,37 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
                 
                 # Save to CSV
                 if verbose >= 1:
-                    print(f"\nSaving aggregated demand data to {training_data}...")
+                    print(f"\nChecking for existing data and saving aggregated demand data to {training_data}...")
                 try:
                     # Create directory if it doesn't exist
                     os.makedirs(os.path.dirname(training_data), exist_ok=True)
                     
-                    # Check if file exists to determine if headers should be written
+                    # Check if file exists and if scenario data already exists
                     file_exists = os.path.isfile(training_data)
+                    scenario_exists = False
                     
-                    # Write to CSV (append if file exists)
-                    aggregated_demand.to_csv(training_data, mode='a' if file_exists else 'w', 
-                                           index=False, header=not file_exists)
+                    if file_exists:
+                        # Read existing data to check for duplicates
+                        try:
+                            existing_df = pd.read_csv(training_data)
+                            if 'scenario' in existing_df.columns:
+                                scenario_exists = scenario_value in existing_df['scenario'].values
+                                if scenario_exists:
+                                    if verbose >= 1:
+                                        print(f"Scenario {scenario_value} already exists in training data. Skipping duplicate entry.")
+                        except Exception as read_error:
+                            if verbose >= 1:
+                                print(f"Warning: Could not read existing file to check for duplicates: {read_error}")
+                            # Continue with normal append behavior if we can't read the file
                     
-                    if verbose >= 1:
-                        print(f"Aggregated demand data saved successfully to {training_data}")
+                    # Only write if scenario doesn't already exist
+                    if not scenario_exists:
+                        # Write to CSV (append if file exists)
+                        aggregated_demand.to_csv(training_data, mode='a' if file_exists else 'w', 
+                                               index=False, header=not file_exists)
+                        if verbose >= 1:
+                            print(f"Aggregated demand data for scenario {scenario_value} saved successfully to {training_data}")
+                    
                 except Exception as e:
                     if verbose >= 1:
                         print(f"Error saving aggregated demand data: {e}")
@@ -164,12 +161,13 @@ def main(input_excel_file, output_prefix=None, model_prefix=None, solver="gurobi
                 print(f"EV Routing Solver Output - Scenario {scenario}, EV {current_ev} - {now}")
                 print("=" * 60, "\n", sep="")
 
-            # Generate output file paths if prefix provided
+            # Generate output file paths if prefixes provided
             output_excel_file = None
             output_image_file = None
-            if output_prefix:
-                output_excel_file = f"{output_prefix} EV{current_ev} Solution.xlsx"
-                output_image_file = f"{output_prefix} EV{current_ev} Solution Map.png"
+            if output_prefix_solution:
+                output_excel_file = f"{output_prefix_solution} EV{current_ev} Solution.xlsx"
+            if output_prefix_image:
+                output_image_file = f"{output_prefix_image} EV{current_ev} Solution Map.png"
             
             result = solve_for_one_ev(
                 map_data=map_data,
@@ -211,13 +209,18 @@ if __name__ == "__main__":
     scenarios_csv_file = "../data/scenarios.csv"
 
     # Output files
-    # output_prefix = f"../data/37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
-    output_prefix = None  # Avoid saving files
+    sol_name = f"37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
+    output_prefix_solution = f"../solutions/{sol_name}"
+    # output_prefix = None  # Avoid saving solution
+    output_prefix_image = f"../images/{sol_name}"
+    # output_prefix_image = None  # Avoid saving image
+    # output_prefix_model = f"../gurobi_parameters/{sol_name}"
+    output_prefix_model = None  # Avoid saving concrete model
     training_data_path = "../data/training_data.csv"
 
     # Detailed logging
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file_path = f"../data/routing_solver_output_{timestamp}.txt"
+    log_file_path = f"../logs/routing_solver_output_{timestamp}.txt"
     # log_file_path = None
     
     # Set up output redirection to both console and file
@@ -232,7 +235,8 @@ if __name__ == "__main__":
             main(
                 scenario=scenario,
                 ev=evs,
-                output_prefix=output_prefix,
+                output_prefix_solution=output_prefix_solution,
+                output_prefix_image=output_prefix_image,
                 linearize_constraints=linearize_constraints,
                 solver=solver,
                 time_limit=time_limit,
@@ -240,8 +244,8 @@ if __name__ == "__main__":
                 input_excel_file=input_excel_file,
                 scenarios_csv_file=scenarios_csv_file,
                 training_data=training_data_path,
-                # model_prefix=output_prefix,
-                # tuned_params_file="../data/tuned_params_1.prm"
+                # model_prefix=output_prefix_model,
+                # tuned_params_file="../gurobi_parameters/tuned_params_1.prm"
             )
         
     except Exception as e:

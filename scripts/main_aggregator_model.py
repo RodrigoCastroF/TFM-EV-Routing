@@ -6,31 +6,7 @@ from aggregator_model import solve_aggregator_model
 import sys
 import os
 from datetime import datetime
-
-
-class TeeOutput:
-    """Class to write output to both console and file simultaneously."""
-
-    def __init__(self, file_path):
-        self.terminal = sys.stdout
-        self.log_file = None
-        if file_path is not None:
-            self.log_file = open(file_path, 'w', encoding='utf-8')
-
-    def write(self, message):
-        self.terminal.write(message)
-        if self.log_file:
-            self.log_file.write(message)
-            self.log_file.flush()  # Ensure immediate writing to file
-
-    def flush(self):
-        self.terminal.flush()
-        if self.log_file:
-            self.log_file.flush()
-
-    def close(self):
-        if self.log_file:
-            self.log_file.close()
+from utils import TeeOutput
 
 
 def main(input_excel_file, performance_csv_file, training_data_csv_file, trust_region=True, output_excel_file=None,
@@ -137,11 +113,11 @@ if __name__ == "__main__":
     training_data_csv_file = "../regressors/profit_dummy_training_data.csv"
     
     # Output files
-    output_excel_file = "../data/37-intersection map Aggregator Solution.xlsx"
+    output_excel_file = "../solutions/37-intersection map Aggregator Solution.xlsx"
 
     # Detailed logging
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file_path = f"../data/aggregator_solver_output_{timestamp}.txt"
+    log_file_path = f"../logs/aggregator_solver_output_{timestamp}.txt"
     
     # Check if input files exist
     if not os.path.exists(input_excel_file):

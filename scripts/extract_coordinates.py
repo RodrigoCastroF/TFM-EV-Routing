@@ -151,7 +151,7 @@ def save_coordinates_to_excel(coordinates, excel_file_path):
 if __name__ == "__main__":
 
     # Paths
-    image_path = "../data/37-intersection map.png"
+    image_path = "../images/37-intersection map.png"
     excel_file_path = "../data/37-intersection map.xlsx"
     num_nodes = 38  # Including ending point (duplicate of starting point)
     
