@@ -296,8 +296,8 @@ def main():
     """
     
     # Define file paths
-    input_file = "../data/routing_solver_output_20250602_180046.txt"
-    output_file = "../data/routing_solver_output_20250602_180046_analysis.png"
+    input_file = "../logs/routing_solver_output_20250602_180046.txt"
+    output_file = "../images/routing_solver_output_20250602_180046_analysis.png"
     
     # Filter options (None means show all)
     scenarios_filter = None  # e.g., [0, 1] to show only scenarios 0 and 1
