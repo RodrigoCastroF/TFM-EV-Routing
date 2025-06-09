@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import pickle
 import opticl
 import itertools
 from aggregator_model.get_aggregator_map_data import load_aggregator_excel_data
@@ -232,8 +233,13 @@ def train_profit_regression_model(scenarios_file, demand_file, aggregator_excel_
                                        parameter_grid=None,
                                        save_path=model_save,
                                        save=False,
-                                       save_pickle=True,
-                                       pickle_dir=alg_dir)  # Save pickle files in algorithm folder
+                                       save_pickle=False,  # We'll save pickle manually with prefix
+                                       pickle_dir=alg_dir)
+            
+            # Save pickle file with prefix in filename
+            pickle_file = os.path.join(alg_dir, f"{prefix}_{outcome}_{alg}_model.pkl")
+            with open(pickle_file, 'wb') as f:
+                pickle.dump(m, f)
             
             # Save model for ConstraintLearning class (required for opticl optimization)
             constraintL = opticl.ConstraintLearning(X_train, pd.DataFrame(y_train), m, alg)
