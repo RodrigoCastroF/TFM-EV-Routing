@@ -105,15 +105,17 @@ if __name__ == "__main__":
     solver = "gurobi"  # or "cbc", "glpk", "cplex"
     time_limit = 15  # seconds
     verbose = 2  # 0=silent, 1=basic, 2=detailed
-    trust_region = True
+    trust_region = False
+    restricted = True
 
     # Input files
-    input_excel_file = "../data/37-intersection map Aggregator.xlsx"
-    performance_csv_file = "../regressors/profit_dummy_performance_comparison.csv"
-    training_data_csv_file = "../regressors/profit_dummy_training_data.csv"
+    restricted_str = ' Restricted' if restricted else ' Unrestricted'
+    input_excel_file = f"../data/37-intersection map Aggregator{restricted_str}.xlsx"
+    performance_csv_file = "../regressors/37map_1001scenarios_performance_comparison.csv"
+    training_data_csv_file = "../regressors/37map_1001scenarios_training_data.csv"
     
     # Output files
-    output_excel_file = "../solutions/37-intersection map Aggregator Solution.xlsx"
+    output_excel_file = f"../solutions/37-intersection map Aggregator{restricted_str} Solution{' TR' if trust_region else ''}.xlsx"
 
     # Detailed logging
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

@@ -8,6 +8,101 @@ from aggregator_model.get_aggregator_map_data import load_aggregator_excel_data
 from sklearn.model_selection import train_test_split
 
 
+def compute_scenario_profit(scenario, demand_df, scenarios_df, electricity_costs, verbose=0):
+    """
+    Compute profit for a single scenario.
+    
+    Parameters:
+    -----------
+    scenario : int
+        Scenario ID to compute profit for
+    demand_df : pd.DataFrame
+        DataFrame containing aggregated demand data with columns:
+        ['scenario', 'charging_station', 'time_period', 'aggregated_demand']
+    scenarios_df : pd.DataFrame
+        DataFrame containing charging prices for each scenario
+    electricity_costs : dict
+        Dictionary mapping time_period to electricity cost (C_t)
+    verbose : int, default=0
+        Verbosity level (0=silent, 1=detailed computations)
+    
+    Returns:
+    --------
+    float
+        Profit for the scenario (revenue - cost)
+    """
+    # Get charging stations from scenarios dataframe
+    charging_stations = [col for col in scenarios_df.columns if col != 'scenario']
+    
+    # Check if scenario exists in both dataframes
+    if scenario not in scenarios_df['scenario'].values:
+        raise ValueError(f"Scenario {scenario} not found in scenarios dataframe")
+    
+    if scenario not in demand_df['scenario'].values:
+        raise ValueError(f"Scenario {scenario} not found in demand dataframe")
+    
+    # Get charging prices for this scenario
+    scenario_prices = scenarios_df[scenarios_df['scenario'] == scenario]
+    prices = {station: scenario_prices[str(station)].iloc[0] for station in charging_stations}
+    
+    # Get demand data for this scenario
+    scenario_demand = demand_df[demand_df['scenario'] == scenario]
+    
+    if verbose >= 1:
+        print(f"\n--- Scenario {scenario} Profit Computation ---")
+        print(f"Charging prices: {prices}")
+        print(f"Total demand records: {len(scenario_demand)}")
+    
+    # Calculate revenue: sum_i sum_t r^C_i * d_{i,t}
+    revenue = 0
+    revenue_details = {}
+    for _, row in scenario_demand.iterrows():
+        station = str(int(row['charging_station']))  # Convert to string to match prices keys
+        demand = row['aggregated_demand']
+        price = prices[station]
+        station_revenue = price * demand
+        revenue += station_revenue
+        
+        if verbose >= 1 and demand > 0:  # Only show non-zero demand
+            if station not in revenue_details:
+                revenue_details[station] = []
+            revenue_details[station].append(f"t{row['time_period']}:{demand:.3f}kWh*${price:.3f}=${station_revenue:.4f}")
+    
+    # Calculate cost: sum_i sum_t C_t * d_{i,t}
+    cost = 0
+    cost_details = {}
+    for _, row in scenario_demand.iterrows():
+        time_period = int(row['time_period'])  # Convert to int to match electricity_costs keys
+        demand = row['aggregated_demand']
+        elec_cost = electricity_costs[time_period]
+        period_cost = elec_cost * demand
+        cost += period_cost
+        
+        if verbose >= 1 and demand > 0:  # Only show non-zero demand
+            station = str(int(row['charging_station']))  # Convert to string for consistency
+            key = f"t{time_period}"
+            if key not in cost_details:
+                cost_details[key] = []
+            cost_details[key].append(f"s{station}:{demand:.3f}kWh*${elec_cost:.3f}=${period_cost:.4f}")
+    
+    # Profit = revenue - cost
+    profit = revenue - cost
+    
+    if verbose >= 1:
+        print(f"Revenue breakdown by station:")
+        for station, details in revenue_details.items():
+            print(f"  Station {station}: {' + '.join(details)}")
+        print(f"Cost breakdown by time period:")
+        for period, details in cost_details.items():
+            print(f"  {period}: {' + '.join(details)}")
+        print(f"Total Revenue: ${revenue:.4f}")
+        print(f"Total Cost: ${cost:.4f}")
+        print(f"Profit: ${profit:.4f}")
+        print(f"--- End Scenario {scenario} Profit Computation ---\n")
+    
+    return profit
+
+
 def train_profit_regression_model(scenarios_file, demand_file, aggregator_excel_file, 
                                   output_folder, prefix, cv_folds=5, verbose=1):
     """
@@ -79,66 +174,23 @@ def train_profit_regression_model(scenarios_file, demand_file, aggregator_excel_
         if verbose >= 1 and scenario % 1000 == 0:
             print(f"Processing scenario {scenario}...")
         
-        # Get charging prices for this scenario
-        scenario_prices = scenarios_df[scenarios_df['scenario'] == scenario]
-        prices = {station: scenario_prices[str(station)].iloc[0] for station in charging_stations}
-        
-        # Get demand data for this scenario
-        scenario_demand = demand_df[demand_df['scenario'] == scenario]
-        
-        if verbose >= 2:
-            print(f"\n--- Scenario {scenario} Details ---")
-            print(f"Charging prices: {prices}")
-            print(f"Total demand records: {len(scenario_demand)}")
-        
-        # Calculate revenue: sum_i sum_t r^C_i * d_{i,t}
-        revenue = 0
-        revenue_details = {}
-        for _, row in scenario_demand.iterrows():
-            station = str(int(row['charging_station']))  # Convert to string to match prices keys
-            demand = row['aggregated_demand']
-            price = prices[station]
-            station_revenue = price * demand
-            revenue += station_revenue
+        try:
+            # Use the new compute_scenario_profit function
+            profit = compute_scenario_profit(
+                scenario=scenario,
+                demand_df=demand_df,
+                scenarios_df=scenarios_df,
+                electricity_costs=electricity_costs,
+                verbose=verbose if verbose >= 2 else 0  # Only show detailed computations if verbose >= 2
+            )
             
-            if verbose >= 2 and demand > 0:  # Only show non-zero demand
-                if station not in revenue_details:
-                    revenue_details[station] = []
-                revenue_details[station].append(f"t{row['time_period']}:{demand:.3f}kWh*${price:.3f}=${station_revenue:.4f}")
-        
-        # Calculate cost: sum_i sum_t C_t * d_{i,t}
-        cost = 0
-        cost_details = {}
-        for _, row in scenario_demand.iterrows():
-            time_period = int(row['time_period'])  # Convert to int to match electricity_costs keys
-            demand = row['aggregated_demand']
-            elec_cost = electricity_costs[time_period]
-            period_cost = elec_cost * demand
-            cost += period_cost
+            profits.append(profit)
+            processed_scenarios.append(scenario)
             
-            if verbose >= 2 and demand > 0:  # Only show non-zero demand
-                station = str(int(row['charging_station']))  # Convert to string for consistency
-                key = f"t{time_period}"
-                if key not in cost_details:
-                    cost_details[key] = []
-                cost_details[key].append(f"s{station}:{demand:.3f}kWh*${elec_cost:.3f}=${period_cost:.4f}")
-        
-        # Profit = revenue - cost
-        profit = revenue - cost
-        profits.append(profit)
-        processed_scenarios.append(scenario)
-        
-        if verbose >= 2:
-            print(f"Revenue breakdown by station:")
-            for station, details in revenue_details.items():
-                print(f"  Station {station}: {' + '.join(details)}")
-            print(f"Cost breakdown by time period:")
-            for period, details in cost_details.items():
-                print(f"  {period}: {' + '.join(details)}")
-            print(f"Total Revenue: ${revenue:.4f}")
-            print(f"Total Cost: ${cost:.4f}")
-            print(f"Profit: ${profit:.4f}")
-            print(f"--- End Scenario {scenario} ---\n")
+        except Exception as e:
+            if verbose >= 1:
+                print(f"Error processing scenario {scenario}: {e}")
+            continue
     
     # Create features DataFrame for processed scenarios only
     X = scenarios_df[scenarios_df['scenario'].isin(processed_scenarios)][charging_stations].copy()

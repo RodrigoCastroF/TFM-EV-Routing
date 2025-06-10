@@ -92,7 +92,7 @@ def extract_solution_data(model_instance):
     return solution_data
 
 
-def save_solution_data(solution_data, file_path: str):
+def save_solution_data(solution_data, file_path: str, metadata=None):
     """
     Save the solution data from a solved Pyomo routing_model instance to an Excel file.
 
@@ -102,6 +102,8 @@ def save_solution_data(solution_data, file_path: str):
         A dictionary containing the solution data from extract_solution_data().
     file_path: str
         The path where the Excel file should be saved (should end with .xlsx).
+    metadata: dict, optional
+        Dictionary containing solver metadata (solver_status, termination_condition, etc.).
     """
     
     intersections_df = solution_data['intersections_df']
@@ -111,6 +113,49 @@ def save_solution_data(solution_data, file_path: str):
     with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
         intersections_df.to_excel(writer, sheet_name='sIntersections', index=False)
         paths_df.to_excel(writer, sheet_name='sPaths', index=False)
+        
+        # Save metadata if provided
+        if metadata:
+            metadata_df = pd.DataFrame([metadata])
+            metadata_df.to_excel(writer, sheet_name='Unindexed', index=False)
+
+
+def load_solution_data(file_path: str):
+    """
+    Load solution data from an Excel file saved by save_solution_data.
+
+    Parameters
+    ----------
+    file_path: str
+        The path to the Excel file to load.
+
+    Returns
+    -------
+    tuple
+        (solution_data, metadata) where solution_data is a dict with 'intersections_df' and 'paths_df',
+        and metadata is a dict with solver information (or None if not available).
+    """
+    
+    # Load the main solution data
+    intersections_df = pd.read_excel(file_path, sheet_name='sIntersections')
+    paths_df = pd.read_excel(file_path, sheet_name='sPaths')
+    
+    solution_data = {
+        'intersections_df': intersections_df,
+        'paths_df': paths_df
+    }
+    
+    # Try to load metadata
+    metadata = None
+    try:
+        metadata_df = pd.read_excel(file_path, sheet_name='Unindexed')
+        if not metadata_df.empty:
+            metadata = metadata_df.iloc[0].to_dict()
+    except Exception:
+        # Metadata sheet doesn't exist or couldn't be read
+        pass
+    
+    return solution_data, metadata
 
 
 def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, eps: float = 1e-5, decimal_precision: int = 1):

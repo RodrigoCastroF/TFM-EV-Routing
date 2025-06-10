@@ -1,0 +1,2 @@
+save_path,seed,cv_folds,task,parameters,best_params,valid_score,train_score,train_r2,test_score,test_r2,outcome,alg
+../regressors\rf\37map_1001scenarios_profit_model.csv,42,5,continuous,"{'n_estimators': [10, 25], 'max_features': ['sqrt'], 'max_depth': [2, 3, 4]}","{'max_depth': 4, 'max_features': 'sqrt', 'n_estimators': 25}",-9.777570746827056,8.311336685905685,0.7556716629168851,11.738468320282253,0.6959630196800128,profit,rf

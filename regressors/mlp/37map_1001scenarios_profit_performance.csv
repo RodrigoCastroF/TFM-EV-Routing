@@ -1,0 +1,2 @@
+save_path,seed,cv_folds,task,parameters,best_params,valid_score,train_score,train_r2,test_score,test_r2,outcome,alg
+../regressors\mlp\37map_1001scenarios_profit_model.csv,42,5,continuous,"{'hidden_layer_sizes': [(10,), (20,), (50,), (100,)]}","{'hidden_layer_sizes': (50,)}",-4.012115271012688,3.0686146742781175,0.909791944563305,3.899124096265827,0.8990091480612306,profit,mlp

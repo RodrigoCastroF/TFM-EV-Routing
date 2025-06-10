@@ -1,6 +1,6 @@
 from .get_routing_map_data import filter_map_data_for_ev
 from .get_routing_abstract_model import get_ev_routing_abstract_model
-from .save_ev_solution_data import extract_solution_data, save_solution_data, create_solution_map
+from .save_ev_solution_data import extract_solution_data, save_solution_data, create_solution_map, load_solution_data
 from .save_scenario_solution_data import extract_aggregated_demand, create_scenario_analysis_plots
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
@@ -8,7 +8,7 @@ import os
 
 
 def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=None, model_prefix=None, solver="gurobi",
-                     time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None):
+                     time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None, load_if_exists=False):
     """
     Solve the EV routing problem for a single EV.
 
@@ -23,10 +23,59 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
         linearize_constraints: Whether to use linearized constraints (default: False)
         tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
+        load_if_exists: Whether to load existing solution from Excel file if it exists (default: False)
 
     Returns:
         Dictionary with solution results
     """
+
+    # Check if we should load existing solution
+    if load_if_exists and output_excel_file and os.path.exists(output_excel_file):
+        if verbose >= 1:
+            print(f"Loading existing solution for EV {ev} from {output_excel_file}...")
+        try:
+            solution_data, metadata = load_solution_data(output_excel_file)
+            
+            # Reconstruct results with loaded data
+            ev_results = {'ev': ev, 'solution_data': solution_data}
+            if metadata:
+                ev_results.update(metadata)
+            else:
+                # Set default values if metadata is missing
+                ev_results.update({
+                    'solver_status': None,
+                    'termination_condition': None,
+                    'objective_value': None,
+                    'final_gap': None,
+                    'execution_time': None,
+                    'lower_bound': None,
+                    'upper_bound': None
+                })
+            
+            if verbose >= 1:
+                print(f"Solution for EV {ev} loaded successfully!")
+                if 'objective_value' in ev_results and ev_results['objective_value'] is not None:
+                    print(f"Objective function value for EV {ev}: {ev_results['objective_value']}")
+            
+            # Create solution map if requested
+            if output_image_file:
+                input_data = filter_map_data_for_ev(map_data, ev)
+                if verbose >= 1:
+                    print(f"Creating solution map visualization for EV {ev}: {output_image_file}...")
+                try:
+                    create_solution_map(solution_data, input_data, output_image_file, ev=ev)
+                    if verbose >= 1:
+                        print(f"Solution map for EV {ev} created successfully!")
+                except Exception as e:
+                    if verbose >= 1:
+                        print(f"Error creating solution map for EV {ev}: {e}")
+            
+            return ev_results
+            
+        except Exception as e:
+            if verbose >= 1:
+                print(f"Error loading solution for EV {ev}: {e}")
+                print(f"Falling back to solving the model...")
 
     # Filter data for the specific EV
     if verbose >= 1:
@@ -180,7 +229,17 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
         if verbose >= 1:
             print(f"\nSaving solution data for EV {ev} to {output_excel_file}...")
         try:
-            save_solution_data(solution_data, output_excel_file)
+            # Prepare metadata for saving
+            metadata = {
+                'solver_status': str(results.solver.status),
+                'termination_condition': str(results.solver.termination_condition),
+                'objective_value': obj_value,
+                'final_gap': final_gap,
+                'execution_time': execution_time,
+                'lower_bound': lower_bound,
+                'upper_bound': upper_bound
+            }
+            save_solution_data(solution_data, output_excel_file, metadata=metadata)
             if verbose >= 1:
                 print(f"Solution data for EV {ev} saved successfully!")
         except Exception as e:
@@ -216,7 +275,7 @@ def solve_for_one_ev(map_data, ev, output_excel_file=None, output_image_file=Non
 
 
 def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image=None, model_prefix=None, solver="gurobi", time_limit=300, verbose=1,
-                      linearize_constraints=False, tuned_params_file=None):
+                      linearize_constraints=False, tuned_params_file=None, load_if_exists=False):
     """
     Solve the EV routing problem for all EVs in the dataset.
 
@@ -230,6 +289,7 @@ def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image
         verbose: Verbosity level (0=silent, 1=basic, 2=detailed)
         linearize_constraints: Whether to use linearized constraints (default: False)
         tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
+        load_if_exists: Whether to load existing solutions from Excel files if they exist (default: False)
 
     Returns:
         Dictionary with results for all EVs
@@ -263,7 +323,8 @@ def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image
             time_limit=time_limit,
             verbose=verbose,
             linearize_constraints=linearize_constraints,
-            tuned_params_file=tuned_params_file
+            tuned_params_file=tuned_params_file,
+            load_if_exists=load_if_exists
         )
 
         all_results[ev] = ev_results
@@ -273,7 +334,7 @@ def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image
         print("SUMMARY OF ALL EVs")
         print(f"{'=' * 50}")
         for ev, results in all_results.items():
-            if 'objective_value' in results:
+            if 'objective_value' in results and results['objective_value'] is not None:
                 print(f"EV {ev}: Objective = {results['objective_value']:.2f}")
             else:
                 print(f"EV {ev}: {results.get('solver_status', 'unknown status')}")

@@ -1,0 +1,2 @@
+save_path,seed,cv_folds,task,parameters,best_params,valid_score,train_score,train_r2,test_score,test_r2,outcome,alg
+../regressors\cart\37map_1001scenarios_profit_model.csv,42,5,continuous,"{'max_depth': [3, 4, 5, 6, 7, 8, 9, 10], 'min_samples_leaf': [0.02, 0.04, 0.06], 'max_features': [0.4, 0.6, 0.8, 1.0]}","{'max_depth': 10, 'max_features': 1.0, 'min_samples_leaf': 0.02}",-7.744409024606982,4.48343176066001,0.8682005713515006,8.805886038925717,0.7719195616270547,profit,cart

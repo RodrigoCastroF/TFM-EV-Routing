@@ -2,11 +2,14 @@ from routing_model import load_excel_map_data, solve_for_one_ev, solve_for_all_e
 import pandas as pd
 import sys
 import os
+import traceback
 from datetime import datetime
 from utils import TeeOutput
+from regression_model.train_profit_model import compute_scenario_profit
+from aggregator_model.get_aggregator_map_data import load_aggregator_excel_data
 
 
-def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None, training_data=None):
+def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None, training_data=None, compute_profit=False, aggregator_excel_file=None, load_if_exists=False):
     """
     Main function to solve EV routing problem.
     
@@ -27,6 +30,9 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
         linearize_constraints: Whether to use linearized constraints (default: False)
         tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
         training_data: Path to save aggregated demand data as CSV (optional)
+        compute_profit: Whether to compute and display profit for the scenario (default: False)
+        aggregator_excel_file: Path to Excel file containing electricity costs (required if compute_profit=True)
+        load_if_exists: Whether to load existing solutions from Excel files if they exist (default: False)
     
     Returns:
         Dictionary with results (single result for one EV, list of results for multiple EVs)
@@ -83,7 +89,8 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
             time_limit=time_limit,
             verbose=verbose,
             linearize_constraints=linearize_constraints,
-            tuned_params_file=tuned_params_file
+            tuned_params_file=tuned_params_file,
+            load_if_exists=load_if_exists
         )
         
         # Save aggregated demand data to CSV if training_data is provided
@@ -138,6 +145,55 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
                     if verbose >= 1:
                         print(f"Error saving aggregated demand data: {e}")
         
+        # Compute profit if requested
+        if compute_profit and scenario is not None:
+            if aggregator_excel_file is None:
+                if verbose >= 1:
+                    print("Warning: Cannot compute profit - aggregator_excel_file not provided")
+            elif training_data is None:
+                if verbose >= 1:
+                    print("Warning: Cannot compute profit - training_data path not provided")
+            else:
+                try:
+                    if verbose >= 1:
+                        print(f"\nComputing profit for scenario {scenario}...")
+                    
+                    # Load scenarios dataframe
+                    scenarios_df = pd.read_csv(scenarios_csv_file)
+                    
+                    # Load demand data
+                    if os.path.exists(training_data):
+                        demand_df = pd.read_csv(training_data)
+                    else:
+                        if verbose >= 1:
+                            print(f"Warning: Training data file {training_data} not found. Cannot compute profit.")
+                        return results
+                    
+                    # Load electricity costs
+                    aggregator_data = load_aggregator_excel_data(aggregator_excel_file, verbose=0)
+                    electricity_costs = aggregator_data[None]['pElectricityCost']
+                    
+                    # Compute profit for the scenario
+                    profit = compute_scenario_profit(
+                        scenario=scenario,
+                        demand_df=demand_df,
+                        scenarios_df=scenarios_df,
+                        electricity_costs=electricity_costs,
+                        verbose=verbose
+                    )
+                    
+                    if verbose >= 1:
+                        print(f"Scenario {scenario} Profit: ${profit:.4f}")
+                    
+                    # Add profit to results
+                    if isinstance(results, dict):
+                        results['scenario_profit'] = profit
+                    
+                except Exception as e:
+                    if verbose >= 1:
+                        print(f"Error computing profit: {e}")
+                        traceback.print_exc()
+        
         return results
     else:
         # Convert single EV to list for uniform handling
@@ -179,14 +235,13 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
                 time_limit=time_limit,
                 verbose=verbose,
                 linearize_constraints=linearize_constraints,
-                tuned_params_file=tuned_params_file
+                tuned_params_file=tuned_params_file,
+                load_if_exists=load_if_exists
             )
             results.append(result)
 
             if verbose >= 1:
                 print("Final Results:", result)
-                if log_file_path:
-                    print(f"Output saved to: {log_file_path}")
                 print("\n" + "=" * 60)
         
         # Return single result for single EV, list of results for multiple EVs
@@ -199,14 +254,16 @@ if __name__ == "__main__":
     linearize_constraints = True
     solver = "gurobi"
     # scenarios = list(range(2,1000))  # from scenario 2 to 999
-    scenarios = [1000]  # scenario with maximum prices
+    scenarios = [10_001]
     # evs = [1]
     evs = None  # Solve for all EVs
     time_limit = 15
+    load_if_exists = True
 
     # Input files
     input_excel_file = "../data/37-intersection map.xlsx"
     scenarios_csv_file = "../data/scenarios.csv"
+    aggregator_excel_file = "../data/37-intersection map Aggregator Unrestricted.xlsx"
 
     # Output files
     sol_name = f"37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
@@ -216,7 +273,8 @@ if __name__ == "__main__":
     # output_prefix_image = None  # Avoid saving image
     # output_prefix_model = f"../gurobi_parameters/{sol_name}"
     output_prefix_model = None  # Avoid saving concrete model
-    training_data_path = "../data/training_data.csv"
+    # training_data_path = "../data/training_data.csv"
+    training_data_path = None  # Avoid updating training data
 
     # Detailed logging
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -238,12 +296,15 @@ if __name__ == "__main__":
                 output_prefix_solution=output_prefix_solution,
                 output_prefix_image=output_prefix_image,
                 linearize_constraints=linearize_constraints,
+                load_if_exists=load_if_exists,
                 solver=solver,
                 time_limit=time_limit,
                 verbose=2,
                 input_excel_file=input_excel_file,
                 scenarios_csv_file=scenarios_csv_file,
                 training_data=training_data_path,
+                compute_profit=True,
+                aggregator_excel_file=aggregator_excel_file,
                 # model_prefix=output_prefix_model,
                 # tuned_params_file="../gurobi_parameters/tuned_params_1.prm"
             )
