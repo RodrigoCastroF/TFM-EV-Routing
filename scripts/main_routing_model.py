@@ -40,6 +40,7 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
     
     # Handle scenario-based charging prices
     charging_prices = None
+    scenarios_df = None
     if scenario is not None:
         if scenarios_csv_file is None:
             raise ValueError("scenarios_csv_file must be provided when scenario is specified")
@@ -47,13 +48,13 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
             print(f"Loading charging prices for scenario {scenario} from {scenarios_csv_file}...")
         
         # Load scenario charging prices
-        df = pd.read_csv(scenarios_csv_file)
-        scenario_row = df[df['scenario'] == scenario]
+        scenarios_df = pd.read_csv(scenarios_csv_file)
+        scenario_row = scenarios_df[scenarios_df['scenario'] == scenario]
         if scenario_row.empty:
             raise ValueError(f"Scenario {scenario} not found in {scenarios_csv_file}")
         
         # Extract charging prices (exclude the 'scenario' column)
-        charging_stations = [col for col in df.columns if col != 'scenario']
+        charging_stations = [col for col in scenarios_df.columns if col != 'scenario']
         charging_prices = {}
         for station in charging_stations:
             charging_prices[int(station)] = float(scenario_row[station].iloc[0])
@@ -93,81 +94,71 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
             load_if_exists=load_if_exists
         )
         
+        # Process aggregated demand data if available
+        processed_demand_df = None
+        if "aggregated_demand" in results and results["aggregated_demand"] is not None:
+            aggregated_demand = results["aggregated_demand"].copy()
+            scenario_value = 0 if scenario is None else scenario
+            aggregated_demand['scenario'] = scenario_value
+            aggregated_demand['charging_station'] = aggregated_demand['charging_station'].astype(int)
+            columns_order = ['scenario', 'charging_station', 'time_period', 'aggregated_demand']
+            processed_demand_df = aggregated_demand[columns_order]
+        
         # Save aggregated demand data to CSV if training_data is provided
-        if training_data and "aggregated_demand" in results:
-            aggregated_demand = results["aggregated_demand"]
-            if aggregated_demand is not None:
-                # Add scenario column
-                scenario_value = 0 if scenario is None else scenario
-                aggregated_demand['scenario'] = scenario_value
+        if training_data and processed_demand_df is not None:
+            if verbose >= 1:
+                print(f"\nChecking for existing data and saving aggregated demand data to {training_data}...")
+            try:
+                # Create directory if it doesn't exist
+                os.makedirs(os.path.dirname(training_data), exist_ok=True)
                 
-                # Convert charging_station to integer
-                aggregated_demand['charging_station'] = aggregated_demand['charging_station'].astype(int)
+                # Check if file exists and if scenario data already exists
+                file_exists = os.path.isfile(training_data)
+                scenario_exists = False
                 
-                # Reorder columns to match required format
-                columns_order = ['scenario', 'charging_station', 'time_period', 'aggregated_demand']
-                aggregated_demand = aggregated_demand[columns_order]
-                
-                # Save to CSV
-                if verbose >= 1:
-                    print(f"\nChecking for existing data and saving aggregated demand data to {training_data}...")
-                try:
-                    # Create directory if it doesn't exist
-                    os.makedirs(os.path.dirname(training_data), exist_ok=True)
-                    
-                    # Check if file exists and if scenario data already exists
-                    file_exists = os.path.isfile(training_data)
-                    scenario_exists = False
-                    
-                    if file_exists:
-                        # Read existing data to check for duplicates
-                        try:
-                            existing_df = pd.read_csv(training_data)
-                            if 'scenario' in existing_df.columns:
-                                scenario_exists = scenario_value in existing_df['scenario'].values
-                                if scenario_exists:
-                                    if verbose >= 1:
-                                        print(f"Scenario {scenario_value} already exists in training data. Skipping duplicate entry.")
-                        except Exception as read_error:
-                            if verbose >= 1:
-                                print(f"Warning: Could not read existing file to check for duplicates: {read_error}")
-                            # Continue with normal append behavior if we can't read the file
-                    
-                    # Only write if scenario doesn't already exist
-                    if not scenario_exists:
-                        # Write to CSV (append if file exists)
-                        aggregated_demand.to_csv(training_data, mode='a' if file_exists else 'w', 
-                                               index=False, header=not file_exists)
+                if file_exists:
+                    # Read existing data to check for duplicates
+                    try:
+                        existing_df = pd.read_csv(training_data)
+                        if 'scenario' in existing_df.columns:
+                            scenario_value = 0 if scenario is None else scenario
+                            scenario_exists = scenario_value in existing_df['scenario'].values
+                            if scenario_exists:
+                                if verbose >= 1:
+                                    print(f"Scenario {scenario_value} already exists in training data. Skipping duplicate entry.")
+                    except Exception as read_error:
                         if verbose >= 1:
-                            print(f"Aggregated demand data for scenario {scenario_value} saved successfully to {training_data}")
-                    
-                except Exception as e:
+                            print(f"Warning: Could not read existing file to check for duplicates: {read_error}")
+                        # Continue with normal append behavior if we can't read the file
+                
+                # Only write if scenario doesn't already exist
+                if not scenario_exists:
+                    # Write to CSV (append if file exists)
+                    processed_demand_df.to_csv(training_data, mode='a' if file_exists else 'w', 
+                                           index=False, header=not file_exists)
                     if verbose >= 1:
-                        print(f"Error saving aggregated demand data: {e}")
+                        scenario_value = 0 if scenario is None else scenario
+                        print(f"Aggregated demand data for scenario {scenario_value} saved successfully to {training_data}")
+                
+            except Exception as e:
+                if verbose >= 1:
+                    print(f"Error saving aggregated demand data: {e}")
         
         # Compute profit if requested
         if compute_profit and scenario is not None:
             if aggregator_excel_file is None:
                 if verbose >= 1:
                     print("Warning: Cannot compute profit - aggregator_excel_file not provided")
-            elif training_data is None:
+            elif processed_demand_df is None:
                 if verbose >= 1:
-                    print("Warning: Cannot compute profit - training_data path not provided")
+                    print("Warning: Cannot compute profit - aggregated demand data not available")
+            elif scenarios_df is None:
+                if verbose >= 1:
+                    print("Warning: Cannot compute profit - scenarios data not available")
             else:
                 try:
                     if verbose >= 1:
                         print(f"\nComputing profit for scenario {scenario}...")
-                    
-                    # Load scenarios dataframe
-                    scenarios_df = pd.read_csv(scenarios_csv_file)
-                    
-                    # Load demand data
-                    if os.path.exists(training_data):
-                        demand_df = pd.read_csv(training_data)
-                    else:
-                        if verbose >= 1:
-                            print(f"Warning: Training data file {training_data} not found. Cannot compute profit.")
-                        return results
                     
                     # Load electricity costs
                     aggregator_data = load_aggregator_excel_data(aggregator_excel_file, verbose=0)
@@ -176,7 +167,7 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
                     # Compute profit for the scenario
                     profit = compute_scenario_profit(
                         scenario=scenario,
-                        demand_df=demand_df,
+                        demand_df=processed_demand_df,
                         scenarios_df=scenarios_df,
                         electricity_costs=electricity_costs,
                         verbose=verbose
