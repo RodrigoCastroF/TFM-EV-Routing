@@ -2,7 +2,7 @@
 Main script to train profit regression models using the specified data files.
 """
 
-from regression_model.train_profit_model import train_profit_regression_model
+from regression_model import train_profit_regression_model
 import sys
 import os
 from datetime import datetime

@@ -5,8 +5,8 @@ import os
 import traceback
 from datetime import datetime
 from utils import TeeOutput
-from regression_model.train_profit_model import compute_scenario_profit
-from aggregator_model.get_aggregator_map_data import load_aggregator_excel_data
+from regression_model import compute_scenario_profit
+from aggregator_model import load_aggregator_excel_data
 
 
 def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None, training_data=None, compute_profit=False, aggregator_excel_file=None, load_if_exists=False):
