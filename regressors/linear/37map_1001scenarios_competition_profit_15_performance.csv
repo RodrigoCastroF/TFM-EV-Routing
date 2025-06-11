@@ -1,0 +1,2 @@
+save_path,seed,cv_folds,task,parameters,best_params,valid_score,train_score,train_r2,test_score,test_r2,outcome,alg
+../regressors\linear\37map_1001scenarios_competition_profit_15_model.csv,42,5,continuous,"{'alpha': [0.1, 1, 10, 100, 1000], 'l1_ratio': array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])}","{'alpha': 0.1, 'l1_ratio': np.float64(0.9)}",-8.436436670889826,8.320567912016756,0.3100322325734365,8.573982989270878,0.33976620813887703,profit_15,linear

@@ -1,0 +1,2 @@
+save_path,seed,cv_folds,task,parameters,best_params,valid_score,train_score,train_r2,test_score,test_r2,outcome,alg
+../regressors\svm\37map_1001scenarios_competition_profit_11_model.csv,42,5,continuous,"{'C': [0.1, 1, 10, 100]}",{'C': 1},-7.196071164333328,7.0859401060488505,0.4074804950421703,7.253392626874277,0.3897560780146312,profit_11,svm

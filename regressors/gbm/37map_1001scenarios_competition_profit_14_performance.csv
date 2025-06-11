@@ -1,0 +1,2 @@
+save_path,seed,cv_folds,task,parameters,best_params,valid_score,train_score,train_r2,test_score,test_r2,outcome,alg
+../regressors\gbm\37map_1001scenarios_competition_profit_14_model.csv,42,5,continuous,"{'learning_rate': [0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2], 'max_depth': [2, 3, 4, 5], 'n_estimators': [20]}","{'learning_rate': 0.2, 'max_depth': 4, 'n_estimators': 20}",-9.999578205644518,4.821476670681837,0.8056635137921703,8.808796052825139,0.6610468050019744,profit_14,gbm

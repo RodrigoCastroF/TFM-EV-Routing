@@ -1,0 +1,2 @@
+save_path,seed,cv_folds,task,parameters,best_params,valid_score,train_score,train_r2,test_score,test_r2,outcome,alg
+../regressors\rf\37map_1001scenarios_competition_profit_37_model.csv,42,5,continuous,"{'n_estimators': [10, 25], 'max_features': ['sqrt'], 'max_depth': [2, 3, 4]}","{'max_depth': 4, 'max_features': 'sqrt', 'n_estimators': 25}",-8.763886034371936,7.289153411937283,0.6690798921907526,8.92194322593092,0.5367640352581222,profit_37,rf

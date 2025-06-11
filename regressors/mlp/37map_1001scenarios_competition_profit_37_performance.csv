@@ -1,0 +1,2 @@
+save_path,seed,cv_folds,task,parameters,best_params,valid_score,train_score,train_r2,test_score,test_r2,outcome,alg
+../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv,42,5,continuous,"{'hidden_layer_sizes': [(10,), (20,), (50,), (100,)]}","{'hidden_layer_sizes': (100,)}",-5.168781373393374,3.7002157617277955,0.8320139898848689,5.130655906717597,0.7336113581400925,profit_37,mlp

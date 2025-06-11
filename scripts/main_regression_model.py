@@ -2,7 +2,7 @@
 Main script to train profit regression models using the specified data files.
 """
 
-from regression_model import train_profit_regression_model
+from regression_model import train_profit_regression_model, train_competition_regression_models
 import sys
 import os
 from datetime import datetime
@@ -10,23 +10,39 @@ from utils import TeeOutput
 
 
 def main():
+
+    # Configuration
+    use_competition_models = True  # Change this to True to train per-station models
+
     # File paths
     scenarios_file = "../data/scenarios.csv"
     demand_file = "../data/training_data.csv"
     aggregator_excel_file = "../data/37-intersection map Aggregator Unrestricted.xlsx"
     output_folder = "../regressors"
-    prefix = "37map_1001scenarios"
+    prefix = f"37map_1001scenarios{'_competition' if use_competition_models else ''}"
     
-    # Train the regression models
-    train_profit_regression_model(
-        scenarios_file=scenarios_file,
-        demand_file=demand_file,
-        aggregator_excel_file=aggregator_excel_file,
-        output_folder=output_folder,
-        prefix=prefix,
-        cv_folds=5,
-        verbose=2
-    )
+    if use_competition_models:
+        print("Using competition regression models (separate regressor per station)...")
+        train_competition_regression_models(
+            scenarios_file=scenarios_file,
+            demand_file=demand_file,
+            aggregator_excel_file=aggregator_excel_file,
+            output_folder=output_folder,
+            prefix=prefix,
+            cv_folds=5,
+            verbose=2
+        )
+    else:
+        print("Using single profit regression model (original approach)...")
+        train_profit_regression_model(
+            scenarios_file=scenarios_file,
+            demand_file=demand_file,
+            aggregator_excel_file=aggregator_excel_file,
+            output_folder=output_folder,
+            prefix=prefix,
+            cv_folds=5,
+            verbose=2
+        )
 
 
 if __name__ == "__main__":
