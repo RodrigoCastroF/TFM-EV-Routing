@@ -1,7 +1,8 @@
-from .get_routing_map_data import filter_map_data_for_ev
+from .get_routing_map_data import filter_map_data_for_ev, extract_electricity_costs
 from .get_routing_abstract_model import get_ev_routing_abstract_model
 from .save_ev_solution_data import extract_solution_data, save_solution_data, create_solution_map, load_solution_data
 from .save_scenario_solution_data import extract_aggregated_demand, create_scenario_analysis_plots
+from .compute_profit import compute_profit
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 import os
@@ -296,6 +297,13 @@ def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image
     """
 
     all_results = {}
+    
+    # Extract electricity costs from map data
+    if verbose >= 1:
+        print(f"Extracting electricity costs from map data...")
+    electricity_costs = extract_electricity_costs(map_data)
+    if verbose >= 1:
+        print("Electricity costs:", electricity_costs)
 
     # Solve for each EV
     for ev in map_data["evs"]:
@@ -333,6 +341,7 @@ def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image
         print(f"\n{'=' * 50}")
         print("SUMMARY OF ALL EVs")
         print(f"{'=' * 50}")
+        # Note this will be None if solutions were loaded
         for ev, results in all_results.items():
             if 'objective_value' in results and results['objective_value'] is not None:
                 print(f"EV {ev}: Objective = {results['objective_value']:.2f}")
@@ -354,6 +363,39 @@ def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image
             print(f"Error extracting aggregated demand: {e}")
         aggregated_demand = None
     all_results["aggregated_demand"] = aggregated_demand
+
+    # Compute station profits
+    if electricity_costs is not None and aggregated_demand is not None:
+        if verbose >= 1:
+            print(f"\n{'=' * 50}")
+            print("Computing station profits...")
+            print(f"{'=' * 50}")
+        try:
+            # Extract charging prices from map data
+            charging_stations_df = map_data['charging_stations_df']
+            charging_prices = {}
+            for _, row in charging_stations_df.iterrows():
+                station_id = str(int(row['pStationIntersection']))
+                price = row['pChargingPrice']
+                charging_prices[station_id] = price
+            
+            # Compute station profits
+            station_profits = compute_profit(
+                charging_prices=charging_prices,
+                aggregated_demand=aggregated_demand,
+                electricity_costs=electricity_costs,
+                verbose=verbose
+            )
+            
+            all_results["station_profits"] = station_profits
+            
+            if verbose >= 1:
+                print("Station profits computed successfully!")
+                print("Station profits:", station_profits)
+        except Exception as e:
+            if verbose >= 1:
+                print(f"Error computing station profits: {e}")
+            all_results["station_profits"] = None
 
     # Create scenario analysis plots if output prefix is provided
     if output_prefix_image:

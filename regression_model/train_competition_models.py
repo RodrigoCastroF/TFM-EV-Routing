@@ -1,15 +1,12 @@
 import pandas as pd
-import numpy as np
 import os
 import pickle
 import opticl
-import itertools
-from aggregator_model import load_aggregator_excel_data
+from routing_model import load_excel_map_data, extract_electricity_costs, compute_profit_stations
 from sklearn.model_selection import train_test_split
-from .compute_profit import compute_profit_stations
 
 
-def train_competition_regression_models(scenarios_file, demand_file, aggregator_excel_file, 
+def train_competition_regression_models(scenarios_file, demand_file, map_excel_file, 
                                       output_folder, prefix, cv_folds=5, verbose=1):
     """
     Train regression models to predict profit for each charging station separately.
@@ -20,8 +17,8 @@ def train_competition_regression_models(scenarios_file, demand_file, aggregator_
         Path to CSV file containing charging prices for each scenario
     demand_file : str
         Path to CSV file containing aggregated demand data
-    aggregator_excel_file : str
-        Path to Excel file containing electricity costs
+    map_excel_file : str
+        Path to Excel map file containing electricity costs in sTimePeriods sheet
     output_folder : str
         Folder path to save results
     prefix : str
@@ -46,9 +43,9 @@ def train_competition_regression_models(scenarios_file, demand_file, aggregator_
     if verbose >= 1:
         print(f"Loaded demand data: {len(demand_df)} records")
     
-    # Load electricity costs
-    aggregator_data = load_aggregator_excel_data(aggregator_excel_file, verbose=verbose)
-    electricity_costs = aggregator_data[None]['pElectricityCost']  # C_t for each period t
+    # Load electricity costs from map file
+    map_data = load_excel_map_data(map_excel_file, verbose=verbose)
+    electricity_costs = extract_electricity_costs(map_data)  # C_t for each period t
     if verbose >= 1:
         print(f"Loaded electricity costs for {len(electricity_costs)} time periods")
     

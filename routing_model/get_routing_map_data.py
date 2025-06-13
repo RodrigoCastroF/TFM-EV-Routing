@@ -32,6 +32,7 @@ def load_excel_map_data(file_path: str, charging_prices: dict = None, verbose: i
     paths_df = pd.read_excel(file_path, sheet_name="sPaths")
     delivery_points_df = pd.read_excel(file_path, sheet_name="sDeliveryPoints")
     charging_stations_df = pd.read_excel(file_path, sheet_name="sChargingStations")
+    time_periods_df = pd.read_excel(file_path, sheet_name="sTimePeriods")
     
     # Try to read coordinates if the sheet exists
     coordinates = None
@@ -50,7 +51,7 @@ def load_excel_map_data(file_path: str, charging_prices: dict = None, verbose: i
         return col_name.split(" ")[0]
 
     # Clean column names for all dataframes
-    for df in [paths_df, delivery_points_df, charging_stations_df]:
+    for df in [paths_df, delivery_points_df, charging_stations_df, time_periods_df]:
         df.columns = [clean_column_name(col) for col in df.columns]
     
     # Clean the index names in unindexed_df
@@ -83,12 +84,44 @@ def load_excel_map_data(file_path: str, charging_prices: dict = None, verbose: i
         'paths_df': paths_df,
         'delivery_points_df': delivery_points_df,
         'charging_stations_df': charging_stations_df,
+        'time_periods_df': time_periods_df,
         'coordinates': coordinates,
         'clean_column_name': clean_column_name,
         'evs': evs
     }
 
     return map_data
+
+
+def extract_electricity_costs(map_data: dict) -> dict:
+    """
+    Extract electricity costs from map data in the format expected by regression models.
+    
+    Parameters
+    ----------
+    map_data: dict
+        The raw map data returned by load_excel_map_data().
+    
+    Returns
+    -------
+    electricity_costs: dict
+        Dictionary with format {time_period: electricity_cost} or empty dict if no data available.
+    """
+    time_periods_df = map_data.get('time_periods_df')
+    
+    if time_periods_df is None:
+        return {}
+    
+    if 'pPeriod' not in time_periods_df.columns or 'pElectricityCost' not in time_periods_df.columns:
+        return {}
+    
+    electricity_costs = {}
+    for _, row in time_periods_df.iterrows():
+        period = int(row['pPeriod'])
+        cost = float(row['pElectricityCost'])
+        electricity_costs[period] = cost
+    
+    return electricity_costs
 
 
 def filter_map_data_for_ev(map_data: dict, ev: int) -> dict:

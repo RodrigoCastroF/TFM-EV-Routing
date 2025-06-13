@@ -17,7 +17,7 @@ def main():
     # File paths
     scenarios_file = "../data/scenarios.csv"
     demand_file = "../data/training_data.csv"
-    aggregator_excel_file = "../data/37-intersection map Aggregator Unrestricted.xlsx"
+    map_excel_file = "../data/37-intersection map.xlsx"
     output_folder = "../regressors"
     prefix = f"37map_1001scenarios{'_competition' if use_competition_models else ''}"
     
@@ -26,7 +26,7 @@ def main():
         train_competition_regression_models(
             scenarios_file=scenarios_file,
             demand_file=demand_file,
-            aggregator_excel_file=aggregator_excel_file,
+            map_excel_file=map_excel_file,
             output_folder=output_folder,
             prefix=prefix,
             cv_folds=5,
@@ -37,7 +37,7 @@ def main():
         train_profit_regression_model(
             scenarios_file=scenarios_file,
             demand_file=demand_file,
-            aggregator_excel_file=aggregator_excel_file,
+            map_excel_file=map_excel_file,
             output_folder=output_folder,
             prefix=prefix,
             cv_folds=5,

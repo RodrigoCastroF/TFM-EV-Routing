@@ -1,15 +1,13 @@
-from routing_model import load_excel_map_data, solve_for_one_ev, solve_for_all_evs
+from routing_model import load_excel_map_data, solve_for_one_ev, solve_for_all_evs, extract_electricity_costs
 import pandas as pd
 import sys
 import os
 import traceback
 from datetime import datetime
 from utils import TeeOutput
-from regression_model import compute_scenario_profit
-from aggregator_model import load_aggregator_excel_data
 
 
-def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None, training_data=None, compute_profit=False, aggregator_excel_file=None, load_if_exists=False):
+def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None, model_prefix=None, solver="gurobi", ev=None, scenario=None, scenarios_csv_file=None, time_limit=300, verbose=1, linearize_constraints=False, tuned_params_file=None, training_data=None, load_if_exists=False):
     """
     Main function to solve EV routing problem.
     
@@ -30,8 +28,6 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
         linearize_constraints: Whether to use linearized constraints (default: False)
         tuned_params_file: Path to tuned parameters file (.prm) for Gurobi (optional)
         training_data: Path to save aggregated demand data as CSV (optional)
-        compute_profit: Whether to compute and display profit for the scenario (default: False)
-        aggregator_excel_file: Path to Excel file containing electricity costs (required if compute_profit=True)
         load_if_exists: Whether to load existing solutions from Excel files if they exist (default: False)
     
     Returns:
@@ -40,7 +36,6 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
     
     # Handle scenario-based charging prices
     charging_prices = None
-    scenarios_df = None
     if scenario is not None:
         if scenarios_csv_file is None:
             raise ValueError("scenarios_csv_file must be provided when scenario is specified")
@@ -71,10 +66,12 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
     if verbose >= 1:
         print(f"Loading data from {input_excel_file}...")
     map_data = load_excel_map_data(input_excel_file, charging_prices=charging_prices, verbose=verbose)
+    electricity_costs = extract_electricity_costs(map_data)
     if verbose >= 1:
         print("Raw map data loaded successfully")
         print("List of EVs:", map_data["evs"])
         print("Charging prices:", map_data["charging_stations_df"]["pChargingPrice"].tolist())
+        print("Electricity costs:", electricity_costs)
     
     if ev is None:
         # Solve for all EVs using solve_for_all_evs
@@ -95,7 +92,6 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
         )
         
         # Process aggregated demand data if available
-        processed_demand_df = None
         if "aggregated_demand" in results and results["aggregated_demand"] is not None:
             aggregated_demand = results["aggregated_demand"].copy()
             scenario_value = 0 if scenario is None else scenario
@@ -103,6 +99,10 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
             aggregated_demand['charging_station'] = aggregated_demand['charging_station'].astype(int)
             columns_order = ['scenario', 'charging_station', 'time_period', 'aggregated_demand']
             processed_demand_df = aggregated_demand[columns_order]
+        else:
+            if verbose >= 1:
+                print("Warning: Aggregated demand not available in results.")
+            processed_demand_df = None
         
         # Save aggregated demand data to CSV if training_data is provided
         if training_data and processed_demand_df is not None:
@@ -144,46 +144,22 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
                 if verbose >= 1:
                     print(f"Error saving aggregated demand data: {e}")
         
-        # Compute profit if requested
-        if compute_profit and scenario is not None:
-            if aggregator_excel_file is None:
-                if verbose >= 1:
-                    print("Warning: Cannot compute profit - aggregator_excel_file not provided")
-            elif processed_demand_df is None:
-                if verbose >= 1:
-                    print("Warning: Cannot compute profit - aggregated demand data not available")
-            elif scenarios_df is None:
-                if verbose >= 1:
-                    print("Warning: Cannot compute profit - scenarios data not available")
-            else:
-                try:
-                    if verbose >= 1:
-                        print(f"\nComputing profit for scenario {scenario}...")
-                    
-                    # Load electricity costs
-                    aggregator_data = load_aggregator_excel_data(aggregator_excel_file, verbose=0)
-                    electricity_costs = aggregator_data[None]['pElectricityCost']
-                    
-                    # Compute profit for the scenario
-                    profit = compute_scenario_profit(
-                        scenario=scenario,
-                        demand_df=processed_demand_df,
-                        scenarios_df=scenarios_df,
-                        electricity_costs=electricity_costs,
-                        verbose=verbose
-                    )
-                    
-                    if verbose >= 1:
-                        print(f"Scenario {scenario} Profit: ${profit:.4f}")
-                    
-                    # Add profit to results
-                    if isinstance(results, dict):
-                        results['scenario_profit'] = profit
-                    
-                except Exception as e:
-                    if verbose >= 1:
-                        print(f"Error computing profit: {e}")
-                        traceback.print_exc()
+        # Display profit results if computed
+        if "station_profits" in results and results["station_profits"] is not None:
+            station_profits = results["station_profits"]
+            total_profit = sum(station_profits.values())
+            if verbose >= 1:
+                print(f"\nProfit Results:")
+                for station, profit in station_profits.items():
+                    print(f"  Station {station}: ${profit:.4f}")
+                print(f"Total Scenario Profit: ${total_profit:.4f}")
+
+            # Add total profit to results for compatibility
+            results['scenario_profit'] = total_profit
+        else:
+            if verbose >= 1:
+                print("Warning: Station profits not available in results.")
+            results['scenario_profit'] = None
         
         return results
     else:
@@ -245,7 +221,7 @@ if __name__ == "__main__":
     linearize_constraints = True
     solver = "gurobi"
     # scenarios = list(range(2,1000))  # from scenario 2 to 999
-    scenarios = [10_003]
+    scenarios = [10_002]
     # evs = [1]
     evs = None  # Solve for all EVs
     time_limit = 15
@@ -254,7 +230,6 @@ if __name__ == "__main__":
     # Input files
     input_excel_file = "../data/37-intersection map.xlsx"
     scenarios_csv_file = "../data/scenarios.csv"
-    aggregator_excel_file = "../data/37-intersection map Aggregator Unrestricted.xlsx"
 
     # Output files
     sol_name = f"37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
@@ -294,8 +269,6 @@ if __name__ == "__main__":
                 input_excel_file=input_excel_file,
                 scenarios_csv_file=scenarios_csv_file,
                 training_data=training_data_path,
-                compute_profit=True,
-                aggregator_excel_file=aggregator_excel_file,
                 # model_prefix=output_prefix_model,
                 # tuned_params_file="../gurobi_parameters/tuned_params_1.prm"
             )

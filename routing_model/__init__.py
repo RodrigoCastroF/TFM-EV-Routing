@@ -1,2 +1,3 @@
-from .get_routing_map_data import load_excel_map_data
+from .get_routing_map_data import load_excel_map_data, extract_electricity_costs
 from .solve_routing_model import solve_for_one_ev, solve_for_all_evs
+from .compute_profit import compute_profit, compute_profit_stations, compute_scenario_profit

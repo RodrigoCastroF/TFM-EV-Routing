@@ -1,3 +1,2 @@
-from .compute_profit import compute_scenario_profit, compute_profit_stations
 from .train_profit_model import train_profit_regression_model
 from .train_competition_models import train_competition_regression_models
