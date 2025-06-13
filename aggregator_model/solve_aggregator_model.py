@@ -11,7 +11,7 @@ import opticl
 import numpy as np
 
 
-def solve_aggregator_model(input_excel_file, performance_csv_file, training_data_csv_file, trust_region=True,
+def solve_aggregator_model(input_excel_file=None, input_data=None, performance_csv_file=None, training_data_csv_file=None, trust_region=True,
                           output_excel_file=None, solver="gurobi", time_limit=300, verbose=1):
     """
     Solve the aggregator optimization problem with embedded regression model.
@@ -19,8 +19,12 @@ def solve_aggregator_model(input_excel_file, performance_csv_file, training_data
 
     Parameters
     ----------
-    input_excel_file: str
+    input_excel_file: str, optional
         Path to the input Excel file containing aggregator data (charging station bounds).
+        Either this or input_data must be provided.
+    input_data: dict, optional
+        Input data in the format returned by load_aggregator_excel_data.
+        Either this or input_excel_file must be provided.
     performance_csv_file: str
         Path to the CSV file containing performance comparison of regression models.
     training_data_csv_file: str
@@ -42,10 +46,16 @@ def solve_aggregator_model(input_excel_file, performance_csv_file, training_data
         Dictionary with solution results including objective value and solution data.
     """
     
-    # Load data to determine model type
-    if verbose >= 1:
-        print(f"Loading aggregator data from {input_excel_file}...")
-    input_data = load_aggregator_excel_data(input_excel_file, verbose=verbose)
+    # Load or use provided data
+    if input_data is not None:
+        if verbose >= 1:
+            print(f"Using provided input data...")
+    elif input_excel_file is not None:
+        if verbose >= 1:
+            print(f"Loading aggregator data from {input_excel_file}...")
+        input_data = load_aggregator_excel_data(input_excel_file, verbose=verbose)
+    else:
+        raise ValueError("Either input_excel_file or input_data must be provided")
     
     # Check if this is a competition model (has fixed competitor prices)
     fixed_prices = input_data[None].get('pChargingPrice', {})
@@ -54,16 +64,20 @@ def solve_aggregator_model(input_excel_file, performance_csv_file, training_data
     if has_competitors:
         if verbose >= 1:
             print("Detected competition model (some stations have fixed prices)")
-        return solve_competition_model(input_excel_file, performance_csv_file, training_data_csv_file, 
-                                     trust_region, output_excel_file, solver, time_limit, verbose)
+        return solve_competition_model(input_data=input_data, performance_csv_file=performance_csv_file, 
+                                     training_data_csv_file=training_data_csv_file, 
+                                     trust_region=trust_region, output_excel_file=output_excel_file, 
+                                     solver=solver, time_limit=time_limit, verbose=verbose)
     else:
         if verbose >= 1:
             print("Detected monopoly model (all stations are optimizable)")
-        return solve_monopoly_model(input_excel_file, performance_csv_file, training_data_csv_file, 
-                                  trust_region, output_excel_file, solver, time_limit, verbose)
+        return solve_monopoly_model(input_data=input_data, performance_csv_file=performance_csv_file, 
+                                  training_data_csv_file=training_data_csv_file, 
+                                  trust_region=trust_region, output_excel_file=output_excel_file, 
+                                  solver=solver, time_limit=time_limit, verbose=verbose)
 
 
-def solve_monopoly_model(input_excel_file, performance_csv_file, training_data_csv_file, trust_region=True,
+def solve_monopoly_model(input_data, performance_csv_file, training_data_csv_file, trust_region=True,
                         output_excel_file=None, solver="gurobi", time_limit=300, verbose=1):
     """
     Solve the monopoly aggregator optimization problem with embedded regression model.
@@ -71,8 +85,8 @@ def solve_monopoly_model(input_excel_file, performance_csv_file, training_data_c
 
     Parameters
     ----------
-    input_excel_file: str
-        Path to the input Excel file containing aggregator data (charging station bounds).
+    input_data: dict
+        Input data in the format returned by load_aggregator_excel_data.
     performance_csv_file: str
         Path to the CSV file containing performance comparison of regression models.
     training_data_csv_file: str
@@ -94,10 +108,6 @@ def solve_monopoly_model(input_excel_file, performance_csv_file, training_data_c
         Dictionary with solution results including objective value and solution data.
     """
 
-    # Load charging station bounds from Excel file
-    if verbose >= 1:
-        print(f"Loading aggregator data from {input_excel_file}...")
-    input_data = load_aggregator_excel_data(input_excel_file, verbose=verbose)
     charging_stations = input_data[None]['sChargingStations'][None]
     min_prices = input_data[None]['pMinChargingPrice']
     max_prices = input_data[None]['pMaxChargingPrice']
@@ -241,7 +251,7 @@ def solve_monopoly_model(input_excel_file, performance_csv_file, training_data_c
     }
 
 
-def solve_competition_model(input_excel_file, performance_csv_file, training_data_csv_file, trust_region=True,
+def solve_competition_model(input_data, performance_csv_file, training_data_csv_file, trust_region=True,
                            output_excel_file=None, solver="gurobi", time_limit=300, verbose=1):
     """
     Solve the competition aggregator optimization problem with embedded regression models.
@@ -249,8 +259,8 @@ def solve_competition_model(input_excel_file, performance_csv_file, training_dat
 
     Parameters
     ----------
-    input_excel_file: str
-        Path to the input Excel file containing aggregator data (charging station bounds and competitor prices).
+    input_data: dict
+        Input data in the format returned by load_aggregator_excel_data.
     performance_csv_file: str
         Path to the CSV file containing performance comparison of regression models for each station.
     training_data_csv_file: str
@@ -272,10 +282,6 @@ def solve_competition_model(input_excel_file, performance_csv_file, training_dat
         Dictionary with solution results including objective value and solution data.
     """
 
-    # Load charging station data from Excel file
-    if verbose >= 1:
-        print(f"Loading aggregator competition data from {input_excel_file}...")
-    input_data = load_aggregator_excel_data(input_excel_file, verbose=verbose)
     all_stations = input_data[None]['sChargingStations'][None]
     min_prices = input_data[None]['pMinChargingPrice']
     max_prices = input_data[None]['pMaxChargingPrice']

@@ -101,7 +101,7 @@ def extract_aggregated_demand(all_ev_results, map_data, eps=1e-5, verbose=0):
     result_df = pd.DataFrame(aggregated_results)
     result_df = result_df.sort_values(['charging_station', 'time_period']).reset_index(drop=True)
     
-    if verbose >= 1:
+    if verbose >= 2:
         print("Raw aggregated demand results:")
         print(result_df.to_string())
     

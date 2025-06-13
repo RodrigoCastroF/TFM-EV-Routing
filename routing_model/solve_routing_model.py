@@ -308,9 +308,8 @@ def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image
     # Solve for each EV
     for ev in map_data["evs"]:
         if verbose >= 1:
-            print(f"\n{'=' * 50}")
-            print(f"Processing EV {ev}")
-            print(f"{'=' * 50}")
+            print(f"\nProcessing EV {ev}")
+            print(f"{'-' * 50}")
 
         # Generate output file paths if prefixes provided
         output_excel_file = None
@@ -338,9 +337,8 @@ def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image
         all_results[ev] = ev_results
 
     if verbose >= 1:
-        print(f"\n{'=' * 50}")
-        print("SUMMARY OF ALL EVs")
-        print(f"{'=' * 50}")
+        print("\nSUMMARY OF ALL EVs")
+        print(f"{'-' * 50}")
         # Note this will be None if solutions were loaded
         for ev, results in all_results.items():
             if 'objective_value' in results and results['objective_value'] is not None:
@@ -349,9 +347,8 @@ def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image
                 print(f"EV {ev}: {results.get('solver_status', 'unknown status')}")
 
     if verbose >= 1:
-        print(f"\n{'=' * 50}")
-        print("Extracting aggregated demand...")
-        print(f"{'=' * 50}")
+        print("\nExtracting aggregated demand...")
+        print(f"{'-' * 50}")
     
     # Extract aggregated demand for all EVs
     try:
@@ -367,9 +364,8 @@ def solve_for_all_evs(map_data, output_prefix_solution=None, output_prefix_image
     # Compute station profits
     if electricity_costs is not None and aggregated_demand is not None:
         if verbose >= 1:
-            print(f"\n{'=' * 50}")
-            print("Computing station profits...")
-            print(f"{'=' * 50}")
+            print("\nComputing station profits...")
+            print(f"{'-' * 50}")
         try:
             # Extract charging prices from map data
             charging_stations_df = map_data['charging_stations_df']
