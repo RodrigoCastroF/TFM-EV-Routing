@@ -104,6 +104,9 @@ def compute_profit_stations(scenario, demand_df, scenarios_df, electricity_costs
         print(f"\nCost breakdown by time period:")
         for period, details in cost_details.items():
             print(f"  {period}: {' + '.join(details)}")
+        print(f"\nProfit breakdown by station:")
+        for station, profit in station_profits.items():
+            print(f"  Station {station}: ${profit:.4f}")
         print(f"\nTotal Revenue: ${total_revenue:.4f}")
         print(f"Total Cost: ${total_cost:.4f}")
         print(f"Profit: ${sum(station_profits.values()):.4f}")

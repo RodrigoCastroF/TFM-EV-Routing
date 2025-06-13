@@ -105,17 +105,38 @@ if __name__ == "__main__":
     solver = "gurobi"  # or "cbc", "glpk", "cplex"
     time_limit = 15  # seconds
     verbose = 2  # 0=silent, 1=basic, 2=detailed
-    trust_region = False
-    restricted = True
+    trust_region = True
+    model_type = 'competition'
+
+    # Model type-specific files
+    model_type_files = {
+        'restricted': (
+            "../data/37-intersection map Aggregator Restricted.xlsx",
+            "../regressors/37map_1001scenarios_performance_comparison.csv",
+            "../regressors/37map_1001scenarios_training_data.csv",
+            f"../solutions/37-intersection map Aggregator Restricted Solution{' TR' if trust_region else ''}.xlsx"
+        ),
+        'unrestricted': (
+            "../data/37-intersection map Aggregator Unrestricted.xlsx",
+            "../regressors/37map_1001scenarios_performance_comparison.csv",
+            "../regressors/37map_1001scenarios_training_data.csv",
+            f"../solutions/37-intersection map Aggregator Unrestricted Solution{' TR' if trust_region else ''}.xlsx"
+        ),
+        'competition': (
+            "../data/37-intersection map Aggregator Competition.xlsx",
+            "../regressors/37map_1001scenarios_competition_performance_comparison.csv",
+            "../regressors/37map_1001scenarios_competition_training_data.csv",
+            f"../solutions/37-intersection map Aggregator Competition Solution{' TR' if trust_region else ''}.xlsx"
+        ),
+    }[model_type]
 
     # Input files
-    restricted_str = ' Restricted' if restricted else ' Unrestricted'
-    input_excel_file = f"../data/37-intersection map Aggregator{restricted_str}.xlsx"
-    performance_csv_file = "../regressors/37map_1001scenarios_performance_comparison.csv"
-    training_data_csv_file = "../regressors/37map_1001scenarios_training_data.csv"
+    input_excel_file = model_type_files[0]
+    performance_csv_file = model_type_files[1]
+    training_data_csv_file =  model_type_files[2]
     
     # Output files
-    output_excel_file = f"../solutions/37-intersection map Aggregator{restricted_str} Solution{' TR' if trust_region else ''}.xlsx"
+    output_excel_file =  model_type_files[3]
 
     # Detailed logging
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
