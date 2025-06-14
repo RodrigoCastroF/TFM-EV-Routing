@@ -71,20 +71,10 @@ def get_controlled_profit(station_profits, controlled_stations):
     return sum(station_profits.get(str(station), 0) for station in controlled_stations)
 
 
-def solve_routing_and_get_profit(charging_prices, controlled_stations, base_map_file, output_prefix_solution, solver, time_limit, verbose):
+def solve_routing_and_get_profit(charging_prices, controlled_stations, base_map_file, solver, time_limit, verbose):
     """Solve routing model with given prices and return profit of controlled stations."""
     if verbose >= 1:
         print(f"\nSolving routing model for prices {charging_prices}...")
-        print()
-    
-    # Create specific solution name based on charging prices
-    price_parts = []
-    for station in sorted(charging_prices.keys()):
-        price_parts.append(f"{station}-{charging_prices[station]:.3f}")
-    price_signature = "_".join(price_parts)
-    solution_name = f"{output_prefix_solution}_{price_signature}"
-    if verbose >= 1:
-        print(f"Solutions will be saved with prefix {solution_name}")
         print()
     
     map_data = load_excel_map_data(base_map_file, charging_prices=charging_prices, verbose=0)
@@ -93,9 +83,7 @@ def solve_routing_and_get_profit(charging_prices, controlled_stations, base_map_
         solver=solver,
         time_limit=time_limit,
         verbose=verbose,
-        linearize_constraints=True,
-        output_prefix_solution=solution_name,
-        load_if_exists=True
+        linearize_constraints=True
     )
     
     if "station_profits" in results and results["station_profits"] is not None:
@@ -110,8 +98,8 @@ def solve_routing_and_get_profit(charging_prices, controlled_stations, base_map_
 
 
 def run_experiment_for_combination(controlled_stations, base_case_prices, general_min_price, general_max_price,
-                                 performance_csv_file, training_data_csv_file, base_map_file, output_prefix_solution,
-                                 solver="gurobi", time_limit=300, verbose=1):
+                                 performance_csv_file, training_data_csv_file, base_map_file,
+                                 all_stations, base_case_station_profits, solver="gurobi", time_limit=300, verbose=1):
     """Run complete experiment for a specific combination of controlled stations."""
     results = []
     
@@ -137,9 +125,48 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
         print(f"Controlled stations: {controlled_stations}")
         print(f"Competitor stations: {[s for s in base_case_prices.keys() if s not in controlled_stations]}")
     
+    # Calculate base case profit from pre-computed results
+    base_case_profit = get_controlled_profit(base_case_station_profits, controlled_stations)
+    if verbose >= 1:
+        print(f"Base case profit: ${base_case_profit:.4f}")
+
+    # Run max prices once per combination  
+    if verbose >= 1:
+        print(f"\n{'=' * 40}")
+        print(f"Testing max prices scenario...")
+        print(f"{'=' * 40}")
+    max_prices_profit = solve_routing_and_get_profit(max_case_prices, controlled_stations, base_map_file, solver, time_limit, max(0, verbose-1))
+    if verbose >= 1:
+        print(f"Max prices profit: ${max_prices_profit:.4f}")
+
+    # Store base case and max prices results
+    controlled_stations_str = "|".join(map(str, controlled_stations))
+    
+    # Base case result
+    base_case_result = {
+        'controlled_stations': controlled_stations_str,
+        'type': 'base_case',
+        'profit': base_case_profit
+    }
+    for station in all_stations:
+        base_case_result[f'rc_{station}'] = base_case_prices[station]
+    results.append(base_case_result)
+    
+    # Max prices result
+    max_prices_result = {
+        'controlled_stations': controlled_stations_str,
+        'type': 'max_prices', 
+        'profit': max_prices_profit
+    }
+    for station in all_stations:
+        max_prices_result[f'rc_{station}'] = max_case_prices[station]
+    results.append(max_prices_result)
+    
     # Test both trust region settings
     for trust_region in [True, False]:
         tr_str = "with" if trust_region else "without"
+        type_prefix = "sol_tr" if trust_region else "sol"
+        
         if verbose >= 1:
             print()
             print(f"\n{'=' * 60}")
@@ -149,9 +176,9 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
         
         # Solve aggregator model
         if verbose >= 2:
-            print(f"\n{'=' * 60}")
+            print(f"\n{'=' * 40}")
             print(f"Solving aggregator model...")
-            print(f"{'=' * 60}")
+            print(f"{'=' * 40}")
         
         agg_results = solve_aggregator_model(
             input_data=synthetic_data,
@@ -169,65 +196,51 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
         if verbose >= 2:
             print(f"Aggregator solver status: {agg_results.get('solver_status', 'unknown')}")
         
-        # Format solution string with ALL station prices
-        all_stations = sorted(base_case_prices.keys())
-        solution_parts = []
-        for station in all_stations:
-            price = solution_prices[station]
-            solution_parts.append(f"{station}:{price:.3f}")
-        solution_str = ", ".join(solution_parts)
-        
         if verbose >= 1:
             print(f"Predicted profit: ${predicted_profit:.2f}")
             if verbose >= 2:
+                solution_parts = []
+                for station in sorted(all_stations):
+                    price = solution_prices[station]
+                    solution_parts.append(f"{station}:{price:.3f}")
+                solution_str = ", ".join(solution_parts)
                 print(f"Solution prices: {solution_str}")
         
-        # Test scenarios
+        # Store predicted result
+        predicted_result = {
+            'controlled_stations': controlled_stations_str,
+            'type': f'{type_prefix}_predicted',
+            'profit': predicted_profit
+        }
+        for station in all_stations:
+            predicted_result[f'rc_{station}'] = solution_prices[station]
+        results.append(predicted_result)
+        
+        # Test solution against routing model
         if verbose >= 1:
-            print(f"\n{'=' * 60}")
+            print(f"\n{'=' * 40}")
             print(f"Testing solution against routing model...")
-            print(f"{'=' * 60}")
-        real_profit = solve_routing_and_get_profit(solution_prices, controlled_stations, base_map_file, output_prefix_solution, solver, time_limit, max(0, verbose-1))
+            print(f"{'=' * 40}")
+        real_profit = solve_routing_and_get_profit(solution_prices, controlled_stations, base_map_file, solver, time_limit, max(0, verbose-1))
         if verbose >= 1:
             print(f"Real profit: ${real_profit:.4f}")
 
-        if verbose >= 1:
-            print(f"\n{'=' * 60}")
-            print(f"Testing base case scenario...")
-            print(f"{'=' * 60}")
-        base_case_profit = solve_routing_and_get_profit(base_case_prices, controlled_stations, base_map_file, output_prefix_solution, solver, time_limit, max(0, verbose-1))
-        if verbose >= 1:
-            print(f"Base case profit: ${base_case_profit:.4f}")
-
-        if verbose >= 1:
-            print(f"\n{'=' * 60}")
-            print(f"Testing max prices scenario...")
-            print(f"{'=' * 60}")
-        max_prices_profit = solve_routing_and_get_profit(max_case_prices, controlled_stations, base_map_file, output_prefix_solution, solver, time_limit, max(0, verbose-1))
-        if verbose >= 1:
-            print(f"Max prices profit: ${max_prices_profit:.4f}")
-
-        # Store results
-        result = {
-            'controlled_stations': ", ".join(map(str, controlled_stations)),
-            'trust_region': "Yes" if trust_region else "No",
-            'solution': solution_str,
-            'predicted_profit': predicted_profit,
-            'real_profit': real_profit,
-            'base_case_profit': base_case_profit,
-            'max_prices_profit': max_prices_profit
+        # Store real result
+        real_result = {
+            'controlled_stations': controlled_stations_str,
+            'type': f'{type_prefix}_real',
+            'profit': real_profit
         }
-        
-        results.append(result)
+        for station in all_stations:
+            real_result[f'rc_{station}'] = solution_prices[station]
+        results.append(real_result)
         
         if verbose >= 1:
-            print(f"\n{'=' * 60}")
-            print(f"RESULTS: Controlled stations {controlled_stations} {tr_str} trust_region")
-            print(f"{'=' * 60}")
+            print(f"\n{'=' * 40}")
+            print(f"RESULTS: {tr_str} trust_region")
+            print(f"{'=' * 40}")
             print(f" Predicted profit: ${predicted_profit:.4f}")
             print(f" Real profit: ${real_profit:.4f}" if real_profit is not None else "    Real profit: N/A")
-            print(f" Base case profit: ${base_case_profit:.4f}" if base_case_profit is not None else "    Base case profit: N/A")
-            print(f" Max prices profit: ${max_prices_profit:.4f}" if max_prices_profit is not None else "    Max prices profit: N/A")
             if real_profit is not None and base_case_profit is not None:
                 improvement = real_profit - base_case_profit
                 print(f" Improvement over base: ${improvement:.4f} ({improvement/base_case_profit*100:.1f}%)")
@@ -261,12 +274,10 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_csv_file = f"../results/aggregator_experiments_{timestamp}.csv"
     log_file_path = f"../logs/aggregator_experiments_{timestamp}.txt"
-    output_prefix_solution = f"../solutions/aggregator_experiment"
     
     # Create output directories if they don't exist
     os.makedirs(os.path.dirname(output_csv_file), exist_ok=True)
     os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
-    os.makedirs(os.path.dirname(output_prefix_solution), exist_ok=True)
     
     # Set up output redirection to save to log file
     original_stdout = sys.stdout
@@ -313,6 +324,25 @@ def main():
             print(f"    {i:2d}. {combo}")
         print()
         
+        # Run base case once for all combinations
+        print("Running base case scenario (once for all combinations)...")
+        print("=" * 80)
+        map_data = load_excel_map_data(base_map_file, charging_prices=base_case_prices, verbose=0)
+        base_case_results = solve_for_all_evs(
+            map_data,
+            solver=solver,
+            time_limit=time_limit,
+            verbose=max(0, verbose-1),
+            linearize_constraints=True
+        )
+        
+        if "station_profits" not in base_case_results or base_case_results["station_profits"] is None:
+            raise RuntimeError("Failed to solve base case - no station profits available")
+        
+        base_case_station_profits = base_case_results["station_profits"]
+        print(f"✓ Base case solved successfully")
+        print()
+
         # Run experiments
         print("Starting experiments...")
         print("=" * 80)
@@ -330,7 +360,8 @@ def main():
                 performance_csv_file=performance_csv_file,
                 training_data_csv_file=training_data_csv_file,
                 base_map_file=base_map_file,
-                output_prefix_solution=output_prefix_solution,
+                all_stations=all_stations,
+                base_case_station_profits=base_case_station_profits,
                 solver=solver,
                 time_limit=time_limit,
                 verbose=verbose
