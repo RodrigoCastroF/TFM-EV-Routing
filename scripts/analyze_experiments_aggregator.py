@@ -102,10 +102,19 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     width = 0.18
     
     bar_positions = {}
+    # Create readable labels for profit types
+    readable_labels = {
+        'base_case': 'Base Case',
+        'max_prices': 'Max Prices', 
+        'sol_real': 'Solution (No Trust Region) Real Profit',
+        'sol_tr_real': 'Solution (Trust Region) Real Profit'
+    }
+    
     for i, profit_type in enumerate(available_types):
         if profit_type in pivot_data.columns:
             values = pivot_data[profit_type].values
-            bars = ax1.bar(x + i * width, values, width, label=profit_type.replace('_', ' ').title(), 
+            readable_label = readable_labels.get(profit_type, profit_type.replace('_', ' ').title())
+            bars = ax1.bar(x + i * width, values, width, label=readable_label, 
                           color=type_colors[profit_type], alpha=0.8)
             bar_positions[profit_type] = x + i * width
     
@@ -121,7 +130,7 @@ def create_comprehensive_analysis(df, output_dir="../images"):
                 ax1.plot([pos - line_width/2, pos + line_width/2], [pred_val, pred_val], 
                         color='lightblue', linewidth=3, alpha=0.9)
         # Add legend entry
-        ax1.plot([], [], color='lightblue', linewidth=3, label='Sol Predicted', alpha=0.9)
+        ax1.plot([], [], color='lightblue', linewidth=3, label='Solution (No Trust Region) Predicted Profit', alpha=0.9)
     
     # Add predicted line for sol_tr_real bars
     if 'sol_tr_real' in pivot_data.columns and 'sol_tr_predicted' in pivot_data.columns:
@@ -132,7 +141,7 @@ def create_comprehensive_analysis(df, output_dir="../images"):
                 ax1.plot([pos - line_width/2, pos + line_width/2], [pred_val, pred_val], 
                         color='lightgreen', linewidth=3, alpha=0.9)
         # Add legend entry
-        ax1.plot([], [], color='lightgreen', linewidth=3, label='Sol Tr Predicted', alpha=0.9)
+        ax1.plot([], [], color='lightgreen', linewidth=3, label='Solution (Trust Region) Predicted Profit', alpha=0.9)
     
     ax1.set_xlabel('Number of Controlled Stations')
     ax1.set_ylabel('Average Profit ($)')
@@ -173,11 +182,16 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     pred_real_df = pd.DataFrame(pred_real_data)
     
     if not pred_real_df.empty:
-        # Create scatter plot
+        # Create scatter plot with consistent colors
+        model_colors = {
+            'With Trust Region': 'green',
+            'No Trust Region': 'blue'
+        }
         for model_type in pred_real_df['model'].unique():
             model_data = pred_real_df[pred_real_df['model'] == model_type]
+            color = model_colors.get(model_type, 'gray')
             ax2.scatter(model_data['predicted'], model_data['real'], 
-                       label=model_type, alpha=0.7, s=60)
+                       label=model_type, alpha=0.7, s=60, color=color)
         
         # Add diagonal line for perfect prediction
         min_val = min(pred_real_df['predicted'].min(), pred_real_df['real'].min())
@@ -256,7 +270,7 @@ def create_comprehensive_analysis(df, output_dir="../images"):
             if len(tr_real) > 0:
                 improvements.append({
                     'combination': combination,
-                    'method': 'Aggregator (TR)',
+                    'method': 'Aggregator (Trust Region)',
                     'improvement': tr_real[0] - base_profit,
                     'improvement_pct': (tr_real[0] - base_profit) / base_profit * 100 if base_profit != 0 else 0,
                     'num_controlled': num_controlled
@@ -265,7 +279,7 @@ def create_comprehensive_analysis(df, output_dir="../images"):
             if len(no_tr_real) > 0:
                 improvements.append({
                     'combination': combination,
-                    'method': 'Aggregator (No TR)',
+                    'method': 'Aggregator (No Trust Region)',
                     'improvement': no_tr_real[0] - base_profit,
                     'improvement_pct': (no_tr_real[0] - base_profit) / base_profit * 100 if base_profit != 0 else 0,
                     'num_controlled': num_controlled
@@ -283,8 +297,15 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     imp_df = pd.DataFrame(improvements)
     
     if not imp_df.empty:
-        # Box plot showing improvement distribution by method
-        sns.boxplot(data=imp_df, x='method', y='improvement_pct', ax=ax4)
+        # Box plot showing improvement distribution by method with consistent colors
+        method_colors = {
+            'Aggregator (Trust Region)': 'green',
+            'Aggregator (No Trust Region)': 'blue', 
+            'Max Prices': 'red'
+        }
+        
+        sns.boxplot(data=imp_df, x='method', y='improvement_pct', hue='method', ax=ax4, 
+                   palette=method_colors, legend=False)
         ax4.set_xlabel('Method')
         ax4.set_ylabel('Improvement over Base Case (%)')
         ax4.set_title('Profit Improvement over Base Case')
@@ -319,10 +340,19 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     width = 0.18
     
     bar_positions = {}
+    # Create readable labels for profit types
+    readable_labels = {
+        'base_case': 'Base Case',
+        'max_prices': 'Max Prices', 
+        'sol_real': 'Solution (No Trust Region) Real Profit',
+        'sol_tr_real': 'Solution (Trust Region) Real Profit'
+    }
+    
     for i, profit_type in enumerate(available_types):
         if profit_type in pivot_data.columns:
             values = pivot_data[profit_type].values
-            bars = ax.bar(x + i * width, values, width, label=profit_type.replace('_', ' ').title(), 
+            readable_label = readable_labels.get(profit_type, profit_type.replace('_', ' ').title())
+            bars = ax.bar(x + i * width, values, width, label=readable_label, 
                          color=type_colors[profit_type], alpha=0.8)
             bar_positions[profit_type] = x + i * width
     
@@ -338,7 +368,7 @@ def create_comprehensive_analysis(df, output_dir="../images"):
                 ax.plot([pos - line_width/2, pos + line_width/2], [pred_val, pred_val], 
                        color='lightblue', linewidth=4, alpha=0.9)
         # Add legend entry
-        ax.plot([], [], color='lightblue', linewidth=4, label='Sol Predicted', alpha=0.9)
+        ax.plot([], [], color='lightblue', linewidth=4, label='Solution (No Trust Region) Predicted Profit', alpha=0.9)
     
     # Add predicted line for sol_tr_real bars
     if 'sol_tr_real' in pivot_data.columns and 'sol_tr_predicted' in pivot_data.columns:
@@ -349,7 +379,7 @@ def create_comprehensive_analysis(df, output_dir="../images"):
                 ax.plot([pos - line_width/2, pos + line_width/2], [pred_val, pred_val], 
                        color='lightgreen', linewidth=4, alpha=0.9)
         # Add legend entry
-        ax.plot([], [], color='lightgreen', linewidth=4, label='Sol Tr Predicted', alpha=0.9)
+        ax.plot([], [], color='lightgreen', linewidth=4, label='Solution (Trust Region) Predicted Profit', alpha=0.9)
     
     ax.set_xlabel('Number of Controlled Stations', fontsize=12)
     ax.set_ylabel('Average Profit ($)', fontsize=12)
@@ -368,10 +398,16 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     if not pred_real_df.empty:
         fig2, ax = plt.subplots(figsize=(10, 8))
         
+        # Use consistent colors for models
+        model_colors = {
+            'With Trust Region': 'green',
+            'No Trust Region': 'blue'
+        }
         for model_type in pred_real_df['model'].unique():
             model_data = pred_real_df[pred_real_df['model'] == model_type]
+            color = model_colors.get(model_type, 'gray')
             ax.scatter(model_data['predicted'], model_data['real'], 
-                       label=model_type, alpha=0.7, s=80)
+                       label=model_type, alpha=0.7, s=80, color=color)
         
         min_val = min(pred_real_df['predicted'].min(), pred_real_df['real'].min())
         max_val = max(pred_real_df['predicted'].max(), pred_real_df['real'].max())
@@ -423,7 +459,15 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     if not imp_df.empty:
         fig4, ax = plt.subplots(figsize=(12, 8))
         
-        sns.boxplot(data=imp_df, x='method', y='improvement_pct', ax=ax)
+        # Use consistent colors for methods
+        method_colors = {
+            'Aggregator (Trust Region)': 'green',
+            'Aggregator (No Trust Region)': 'blue', 
+            'Max Prices': 'red'
+        }
+        
+        sns.boxplot(data=imp_df, x='method', y='improvement_pct', hue='method', ax=ax, 
+                   palette=method_colors, legend=False)
         ax.set_xlabel('Method', fontsize=12)
         ax.set_ylabel('Improvement over Base Case (%)', fontsize=12)
         ax.set_title('Profit Improvement over Base Case', fontsize=14, fontweight='bold')
