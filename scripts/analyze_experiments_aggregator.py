@@ -223,10 +223,10 @@ def create_comprehensive_analysis(df, output_dir="../images"):
         x = np.arange(len(tr_by_size))
         width = 0.35
         
-        ax3.bar(x - width/2, tr_by_size['with_tr'], width, label='With Trust Region', 
-               color='green', alpha=0.7)
-        ax3.bar(x + width/2, tr_by_size['without_tr'], width, label='Without Trust Region', 
+        ax3.bar(x - width/2, tr_by_size['without_tr'], width, label='Without Trust Region', 
                color='blue', alpha=0.7)
+        ax3.bar(x + width/2, tr_by_size['with_tr'], width, label='With Trust Region', 
+               color='green', alpha=0.7)
         
         ax3.set_xlabel('Number of Controlled Stations')
         ax3.set_ylabel('Average Real Profit ($)')
@@ -401,10 +401,10 @@ def create_comprehensive_analysis(df, output_dir="../images"):
         x = np.arange(len(tr_by_size))
         width = 0.35
         
-        ax.bar(x - width/2, tr_by_size['with_tr'], width, label='With Trust Region', 
-               color='green', alpha=0.7)
-        ax.bar(x + width/2, tr_by_size['without_tr'], width, label='Without Trust Region', 
+        ax.bar(x - width/2, tr_by_size['without_tr'], width, label='Without Trust Region', 
                color='blue', alpha=0.7)
+        ax.bar(x + width/2, tr_by_size['with_tr'], width, label='With Trust Region', 
+               color='green', alpha=0.7)
         
         ax.set_xlabel('Number of Controlled Stations', fontsize=12)
         ax.set_ylabel('Average Real Profit ($)', fontsize=12)
