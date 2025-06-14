@@ -185,6 +185,7 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
             performance_csv_file=performance_csv_file,
             training_data_csv_file=training_data_csv_file,
             trust_region=trust_region,
+            model="competition",
             solver=solver,
             time_limit=time_limit,
             verbose=max(0, verbose-1)
@@ -248,7 +249,7 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
     return results
 
 
-def generate_station_combinations(all_stations, min_size=2, max_size=3):
+def generate_station_combinations(all_stations, min_size, max_size):
     """Generate all combinations of stations to test."""
     combinations_to_test = []
     for size in range(min_size, max_size + 1):
@@ -318,7 +319,7 @@ def main():
         
         # Generate combinations to test
         print("Generating station combinations...")
-        combinations_to_test = generate_station_combinations(all_stations, min_size=2, max_size=3)
+        combinations_to_test = generate_station_combinations(all_stations, min_size=4, max_size=5)
         print(f"→ Testing {len(combinations_to_test)} combinations:")
         for i, combo in enumerate(combinations_to_test, 1):
             print(f"    {i:2d}. {combo}")

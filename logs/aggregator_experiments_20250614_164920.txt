@@ -1,0 +1,3490 @@
+================================================================================
+AGGREGATOR EXPERIMENTS - STATION COMBINATIONS
+================================================================================
+Timestamp: 2025-06-14 16:49:20
+Solver: gurobi
+Time limit: 15 seconds
+Verbosity level: 2
+Output CSV: ../results/aggregator_experiments_20250614_164920.csv
+Log file: ../logs/aggregator_experiments_20250614_164920.txt
+
+Loading base data...
+→ Loading aggregator data from: ../data/37-intersection map Aggregator Competition.xlsx
+→ Loading map data from: ../data/37-intersection map.xlsx
+→ Extracting price information...
+→ Available stations: [11, 14, 15, 26, 37]
+→ Base case prices: {11: np.float64(0.6), 14: np.float64(0.6), 15: np.float64(0.5), 26: np.float64(0.6), 37: np.float64(0.5)}
+→ Price range: $0.200 - $0.800
+
+Generating station combinations...
+→ Testing 6 combinations:
+     1. [11, 14, 15, 26]
+     2. [11, 14, 15, 37]
+     3. [11, 14, 26, 37]
+     4. [11, 15, 26, 37]
+     5. [14, 15, 26, 37]
+     6. [11, 14, 15, 26, 37]
+
+Running base case scenario (once for all combinations)...
+================================================================================
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 9.843673651466128
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 12.46159501199929
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 7.695223455732996
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 9.84
+EV 2: Objective = 12.46
+EV 3: Objective = 7.70
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.6), '14': np.float64(0.6), '15': np.float64(0.5), '26': np.float64(0.6), '37': np.float64(0.5)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:1.650kWh*$0.600=$0.9900 + t11:4.558kWh*$0.600=$2.7351 + t12:5.076kWh*$0.600=$3.0458
+  Station 15: t11:5.310kWh*$0.500=$2.6552 + t12:7.200kWh*$0.500=$3.6000 + t13:7.200kWh*$0.500=$3.6000 + t14:7.200kWh*$0.500=$3.6000 + t15:1.541kWh*$0.500=$0.7707
+  Station 37: t13:1.995kWh*$0.500=$0.9973 + t14:3.600kWh*$0.500=$1.8000 + t15:3.600kWh*$0.500=$1.8000 + t16:6.274kWh*$0.500=$3.1372 + t17:5.039kWh*$0.500=$2.5193
+
+Cost breakdown by time period:
+  t10: s14:1.650kWh*$0.040=$0.0665
+  t11: s14:4.558kWh*$0.019=$0.0860 + s15:5.310kWh*$0.019=$0.1001
+  t12: s14:5.076kWh*$0.017=$0.0882 + s15:7.200kWh*$0.017=$0.1250
+  t13: s15:7.200kWh*$0.017=$0.1224 + s37:1.995kWh*$0.017=$0.0339
+  t14: s15:7.200kWh*$0.018=$0.1274 + s37:3.600kWh*$0.018=$0.0637
+  t15: s15:1.541kWh*$0.015=$0.0232 + s37:3.600kWh*$0.015=$0.0541
+  t16: s37:6.274kWh*$0.013=$0.0826
+  t17: s37:5.039kWh*$0.014=$0.0710
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $6.5302
+  Station 15: $13.7277
+  Station 26: $0.0000
+  Station 37: $9.9485
+
+Total Revenue: $31.2505
+Total Cost: $1.0441
+Profit: $30.2064
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(6.530191534995553), '15': np.float64(13.727748669593861), '26': np.float64(0.0), '37': np.float64(9.948502531171913)}
+✓ Base case solved successfully
+
+Starting experiments...
+================================================================================
+
+PROGRESS: Combination 1/6 - [11, 14, 15, 26]
+Remaining: 5 combinations
+
+
+============================================================
+EXPERIMENT: Controlled stations [11, 14, 15, 26]
+============================================================
+
+Creating synthetic aggregator data for stations [11, 14, 15, 26]...
+Price bounds: $0.200 - $0.800
+Controlled stations: [11, 14, 15, 26]
+Competitor stations: [37]
+Base case profit: $20.2579
+
+========================================
+Testing max prices scenario...
+========================================
+
+Solving routing model for prices {11: 0.8, 14: 0.8, 15: 0.8, 26: 0.8, 37: np.float64(0.5)}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 11.602677842346315
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 14.311460015999799
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 9.98406712767973
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 11.60
+EV 2: Objective = 14.31
+EV 3: Objective = 9.98
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.8), '14': np.float64(0.8), '15': np.float64(0.8), '26': np.float64(0.8), '37': np.float64(0.5)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:3.229kWh*$0.800=$2.5830 + t11:5.330kWh*$0.800=$4.2638 + t12:5.076kWh*$0.800=$4.0610
+  Station 15: t11:3.561kWh*$0.800=$2.8489 + t12:2.546kWh*$0.800=$2.0372
+  Station 37: t12:2.421kWh*$0.500=$1.2103 + t13:5.761kWh*$0.500=$2.8807 + t14:10.800kWh*$0.500=$5.4000 + t15:10.800kWh*$0.500=$5.4000 + t16:8.379kWh*$0.500=$4.1897 + t17:5.039kWh*$0.500=$2.5193
+
+Cost breakdown by time period:
+  t10: s14:3.229kWh*$0.040=$0.1302
+  t11: s14:5.330kWh*$0.019=$0.1005 + s15:3.561kWh*$0.019=$0.0672
+  t12: s14:5.076kWh*$0.017=$0.0882 + s15:2.546kWh*$0.017=$0.0442 + s37:2.421kWh*$0.017=$0.0420
+  t13: s37:5.761kWh*$0.017=$0.0979
+  t14: s37:10.800kWh*$0.018=$0.1911
+  t15: s37:10.800kWh*$0.015=$0.1623
+  t16: s37:8.379kWh*$0.013=$0.1103
+  t17: s37:5.039kWh*$0.014=$0.0710
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $10.5890
+  Station 15: $4.7747
+  Station 26: $0.0000
+  Station 37: $20.9253
+
+Total Revenue: $37.3940
+Total Cost: $1.1049
+Profit: $36.2891
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(10.589011968863906), '15': np.float64(4.774743877669573), '26': np.float64(0.0), '37': np.float64(20.925343756388507)}
+Max prices profit: $15.3638
+
+
+============================================================
+Testing with trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [11, 14, 15, 26]
+Competitor stations: [37] with fixed prices: [np.float64(0.5)]
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 11: Best algorithm mlp (R² = 0.4430)
+Station 14: Best algorithm mlp (R² = 0.6709)
+Station 15: Best algorithm mlp (R² = 0.6750)
+Station 26: Best algorithm mlp (R² = 0.8269)
+     outcome model_type  ...        task objective
+0  profit_11        mlp  ...  continuous         1
+1  profit_14        mlp  ...  continuous         1
+2  profit_15        mlp  ...  continuous         1
+3  profit_26        mlp  ...  continuous         1
+
+[4 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_11        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_11_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_14        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_14_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_15        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_15_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_26        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_26_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Generating constraints for the trust region using 1001 samples.
+... Trust region defined.
+Embedding objective function for profit_11
+Embedding objective function for profit_14
+Embedding objective function for profit_15
+Embedding objective function for profit_26
+Model created with 636 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $35.80
+Charging prices:
+  Station 11 (AGGREGATOR): $0.661/kWh (range: $0.2-$0.8)
+  Station 14 (AGGREGATOR): $0.795/kWh (range: $0.2-$0.8)
+  Station 15 (AGGREGATOR): $0.661/kWh (range: $0.2-$0.8)
+  Station 26 (AGGREGATOR): $0.414/kWh (range: $0.2-$0.8)
+  Station 37 (COMPETITOR): $0.500/kWh (FIXED)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $35.80
+Solution prices: 11:0.661, 14:0.795, 15:0.661, 26:0.414, 37:0.500
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.6610887575017557, 14: 0.7954231527435388, 15: 0.6609367166060083, 26: 0.4135523114132109, 37: 0.5}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 9.421111379094725
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 12.718123149748514
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 6.808626735587594
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 9.42
+EV 2: Objective = 12.72
+EV 3: Objective = 6.81
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.6610887575017557), '14': np.float64(0.7954231527435388), '15': np.float64(0.6609367166060083), '26': np.float64(0.4135523114132109), '37': np.float64(0.5)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t11:4.005kWh*$0.795=$3.1857
+  Station 15: t11:3.561kWh*$0.661=$2.3537 + t12:0.508kWh*$0.661=$0.3358
+  Station 26: t11:1.348kWh*$0.414=$0.5573 + t12:6.600kWh*$0.414=$2.7294 + t13:6.600kWh*$0.414=$2.7294 + t14:8.075kWh*$0.414=$3.3396 + t15:8.697kWh*$0.414=$3.5965 + t16:11.753kWh*$0.414=$4.8606 + t17:6.600kWh*$0.414=$2.7294 + t18:1.930kWh*$0.414=$0.7982
+  Station 37: t12:1.465kWh*$0.500=$0.7327 + t13:3.600kWh*$0.500=$1.8000 + t14:0.811kWh*$0.500=$0.4055
+
+Cost breakdown by time period:
+  t11: s14:4.005kWh*$0.019=$0.0755 + s15:3.561kWh*$0.019=$0.0672 + s26:1.348kWh*$0.019=$0.0254
+  t12: s15:0.508kWh*$0.017=$0.0088 + s26:6.600kWh*$0.017=$0.1146 + s37:1.465kWh*$0.017=$0.0254
+  t13: s26:6.600kWh*$0.017=$0.1122 + s37:3.600kWh*$0.017=$0.0612
+  t14: s26:8.075kWh*$0.018=$0.1429 + s37:0.811kWh*$0.018=$0.0143
+  t15: s26:8.697kWh*$0.015=$0.1307
+  t16: s26:11.753kWh*$0.013=$0.1547
+  t17: s26:6.600kWh*$0.014=$0.0931
+  t18: s26:1.930kWh*$0.012=$0.0225
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $3.1102
+  Station 15: $2.6135
+  Station 26: $20.5446
+  Station 37: $2.8372
+
+Total Revenue: $30.1540
+Total Cost: $1.0485
+Profit: $29.1055
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(3.110219400280223), '15': np.float64(2.6135473155383773), '26': np.float64(20.544552669472196), '37': np.float64(2.83717996720492)}
+Real profit: $26.2683
+
+========================================
+RESULTS: with trust_region
+========================================
+ Predicted profit: $35.8018
+ Real profit: $26.2683
+ Improvement over base: $6.0104 (29.7%)
+
+
+============================================================
+Testing without trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [11, 14, 15, 26]
+Competitor stations: [37] with fixed prices: [np.float64(0.5)]
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 11: Best algorithm mlp (R² = 0.4430)
+Station 14: Best algorithm mlp (R² = 0.6709)
+Station 15: Best algorithm mlp (R² = 0.6750)
+Station 26: Best algorithm mlp (R² = 0.8269)
+     outcome model_type  ...        task objective
+0  profit_11        mlp  ...  continuous         1
+1  profit_14        mlp  ...  continuous         1
+2  profit_15        mlp  ...  continuous         1
+3  profit_26        mlp  ...  continuous         1
+
+[4 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_11        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_11_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_14        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_14_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_15        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_15_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_26        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_26_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Embedding objective function for profit_11
+Embedding objective function for profit_14
+Embedding objective function for profit_15
+Embedding objective function for profit_26
+Model created with 634 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $35.88
+Charging prices:
+  Station 11 (AGGREGATOR): $0.664/kWh (range: $0.2-$0.8)
+  Station 14 (AGGREGATOR): $0.800/kWh (range: $0.2-$0.8)
+  Station 15 (AGGREGATOR): $0.662/kWh (range: $0.2-$0.8)
+  Station 26 (AGGREGATOR): $0.414/kWh (range: $0.2-$0.8)
+  Station 37 (COMPETITOR): $0.500/kWh (FIXED)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $35.88
+Solution prices: 11:0.664, 14:0.800, 15:0.662, 26:0.414, 37:0.500
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.6639804309286186, 14: 0.8, 15: 0.6618021526719549, 26: 0.4137220710201503, 37: 0.5}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 9.427299617689082
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 12.73852805069675
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 6.811421617314875
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 9.43
+EV 2: Objective = 12.74
+EV 3: Objective = 6.81
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.6639804309286186), '14': np.float64(0.8), '15': np.float64(0.6618021526719549), '26': np.float64(0.4137220710201503), '37': np.float64(0.5)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t11:4.005kWh*$0.800=$3.2041
+  Station 15: t11:3.561kWh*$0.662=$2.3568 + t12:0.508kWh*$0.662=$0.3363
+  Station 26: t11:1.348kWh*$0.414=$0.5576 + t12:6.600kWh*$0.414=$2.7306 + t13:6.600kWh*$0.414=$2.7306 + t14:8.075kWh*$0.414=$3.3410 + t15:8.697kWh*$0.414=$3.5980 + t16:11.753kWh*$0.414=$4.8626 + t17:6.600kWh*$0.414=$2.7306 + t18:1.930kWh*$0.414=$0.7985
+  Station 37: t12:1.465kWh*$0.500=$0.7327 + t13:3.600kWh*$0.500=$1.8000 + t14:0.811kWh*$0.500=$0.4055
+
+Cost breakdown by time period:
+  t11: s14:4.005kWh*$0.019=$0.0755 + s15:3.561kWh*$0.019=$0.0672 + s26:1.348kWh*$0.019=$0.0254
+  t12: s15:0.508kWh*$0.017=$0.0088 + s26:6.600kWh*$0.017=$0.1146 + s37:1.465kWh*$0.017=$0.0254
+  t13: s26:6.600kWh*$0.017=$0.1122 + s37:3.600kWh*$0.017=$0.0612
+  t14: s26:8.075kWh*$0.018=$0.1429 + s37:0.811kWh*$0.018=$0.0143
+  t15: s26:8.697kWh*$0.015=$0.1307
+  t16: s26:11.753kWh*$0.013=$0.1547
+  t17: s26:6.600kWh*$0.014=$0.0931
+  t18: s26:1.930kWh*$0.012=$0.0225
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $3.1286
+  Station 15: $2.6171
+  Station 26: $20.5533
+  Station 37: $2.8372
+
+Total Revenue: $30.1846
+Total Cost: $1.0485
+Profit: $29.1361
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(3.1285501118094077), '15': np.float64(2.6170690037822713), '26': np.float64(20.553312791855117), '37': np.float64(2.837179967204906)}
+Real profit: $26.2989
+
+========================================
+RESULTS: without trust_region
+========================================
+ Predicted profit: $35.8847
+ Real profit: $26.2989
+ Improvement over base: $6.0410 (29.8%)
+✓ Completed combination 1/6
+
+PROGRESS: Combination 2/6 - [11, 14, 15, 37]
+Remaining: 4 combinations
+
+
+============================================================
+EXPERIMENT: Controlled stations [11, 14, 15, 37]
+============================================================
+
+Creating synthetic aggregator data for stations [11, 14, 15, 37]...
+Price bounds: $0.200 - $0.800
+Controlled stations: [11, 14, 15, 37]
+Competitor stations: [26]
+Base case profit: $30.2064
+
+========================================
+Testing max prices scenario...
+========================================
+
+Solving routing model for prices {11: 0.8, 14: 0.8, 15: 0.8, 26: np.float64(0.6), 37: 0.8}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 13.047760084853117
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 15.973692459677096
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 9.878257063519555
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 13.05
+EV 2: Objective = 15.97
+EV 3: Objective = 9.88
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.8), '14': np.float64(0.8), '15': np.float64(0.8), '26': np.float64(0.6), '37': np.float64(0.8)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t11:4.558kWh*$0.800=$3.6467 + t12:3.321kWh*$0.800=$2.6565
+  Station 15: t11:3.561kWh*$0.800=$2.8489 + t12:0.508kWh*$0.800=$0.4065
+  Station 26: t11:1.348kWh*$0.600=$0.8086 + t12:6.600kWh*$0.600=$3.9600 + t13:6.600kWh*$0.600=$3.9600 + t14:11.703kWh*$0.600=$7.0217 + t15:13.200kWh*$0.600=$7.9200 + t16:11.753kWh*$0.600=$7.0520 + t17:0.399kWh*$0.600=$0.2396
+
+Cost breakdown by time period:
+  t11: s14:4.558kWh*$0.019=$0.0860 + s15:3.561kWh*$0.019=$0.0672 + s26:1.348kWh*$0.019=$0.0254
+  t12: s14:3.321kWh*$0.017=$0.0577 + s15:0.508kWh*$0.017=$0.0088 + s26:6.600kWh*$0.017=$0.1146
+  t13: s26:6.600kWh*$0.017=$0.1122
+  t14: s26:11.703kWh*$0.018=$0.2071
+  t15: s26:13.200kWh*$0.015=$0.1983
+  t16: s26:11.753kWh*$0.013=$0.1547
+  t17: s26:0.399kWh*$0.014=$0.0056
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $6.1596
+  Station 15: $3.1794
+  Station 26: $30.1439
+  Station 37: $0.0000
+
+Total Revenue: $40.5205
+Total Cost: $1.0375
+Profit: $39.4830
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(6.159628495737354), '15': np.float64(3.1794325951650615), '26': np.float64(30.143929612343108), '37': np.float64(0.0)}
+Max prices profit: $9.3391
+
+
+============================================================
+Testing with trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [11, 14, 15, 37]
+Competitor stations: [26] with fixed prices: [np.float64(0.6)]
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 11: Best algorithm mlp (R² = 0.4430)
+Station 14: Best algorithm mlp (R² = 0.6709)
+Station 15: Best algorithm mlp (R² = 0.6750)
+Station 37: Best algorithm mlp (R² = 0.7336)
+     outcome model_type  ...        task objective
+0  profit_11        mlp  ...  continuous         1
+1  profit_14        mlp  ...  continuous         1
+2  profit_15        mlp  ...  continuous         1
+3  profit_37        mlp  ...  continuous         1
+
+[4 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_11        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_11_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_14        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_14_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_15        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_15_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_37        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Generating constraints for the trust region using 1001 samples.
+... Trust region defined.
+Embedding objective function for profit_11
+Embedding objective function for profit_14
+Embedding objective function for profit_15
+Embedding objective function for profit_37
+Model created with 636 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $37.15
+Charging prices:
+  Station 11 (AGGREGATOR): $0.794/kWh (range: $0.2-$0.8)
+  Station 14 (AGGREGATOR): $0.499/kWh (range: $0.2-$0.8)
+  Station 15 (AGGREGATOR): $0.483/kWh (range: $0.2-$0.8)
+  Station 26 (COMPETITOR): $0.600/kWh (FIXED)
+  Station 37 (AGGREGATOR): $0.602/kWh (range: $0.2-$0.8)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $37.15
+Solution prices: 11:0.794, 14:0.499, 15:0.483, 26:0.600, 37:0.602
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.7937383530892884, 14: 0.49879723910571316, 15: 0.4828287601056666, 26: 0.6, 37: 0.6024230145211633}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 10.206840137118219
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 11.943293158542712
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 9.181563447227015
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 10.21
+EV 2: Objective = 11.94
+EV 3: Objective = 9.18
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.7937383530892884), '14': np.float64(0.49879723910571316), '15': np.float64(0.4828287601056666), '26': np.float64(0.6), '37': np.float64(0.6024230145211633)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:3.229kWh*$0.499=$1.6105 + t11:11.158kWh*$0.499=$5.5658 + t12:11.444kWh*$0.499=$5.7084 + t13:6.600kWh*$0.499=$3.2921 + t14:1.910kWh*$0.499=$0.9526
+  Station 15: t11:3.561kWh*$0.483=$1.7194 + t12:3.600kWh*$0.483=$1.7382 + t13:3.600kWh*$0.483=$1.7382 + t14:3.600kWh*$0.483=$1.7382 + t15:0.039kWh*$0.483=$0.0187
+  Station 37: t13:0.199kWh*$0.602=$0.1198 + t14:3.650kWh*$0.602=$2.1988 + t15:3.600kWh*$0.602=$2.1687 + t16:3.319kWh*$0.602=$1.9995 + t17:3.433kWh*$0.602=$2.0683
+
+Cost breakdown by time period:
+  t10: s14:3.229kWh*$0.040=$0.1302
+  t11: s14:11.158kWh*$0.019=$0.2104 + s15:3.561kWh*$0.019=$0.0672
+  t12: s14:11.444kWh*$0.017=$0.1987 + s15:3.600kWh*$0.017=$0.0625
+  t13: s14:6.600kWh*$0.017=$0.1122 + s15:3.600kWh*$0.017=$0.0612 + s37:0.199kWh*$0.017=$0.0034
+  t14: s14:1.910kWh*$0.018=$0.0338 + s15:3.600kWh*$0.018=$0.0637 + s37:3.650kWh*$0.018=$0.0646
+  t15: s15:0.039kWh*$0.015=$0.0006 + s37:3.600kWh*$0.015=$0.0541
+  t16: s37:3.319kWh*$0.013=$0.0437
+  t17: s37:3.433kWh*$0.014=$0.0484
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $16.4440
+  Station 15: $6.6976
+  Station 26: $0.0000
+  Station 37: $8.3410
+
+Total Revenue: $32.6372
+Total Cost: $1.1546
+Profit: $31.4826
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(16.44402800794328), '15': np.float64(6.697589749863357), '26': np.float64(0.0), '37': np.float64(8.340967998180927)}
+Real profit: $31.4826
+
+========================================
+RESULTS: with trust_region
+========================================
+ Predicted profit: $37.1497
+ Real profit: $31.4826
+ Improvement over base: $1.2761 (4.2%)
+
+
+============================================================
+Testing without trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [11, 14, 15, 37]
+Competitor stations: [26] with fixed prices: [np.float64(0.6)]
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 11: Best algorithm mlp (R² = 0.4430)
+Station 14: Best algorithm mlp (R² = 0.6709)
+Station 15: Best algorithm mlp (R² = 0.6750)
+Station 37: Best algorithm mlp (R² = 0.7336)
+     outcome model_type  ...        task objective
+0  profit_11        mlp  ...  continuous         1
+1  profit_14        mlp  ...  continuous         1
+2  profit_15        mlp  ...  continuous         1
+3  profit_37        mlp  ...  continuous         1
+
+[4 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_11        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_11_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_14        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_14_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_15        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_15_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_37        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Embedding objective function for profit_11
+Embedding objective function for profit_14
+Embedding objective function for profit_15
+Embedding objective function for profit_37
+Model created with 634 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $37.32
+Charging prices:
+  Station 11 (AGGREGATOR): $0.800/kWh (range: $0.2-$0.8)
+  Station 14 (AGGREGATOR): $0.498/kWh (range: $0.2-$0.8)
+  Station 15 (AGGREGATOR): $0.482/kWh (range: $0.2-$0.8)
+  Station 26 (COMPETITOR): $0.600/kWh (FIXED)
+  Station 37 (AGGREGATOR): $0.602/kWh (range: $0.2-$0.8)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $37.32
+Solution prices: 11:0.800, 14:0.498, 15:0.482, 26:0.600, 37:0.602
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.8, 14: 0.49826840055314303, 15: 0.48183069748789664, 26: 0.6, 37: 0.6022118132725137}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 10.191804573218352
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 11.932422578483887
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 7.288983126693943
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 10.19
+EV 2: Objective = 11.93
+EV 3: Objective = 7.29
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.8), '14': np.float64(0.49826840055314303), '15': np.float64(0.48183069748789664), '26': np.float64(0.6), '37': np.float64(0.6022118132725137)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:1.650kWh*$0.498=$0.8221 + t11:4.558kWh*$0.498=$2.2713 + t12:6.600kWh*$0.498=$3.2886 + t13:6.600kWh*$0.498=$3.2886 + t14:1.910kWh*$0.498=$0.9516
+  Station 15: t11:5.310kWh*$0.482=$2.5587 + t12:7.200kWh*$0.482=$3.4692 + t13:7.200kWh*$0.482=$3.4692 + t14:7.200kWh*$0.482=$3.4692 + t15:1.541kWh*$0.482=$0.7427
+  Station 37: t14:0.122kWh*$0.602=$0.0734 + t15:3.600kWh*$0.602=$2.1680 + t16:3.319kWh*$0.602=$1.9988 + t17:3.433kWh*$0.602=$2.0675
+
+Cost breakdown by time period:
+  t10: s14:1.650kWh*$0.040=$0.0665
+  t11: s14:4.558kWh*$0.019=$0.0860 + s15:5.310kWh*$0.019=$0.1001
+  t12: s14:6.600kWh*$0.017=$0.1146 + s15:7.200kWh*$0.017=$0.1250
+  t13: s14:6.600kWh*$0.017=$0.1122 + s15:7.200kWh*$0.017=$0.1224
+  t14: s14:1.910kWh*$0.018=$0.0338 + s15:7.200kWh*$0.018=$0.1274 + s37:0.122kWh*$0.018=$0.0022
+  t15: s15:1.541kWh*$0.015=$0.0232 + s37:3.600kWh*$0.015=$0.0541
+  t16: s37:3.319kWh*$0.013=$0.0437
+  t17: s37:3.433kWh*$0.014=$0.0484
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $10.2091
+  Station 15: $13.2108
+  Station 26: $0.0000
+  Station 37: $6.1593
+
+Total Revenue: $30.6388
+Total Cost: $1.0595
+Profit: $29.5792
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(10.209122363392314), '15': np.float64(13.210800843091258), '26': np.float64(0.0), '37': np.float64(6.159315167500605)}
+Real profit: $29.5792
+
+========================================
+RESULTS: without trust_region
+========================================
+ Predicted profit: $37.3168
+ Real profit: $29.5792
+ Improvement over base: $-0.6272 (-2.1%)
+✓ Completed combination 2/6
+
+PROGRESS: Combination 3/6 - [11, 14, 26, 37]
+Remaining: 3 combinations
+
+
+============================================================
+EXPERIMENT: Controlled stations [11, 14, 26, 37]
+============================================================
+
+Creating synthetic aggregator data for stations [11, 14, 26, 37]...
+Price bounds: $0.200 - $0.800
+Controlled stations: [11, 14, 26, 37]
+Competitor stations: [15]
+Base case profit: $16.4787
+
+========================================
+Testing max prices scenario...
+========================================
+
+Solving routing model for prices {11: 0.8, 14: 0.8, 15: np.float64(0.5), 26: 0.8, 37: 0.8}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 11.60267784234339
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 19.686071048533325
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 8.012023455733173
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 11.60
+EV 2: Objective = 19.69
+EV 3: Objective = 8.01
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.8), '14': np.float64(0.8), '15': np.float64(0.5), '26': np.float64(0.8), '37': np.float64(0.8)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:1.650kWh*$0.800=$1.3200 + t16:4.399kWh*$0.800=$3.5190 + t17:6.600kWh*$0.800=$5.2800 + t18:0.197kWh*$0.800=$0.1573
+  Station 15: t10:1.396kWh*$0.500=$0.6982 + t11:8.910kWh*$0.500=$4.4552 + t12:10.800kWh*$0.500=$5.4000 + t13:10.800kWh*$0.500=$5.4000 + t14:9.404kWh*$0.500=$4.7018 + t15:1.541kWh*$0.500=$0.7707
+  Station 26: t19:0.151kWh*$0.800=$0.1211 + t20:5.286kWh*$0.800=$4.2289
+  Station 37: t16:2.674kWh*$0.800=$2.1395 + t17:3.433kWh*$0.800=$2.7466
+
+Cost breakdown by time period:
+  t10: s14:1.650kWh*$0.040=$0.0665 + s15:1.396kWh*$0.040=$0.0563
+  t16: s14:4.399kWh*$0.013=$0.0579 + s37:2.674kWh*$0.013=$0.0352
+  t17: s14:6.600kWh*$0.014=$0.0931 + s37:3.433kWh*$0.014=$0.0484
+  t18: s14:0.197kWh*$0.012=$0.0023
+  t11: s15:8.910kWh*$0.019=$0.1680
+  t12: s15:10.800kWh*$0.017=$0.1876
+  t13: s15:10.800kWh*$0.017=$0.1836
+  t14: s15:9.404kWh*$0.018=$0.1664
+  t15: s15:1.541kWh*$0.015=$0.0232
+  t19: s26:0.151kWh*$0.015=$0.0022
+  t20: s26:5.286kWh*$0.020=$0.1033
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $10.0565
+  Station 15: $20.6409
+  Station 26: $4.2445
+  Station 37: $4.8025
+
+Total Revenue: $40.9383
+Total Cost: $1.1939
+Profit: $39.7444
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(10.05652303678337), '15': np.float64(20.64086584113134), '26': np.float64(4.2445102706739215), '37': np.float64(4.802507621042495)}
+Max prices profit: $19.1035
+
+
+============================================================
+Testing with trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [11, 14, 26, 37]
+Competitor stations: [15] with fixed prices: [np.float64(0.5)]
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 11: Best algorithm mlp (R² = 0.4430)
+Station 14: Best algorithm mlp (R² = 0.6709)
+Station 26: Best algorithm mlp (R² = 0.8269)
+Station 37: Best algorithm mlp (R² = 0.7336)
+     outcome model_type  ...        task objective
+0  profit_11        mlp  ...  continuous         1
+1  profit_14        mlp  ...  continuous         1
+2  profit_26        mlp  ...  continuous         1
+3  profit_37        mlp  ...  continuous         1
+
+[4 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_11        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_11_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_14        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_14_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_26        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_26_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_37        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Generating constraints for the trust region using 1001 samples.
+... Trust region defined.
+Embedding objective function for profit_11
+Embedding objective function for profit_14
+Embedding objective function for profit_26
+Embedding objective function for profit_37
+Model created with 786 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $38.49
+Charging prices:
+  Station 11 (AGGREGATOR): $0.786/kWh (range: $0.2-$0.8)
+  Station 14 (AGGREGATOR): $0.638/kWh (range: $0.2-$0.8)
+  Station 15 (COMPETITOR): $0.500/kWh (FIXED)
+  Station 26 (AGGREGATOR): $0.624/kWh (range: $0.2-$0.8)
+  Station 37 (AGGREGATOR): $0.780/kWh (range: $0.2-$0.8)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $38.49
+Solution prices: 11:0.786, 14:0.638, 15:0.500, 26:0.624, 37:0.780
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.7862430647366002, 14: 0.6384898540645296, 15: 0.5, 26: 0.6237235184323796, 37: 0.7798812700126238}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 11.04111342059878
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 17.561216014741476
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 9.604224919713243
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 11.04
+EV 2: Objective = 17.56
+EV 3: Objective = 9.60
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.7862430647366002), '14': np.float64(0.6384898540645296), '15': np.float64(0.5), '26': np.float64(0.6237235184323796), '37': np.float64(0.7798812700126238)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 11: t15:1.496kWh*$0.786=$1.1759 + t16:2.071kWh*$0.786=$1.6285
+  Station 15: t11:8.705kWh*$0.500=$4.3525 + t12:10.800kWh*$0.500=$5.4000 + t13:10.800kWh*$0.500=$5.4000 + t14:10.800kWh*$0.500=$5.4000 + t15:2.095kWh*$0.500=$1.0475
+  Station 26: t16:4.297kWh*$0.624=$2.6799 + t17:12.934kWh*$0.624=$8.0670 + t18:4.052kWh*$0.624=$2.5271
+  Station 37: t19:2.719kWh*$0.780=$2.1201
+
+Cost breakdown by time period:
+  t15: s11:1.496kWh*$0.015=$0.0225 + s15:2.095kWh*$0.015=$0.0315
+  t16: s11:2.071kWh*$0.013=$0.0273 + s26:4.297kWh*$0.013=$0.0566
+  t11: s15:8.705kWh*$0.019=$0.1642
+  t12: s15:10.800kWh*$0.017=$0.1876
+  t13: s15:10.800kWh*$0.017=$0.1836
+  t14: s15:10.800kWh*$0.018=$0.1911
+  t17: s26:12.934kWh*$0.014=$0.1824
+  t18: s26:4.052kWh*$0.012=$0.0472
+  t19: s37:2.719kWh*$0.015=$0.0400
+
+Profit breakdown by station:
+  Station 11: $2.7547
+  Station 14: $0.0000
+  Station 15: $20.8422
+  Station 26: $12.9878
+  Station 37: $2.0801
+
+Total Revenue: $39.7985
+Total Cost: $1.1337
+Profit: $38.6648
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(2.7546670497224333), '14': np.float64(0.0), '15': np.float64(20.842152033284734), '26': np.float64(12.987817460193538), '37': np.float64(2.0801189345150735)}
+Real profit: $17.8226
+
+========================================
+RESULTS: with trust_region
+========================================
+ Predicted profit: $38.4867
+ Real profit: $17.8226
+ Improvement over base: $1.3439 (8.2%)
+
+
+============================================================
+Testing without trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [11, 14, 26, 37]
+Competitor stations: [15] with fixed prices: [np.float64(0.5)]
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 11: Best algorithm mlp (R² = 0.4430)
+Station 14: Best algorithm mlp (R² = 0.6709)
+Station 26: Best algorithm mlp (R² = 0.8269)
+Station 37: Best algorithm mlp (R² = 0.7336)
+     outcome model_type  ...        task objective
+0  profit_11        mlp  ...  continuous         1
+1  profit_14        mlp  ...  continuous         1
+2  profit_26        mlp  ...  continuous         1
+3  profit_37        mlp  ...  continuous         1
+
+[4 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_11        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_11_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_14        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_14_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_26        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_26_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_37        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Embedding objective function for profit_11
+Embedding objective function for profit_14
+Embedding objective function for profit_26
+Embedding objective function for profit_37
+Model created with 784 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $40.02
+Charging prices:
+  Station 11 (AGGREGATOR): $0.800/kWh (range: $0.2-$0.8)
+  Station 14 (AGGREGATOR): $0.651/kWh (range: $0.2-$0.8)
+  Station 15 (COMPETITOR): $0.500/kWh (FIXED)
+  Station 26 (AGGREGATOR): $0.640/kWh (range: $0.2-$0.8)
+  Station 37 (AGGREGATOR): $0.800/kWh (range: $0.2-$0.8)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $40.02
+Solution prices: 11:0.800, 14:0.651, 15:0.500, 26:0.640, 37:0.800
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.8, 14: 0.6512338337955758, 15: 0.5, 26: 0.6395106544941005, 37: 0.8}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 11.145625874367642
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 15.501850387892308
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 7.776377848465364
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 11.15
+EV 2: Objective = 15.50
+EV 3: Objective = 7.78
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.8), '14': np.float64(0.6512338337955758), '15': np.float64(0.5), '26': np.float64(0.6395106544941005), '37': np.float64(0.8)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:1.650kWh*$0.651=$1.0745 + t11:4.558kWh*$0.651=$2.9686 + t12:3.321kWh*$0.651=$2.1625
+  Station 15: t11:5.310kWh*$0.500=$2.6552 + t12:7.200kWh*$0.500=$3.6000 + t13:7.200kWh*$0.500=$3.6000 + t14:7.200kWh*$0.500=$3.6000 + t15:1.541kWh*$0.500=$0.7707
+  Station 26: t14:3.627kWh*$0.640=$2.3198 + t15:6.600kWh*$0.640=$4.2208 + t16:6.600kWh*$0.640=$4.2208 + t17:6.733kWh*$0.640=$4.3058 + t18:0.562kWh*$0.640=$0.3596
+
+Cost breakdown by time period:
+  t10: s14:1.650kWh*$0.040=$0.0665
+  t11: s14:4.558kWh*$0.019=$0.0860 + s15:5.310kWh*$0.019=$0.1001
+  t12: s14:3.321kWh*$0.017=$0.0577 + s15:7.200kWh*$0.017=$0.1250
+  t13: s15:7.200kWh*$0.017=$0.1224
+  t14: s15:7.200kWh*$0.018=$0.1274 + s26:3.627kWh*$0.018=$0.0642
+  t15: s15:1.541kWh*$0.015=$0.0232 + s26:6.600kWh*$0.015=$0.0992
+  t16: s26:6.600kWh*$0.013=$0.0869
+  t17: s26:6.733kWh*$0.014=$0.0949
+  t18: s26:0.562kWh*$0.012=$0.0066
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $5.9955
+  Station 15: $13.7277
+  Station 26: $15.0750
+  Station 37: $0.0000
+
+Total Revenue: $35.8582
+Total Cost: $1.0600
+Profit: $34.7982
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(5.995507178134146), '15': np.float64(13.72774866959416), '26': np.float64(15.074961315194836), '37': np.float64(0.0)}
+Real profit: $21.0705
+
+========================================
+RESULTS: without trust_region
+========================================
+ Predicted profit: $40.0183
+ Real profit: $21.0705
+ Improvement over base: $4.5918 (27.9%)
+✓ Completed combination 3/6
+
+PROGRESS: Combination 4/6 - [11, 15, 26, 37]
+Remaining: 2 combinations
+
+
+============================================================
+EXPERIMENT: Controlled stations [11, 15, 26, 37]
+============================================================
+
+Creating synthetic aggregator data for stations [11, 15, 26, 37]...
+Price bounds: $0.200 - $0.800
+Controlled stations: [11, 15, 26, 37]
+Competitor stations: [14]
+Base case profit: $23.6763
+
+========================================
+Testing max prices scenario...
+========================================
+
+Solving routing model for prices {11: 0.8, 14: np.float64(0.6), 15: 0.8, 26: 0.8, 37: 0.8}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 13.954567294933131
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 14.682362377332439
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 9.560748050878438
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 13.95
+EV 2: Objective = 14.68
+EV 3: Objective = 9.56
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.8), '14': np.float64(0.6), '15': np.float64(0.8), '26': np.float64(0.8), '37': np.float64(0.8)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:5.898kWh*$0.600=$3.5390 + t11:15.277kWh*$0.600=$9.1662 + t12:13.713kWh*$0.600=$8.2278 + t13:13.200kWh*$0.600=$7.9200 + t14:4.082kWh*$0.600=$2.4491
+  Station 15: t13:2.690kWh*$0.800=$2.1523
+  Station 37: t14:0.122kWh*$0.800=$0.0975 + t15:6.279kWh*$0.800=$5.0231 + t16:1.518kWh*$0.800=$1.2144
+
+Cost breakdown by time period:
+  t10: s14:5.898kWh*$0.040=$0.2378
+  t11: s14:15.277kWh*$0.019=$0.2881
+  t12: s14:13.713kWh*$0.017=$0.2381
+  t13: s14:13.200kWh*$0.017=$0.2244 + s15:2.690kWh*$0.017=$0.0457
+  t14: s14:4.082kWh*$0.018=$0.0722 + s37:0.122kWh*$0.018=$0.0022
+  t15: s37:6.279kWh*$0.015=$0.0943
+  t16: s37:1.518kWh*$0.013=$0.0200
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $30.2414
+  Station 15: $2.1066
+  Station 26: $0.0000
+  Station 37: $6.2184
+
+Total Revenue: $39.7892
+Total Cost: $1.2228
+Profit: $38.5664
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(30.2414006447175), '15': np.float64(2.1066028535804127), '26': np.float64(0.0), '37': np.float64(6.21844425500218)}
+Max prices profit: $8.3250
+
+
+============================================================
+Testing with trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [11, 15, 26, 37]
+Competitor stations: [14] with fixed prices: [np.float64(0.6)]
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 11: Best algorithm mlp (R² = 0.4430)
+Station 15: Best algorithm mlp (R² = 0.6750)
+Station 26: Best algorithm mlp (R² = 0.8269)
+Station 37: Best algorithm mlp (R² = 0.7336)
+     outcome model_type  ...        task objective
+0  profit_11        mlp  ...  continuous         1
+1  profit_15        mlp  ...  continuous         1
+2  profit_26        mlp  ...  continuous         1
+3  profit_37        mlp  ...  continuous         1
+
+[4 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_11        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_11_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_15        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_15_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_26        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_26_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_37        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Generating constraints for the trust region using 1001 samples.
+... Trust region defined.
+Embedding objective function for profit_11
+Embedding objective function for profit_15
+Embedding objective function for profit_26
+Embedding objective function for profit_37
+Model created with 786 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $32.58
+Charging prices:
+  Station 11 (AGGREGATOR): $0.792/kWh (range: $0.2-$0.8)
+  Station 14 (COMPETITOR): $0.600/kWh (FIXED)
+  Station 15 (AGGREGATOR): $0.447/kWh (range: $0.2-$0.8)
+  Station 26 (AGGREGATOR): $0.555/kWh (range: $0.2-$0.8)
+  Station 37 (AGGREGATOR): $0.689/kWh (range: $0.2-$0.8)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $32.58
+Solution prices: 11:0.792, 14:0.600, 15:0.447, 26:0.555, 37:0.689
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.7916128429742568, 14: 0.6, 15: 0.44723621164561433, 26: 0.5552184294943363, 37: 0.6891952911593536}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 9.858196122150487
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 13.72033051487255
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 6.9834585811211385
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 9.86
+EV 2: Objective = 13.72
+EV 3: Objective = 6.98
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.7916128429742568), '14': np.float64(0.6), '15': np.float64(0.44723621164561433), '26': np.float64(0.5552184294943363), '37': np.float64(0.6891952911593536)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:1.650kWh*$0.600=$0.9900 + t11:4.558kWh*$0.600=$2.7351 + t12:3.321kWh*$0.600=$1.9924
+  Station 15: t11:5.310kWh*$0.447=$2.3750 + t12:7.200kWh*$0.447=$3.2201 + t13:7.200kWh*$0.447=$3.2201 + t14:7.200kWh*$0.447=$3.2201 + t15:1.541kWh*$0.447=$0.6894
+  Station 26: t14:3.627kWh*$0.555=$2.0140 + t15:6.600kWh*$0.555=$3.6644 + t16:6.600kWh*$0.555=$3.6644 + t17:6.733kWh*$0.555=$3.7382 + t18:0.562kWh*$0.555=$0.3122
+
+Cost breakdown by time period:
+  t10: s14:1.650kWh*$0.040=$0.0665
+  t11: s14:4.558kWh*$0.019=$0.0860 + s15:5.310kWh*$0.019=$0.1001
+  t12: s14:3.321kWh*$0.017=$0.0577 + s15:7.200kWh*$0.017=$0.1250
+  t13: s15:7.200kWh*$0.017=$0.1224
+  t14: s15:7.200kWh*$0.018=$0.1274 + s26:3.627kWh*$0.018=$0.0642
+  t15: s15:1.541kWh*$0.015=$0.0232 + s26:6.600kWh*$0.015=$0.0992
+  t16: s26:6.600kWh*$0.013=$0.0869
+  t17: s26:6.733kWh*$0.014=$0.0949
+  t18: s26:0.562kWh*$0.012=$0.0066
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $5.5073
+  Station 15: $12.2265
+  Station 26: $13.0416
+  Station 37: $0.0000
+
+Total Revenue: $31.8354
+Total Cost: $1.0600
+Profit: $30.7754
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(5.507296273740155), '15': np.float64(12.226528372903356), '26': np.float64(13.04161241984067), '37': np.float64(0.0)}
+Real profit: $25.2681
+
+========================================
+RESULTS: with trust_region
+========================================
+ Predicted profit: $32.5838
+ Real profit: $25.2681
+ Improvement over base: $1.5919 (6.7%)
+
+
+============================================================
+Testing without trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [11, 15, 26, 37]
+Competitor stations: [14] with fixed prices: [np.float64(0.6)]
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 11: Best algorithm mlp (R² = 0.4430)
+Station 15: Best algorithm mlp (R² = 0.6750)
+Station 26: Best algorithm mlp (R² = 0.8269)
+Station 37: Best algorithm mlp (R² = 0.7336)
+     outcome model_type  ...        task objective
+0  profit_11        mlp  ...  continuous         1
+1  profit_15        mlp  ...  continuous         1
+2  profit_26        mlp  ...  continuous         1
+3  profit_37        mlp  ...  continuous         1
+
+[4 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_11        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_11_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_15        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_15_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_26        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_26_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_37        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Embedding objective function for profit_11
+Embedding objective function for profit_15
+Embedding objective function for profit_26
+Embedding objective function for profit_37
+Model created with 784 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $32.67
+Charging prices:
+  Station 11 (AGGREGATOR): $0.800/kWh (range: $0.2-$0.8)
+  Station 14 (COMPETITOR): $0.600/kWh (FIXED)
+  Station 15 (AGGREGATOR): $0.442/kWh (range: $0.2-$0.8)
+  Station 26 (AGGREGATOR): $0.552/kWh (range: $0.2-$0.8)
+  Station 37 (AGGREGATOR): $0.685/kWh (range: $0.2-$0.8)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $32.67
+Solution prices: 11:0.800, 14:0.600, 15:0.442, 26:0.552, 37:0.685
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.8, 14: 0.6, 15: 0.4423059088141986, 26: 0.5522321976498271, 37: 0.6850755267550885}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 9.770270455882752
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 13.67094538241261
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 9.09181934522911
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 9.77
+EV 2: Objective = 13.67
+EV 3: Objective = 9.09
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.8), '14': np.float64(0.6), '15': np.float64(0.4423059088141986), '26': np.float64(0.5522321976498271), '37': np.float64(0.6850755267550885)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t11:4.558kWh*$0.600=$2.7351 + t12:3.321kWh*$0.600=$1.9924
+  Station 15: t11:3.561kWh*$0.442=$1.5751 + t12:3.600kWh*$0.442=$1.5923 + t13:3.600kWh*$0.442=$1.5923 + t14:3.600kWh*$0.442=$1.5923 + t15:0.039kWh*$0.442=$0.0172
+  Station 26: t11:1.348kWh*$0.552=$0.7442 + t12:6.600kWh*$0.552=$3.6447 + t13:6.600kWh*$0.552=$3.6447 + t14:6.229kWh*$0.552=$3.4401 + t15:6.600kWh*$0.552=$3.6447 + t16:6.600kWh*$0.552=$3.6447 + t17:6.733kWh*$0.552=$3.7181 + t18:0.562kWh*$0.552=$0.3105
+
+Cost breakdown by time period:
+  t11: s14:4.558kWh*$0.019=$0.0860 + s15:3.561kWh*$0.019=$0.0672 + s26:1.348kWh*$0.019=$0.0254
+  t12: s14:3.321kWh*$0.017=$0.0577 + s15:3.600kWh*$0.017=$0.0625 + s26:6.600kWh*$0.017=$0.1146
+  t13: s15:3.600kWh*$0.017=$0.0612 + s26:6.600kWh*$0.017=$0.1122
+  t14: s15:3.600kWh*$0.018=$0.0637 + s26:6.229kWh*$0.018=$0.1102
+  t15: s15:0.039kWh*$0.015=$0.0006 + s26:6.600kWh*$0.015=$0.0992
+  t16: s26:6.600kWh*$0.013=$0.0869
+  t17: s26:6.733kWh*$0.014=$0.0949
+  t18: s26:0.562kWh*$0.012=$0.0066
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $4.5838
+  Station 15: $6.1141
+  Station 26: $22.1420
+  Station 37: $0.0000
+
+Total Revenue: $33.8886
+Total Cost: $1.0487
+Profit: $32.8398
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(4.583814043738046), '15': np.float64(6.114060691266225), '26': np.float64(22.141966489127388), '37': np.float64(0.0)}
+Real profit: $28.2560
+
+========================================
+RESULTS: without trust_region
+========================================
+ Predicted profit: $32.6684
+ Real profit: $28.2560
+ Improvement over base: $4.5798 (19.3%)
+✓ Completed combination 4/6
+
+PROGRESS: Combination 5/6 - [14, 15, 26, 37]
+Remaining: 1 combinations
+
+
+============================================================
+EXPERIMENT: Controlled stations [14, 15, 26, 37]
+============================================================
+
+Creating synthetic aggregator data for stations [14, 15, 26, 37]...
+Price bounds: $0.200 - $0.800
+Controlled stations: [14, 15, 26, 37]
+Competitor stations: [11]
+Base case profit: $30.2064
+
+========================================
+Testing max prices scenario...
+========================================
+
+Solving routing model for prices {11: np.float64(0.6), 14: 0.8, 15: 0.8, 26: 0.8, 37: 0.8}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 15.749877842345967
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 33.260270065432806
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 13.171009418025518
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 15.75
+EV 2: Objective = 33.26
+EV 3: Objective = 13.17
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.6), '14': np.float64(0.8), '15': np.float64(0.8), '26': np.float64(0.8), '37': np.float64(0.8)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:2.917kWh*$0.800=$2.3336 + t11:6.600kWh*$0.800=$5.2800 + t12:1.238kWh*$0.800=$0.9904
+  Station 15: t11:3.561kWh*$0.800=$2.8489 + t12:3.600kWh*$0.800=$2.8800 + t13:3.600kWh*$0.800=$2.8800 + t14:3.600kWh*$0.800=$2.8800 + t15:0.039kWh*$0.800=$0.0311
+  Station 26: t11:1.348kWh*$0.800=$1.0781 + t12:6.600kWh*$0.800=$5.2800 + t13:6.600kWh*$0.800=$5.2800 + t14:2.602kWh*$0.800=$2.0817
+  Station 37: t14:1.467kWh*$0.800=$1.1738 + t15:3.600kWh*$0.800=$2.8800 + t16:6.274kWh*$0.800=$5.0195 + t17:7.033kWh*$0.800=$5.6266 + t18:2.133kWh*$0.800=$1.7062
+
+Cost breakdown by time period:
+  t10: s14:2.917kWh*$0.040=$0.1176
+  t11: s14:6.600kWh*$0.019=$0.1245 + s15:3.561kWh*$0.019=$0.0672 + s26:1.348kWh*$0.019=$0.0254
+  t12: s14:1.238kWh*$0.017=$0.0215 + s15:3.600kWh*$0.017=$0.0625 + s26:6.600kWh*$0.017=$0.1146
+  t13: s15:3.600kWh*$0.017=$0.0612 + s26:6.600kWh*$0.017=$0.1122
+  t14: s15:3.600kWh*$0.018=$0.0637 + s26:2.602kWh*$0.018=$0.0460 + s37:1.467kWh*$0.018=$0.0260
+  t15: s15:0.039kWh*$0.015=$0.0006 + s37:3.600kWh*$0.015=$0.0541
+  t16: s37:6.274kWh*$0.013=$0.0826
+  t17: s37:7.033kWh*$0.014=$0.0992
+  t18: s37:2.133kWh*$0.012=$0.0249
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $8.3405
+  Station 15: $11.2649
+  Station 26: $13.4215
+  Station 37: $16.1194
+
+Total Revenue: $50.2500
+Total Cost: $1.1036
+Profit: $49.1464
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(8.340506513557605), '15': np.float64(11.264855604341795), '26': np.float64(13.421546116349804), '37': np.float64(16.119448058964437)}
+Max prices profit: $49.1464
+
+
+============================================================
+Testing with trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [14, 15, 26, 37]
+Competitor stations: [11] with fixed prices: [np.float64(0.6)]
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 14: Best algorithm mlp (R² = 0.6709)
+Station 15: Best algorithm mlp (R² = 0.6750)
+Station 26: Best algorithm mlp (R² = 0.8269)
+Station 37: Best algorithm mlp (R² = 0.7336)
+     outcome model_type  ...        task objective
+0  profit_14        mlp  ...  continuous         1
+1  profit_15        mlp  ...  continuous         1
+2  profit_26        mlp  ...  continuous         1
+3  profit_37        mlp  ...  continuous         1
+
+[4 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_14        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_14_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_15        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_15_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_26        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_26_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_37        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Generating constraints for the trust region using 1001 samples.
+... Trust region defined.
+Embedding objective function for profit_14
+Embedding objective function for profit_15
+Embedding objective function for profit_26
+Embedding objective function for profit_37
+Model created with 906 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $45.21
+Charging prices:
+  Station 11 (COMPETITOR): $0.600/kWh (FIXED)
+  Station 14 (AGGREGATOR): $0.632/kWh (range: $0.2-$0.8)
+  Station 15 (AGGREGATOR): $0.576/kWh (range: $0.2-$0.8)
+  Station 26 (AGGREGATOR): $0.637/kWh (range: $0.2-$0.8)
+  Station 37 (AGGREGATOR): $0.800/kWh (range: $0.2-$0.8)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $45.21
+Solution prices: 11:0.600, 14:0.632, 15:0.576, 26:0.637, 37:0.800
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.6, 14: 0.6319134401805228, 15: 0.5758674405955542, 26: 0.6368417222524602, 37: 0.7997511812977732}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 12.176748769023515
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 15.255798704868992
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 10.484810401974284
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 12.18
+EV 2: Objective = 15.26
+EV 3: Objective = 10.48
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.6), '14': np.float64(0.6319134401805228), '15': np.float64(0.5758674405955542), '26': np.float64(0.6368417222524602), '37': np.float64(0.7997511812977732)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t11:4.558kWh*$0.632=$2.8805 + t12:6.600kWh*$0.632=$4.1706 + t13:6.600kWh*$0.632=$4.1706 + t14:1.910kWh*$0.632=$1.2068
+  Station 15: t11:3.561kWh*$0.576=$2.0508 + t12:3.600kWh*$0.576=$2.0731 + t13:3.600kWh*$0.576=$2.0731 + t14:3.600kWh*$0.576=$2.0731 + t15:0.039kWh*$0.576=$0.0224
+  Station 26: t11:1.348kWh*$0.637=$0.8582 + t12:6.600kWh*$0.637=$4.2032 + t13:6.600kWh*$0.637=$4.2032 + t14:2.602kWh*$0.637=$1.6571 + t16:5.038kWh*$0.637=$3.2086 + t17:6.733kWh*$0.637=$4.2878 + t18:0.562kWh*$0.637=$0.3581
+
+Cost breakdown by time period:
+  t11: s14:4.558kWh*$0.019=$0.0860 + s15:3.561kWh*$0.019=$0.0672 + s26:1.348kWh*$0.019=$0.0254
+  t12: s14:6.600kWh*$0.017=$0.1146 + s15:3.600kWh*$0.017=$0.0625 + s26:6.600kWh*$0.017=$0.1146
+  t13: s14:6.600kWh*$0.017=$0.1122 + s15:3.600kWh*$0.017=$0.0612 + s26:6.600kWh*$0.017=$0.1122
+  t14: s14:1.910kWh*$0.018=$0.0338 + s15:3.600kWh*$0.018=$0.0637 + s26:2.602kWh*$0.018=$0.0460
+  t15: s15:0.039kWh*$0.015=$0.0006
+  t16: s26:5.038kWh*$0.013=$0.0663
+  t17: s26:6.733kWh*$0.014=$0.0949
+  t18: s26:0.562kWh*$0.012=$0.0066
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $12.0821
+  Station 15: $8.0373
+  Station 26: $18.3101
+  Station 37: $0.0000
+
+Total Revenue: $39.4972
+Total Cost: $1.0678
+Profit: $38.4295
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(12.082056895211744), '15': np.float64(8.037346748917741), '26': np.float64(18.310076584154967), '37': np.float64(0.0)}
+Real profit: $38.4295
+
+========================================
+RESULTS: with trust_region
+========================================
+ Predicted profit: $45.2149
+ Real profit: $38.4295
+ Improvement over base: $8.2230 (27.2%)
+
+
+============================================================
+Testing without trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [14, 15, 26, 37]
+Competitor stations: [11] with fixed prices: [np.float64(0.6)]
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 14: Best algorithm mlp (R² = 0.6709)
+Station 15: Best algorithm mlp (R² = 0.6750)
+Station 26: Best algorithm mlp (R² = 0.8269)
+Station 37: Best algorithm mlp (R² = 0.7336)
+     outcome model_type  ...        task objective
+0  profit_14        mlp  ...  continuous         1
+1  profit_15        mlp  ...  continuous         1
+2  profit_26        mlp  ...  continuous         1
+3  profit_37        mlp  ...  continuous         1
+
+[4 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_14        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_14_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_15        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_15_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_26        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_26_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_37        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Embedding objective function for profit_14
+Embedding objective function for profit_15
+Embedding objective function for profit_26
+Embedding objective function for profit_37
+Model created with 904 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $45.23
+Charging prices:
+  Station 11 (COMPETITOR): $0.600/kWh (FIXED)
+  Station 14 (AGGREGATOR): $0.632/kWh (range: $0.2-$0.8)
+  Station 15 (AGGREGATOR): $0.576/kWh (range: $0.2-$0.8)
+  Station 26 (AGGREGATOR): $0.637/kWh (range: $0.2-$0.8)
+  Station 37 (AGGREGATOR): $0.800/kWh (range: $0.2-$0.8)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $45.23
+Solution prices: 11:0.600, 14:0.632, 15:0.576, 26:0.637, 37:0.800
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.6, 14: 0.6321019024279143, 15: 0.5760948325571199, 26: 0.637030179362075, 37: 0.8}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 12.18113984082255
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 15.260340904229063
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 8.772565292161763
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 12.18
+EV 2: Objective = 15.26
+EV 3: Objective = 8.77
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.6), '14': np.float64(0.6321019024279143), '15': np.float64(0.5760948325571199), '26': np.float64(0.637030179362075), '37': np.float64(0.8)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:1.650kWh*$0.632=$1.0430 + t11:4.558kWh*$0.632=$2.8814 + t12:6.600kWh*$0.632=$4.1719 + t13:6.600kWh*$0.632=$4.1719 + t14:1.910kWh*$0.632=$1.2072
+  Station 15: t11:5.310kWh*$0.576=$3.0593 + t12:7.200kWh*$0.576=$4.1479 + t13:7.200kWh*$0.576=$4.1479 + t14:7.200kWh*$0.576=$4.1479 + t15:1.541kWh*$0.576=$0.8880
+  Station 26: t16:5.038kWh*$0.637=$3.2095 + t17:6.733kWh*$0.637=$4.2891 + t18:0.562kWh*$0.637=$0.3582
+
+Cost breakdown by time period:
+  t10: s14:1.650kWh*$0.040=$0.0665
+  t11: s14:4.558kWh*$0.019=$0.0860 + s15:5.310kWh*$0.019=$0.1001
+  t12: s14:6.600kWh*$0.017=$0.1146 + s15:7.200kWh*$0.017=$0.1250
+  t13: s14:6.600kWh*$0.017=$0.1122 + s15:7.200kWh*$0.017=$0.1224
+  t14: s14:1.910kWh*$0.018=$0.0338 + s15:7.200kWh*$0.018=$0.1274
+  t15: s15:1.541kWh*$0.015=$0.0232
+  t16: s26:5.038kWh*$0.013=$0.0663
+  t17: s26:6.733kWh*$0.014=$0.0949
+  t18: s26:0.562kWh*$0.012=$0.0066
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $13.0622
+  Station 15: $15.8928
+  Station 26: $7.6890
+  Station 37: $0.0000
+
+Total Revenue: $37.7230
+Total Cost: $1.0790
+Profit: $36.6440
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(13.062213980570986), '15': np.float64(15.892777199023726), '26': np.float64(7.6889787730495485), '37': np.float64(0.0)}
+Real profit: $36.6440
+
+========================================
+RESULTS: without trust_region
+========================================
+ Predicted profit: $45.2307
+ Real profit: $36.6440
+ Improvement over base: $6.4375 (21.3%)
+✓ Completed combination 5/6
+
+PROGRESS: Combination 6/6 - [11, 14, 15, 26, 37]
+Remaining: 0 combinations
+
+
+============================================================
+EXPERIMENT: Controlled stations [11, 14, 15, 26, 37]
+============================================================
+
+Creating synthetic aggregator data for stations [11, 14, 15, 26, 37]...
+Price bounds: $0.200 - $0.800
+Controlled stations: [11, 14, 15, 26, 37]
+Competitor stations: []
+Base case profit: $30.2064
+
+========================================
+Testing max prices scenario...
+========================================
+
+Solving routing model for prices {11: 0.8, 14: 0.8, 15: 0.8, 26: 0.8, 37: 0.8}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 15.749877842346653
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 18.45866001599852
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 14.1312671276796
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 15.75
+EV 2: Objective = 18.46
+EV 3: Objective = 14.13
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.8), '14': np.float64(0.8), '15': np.float64(0.8), '26': np.float64(0.8), '37': np.float64(0.8)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 14: t10:3.229kWh*$0.800=$2.5830 + t11:11.158kWh*$0.800=$8.9267 + t12:11.444kWh*$0.800=$9.1554 + t13:6.600kWh*$0.800=$5.2800 + t14:1.910kWh*$0.800=$1.5278
+  Station 15: t11:3.561kWh*$0.800=$2.8489 + t12:3.600kWh*$0.800=$2.8800 + t13:3.600kWh*$0.800=$2.8800 + t14:3.600kWh*$0.800=$2.8800 + t15:0.039kWh*$0.800=$0.0311
+  Station 37: t13:0.199kWh*$0.800=$0.1591 + t14:3.650kWh*$0.800=$2.9200 + t15:3.600kWh*$0.800=$2.8800 + t16:3.319kWh*$0.800=$2.6552 + t17:3.433kWh*$0.800=$2.7466
+
+Cost breakdown by time period:
+  t10: s14:3.229kWh*$0.040=$0.1302
+  t11: s14:11.158kWh*$0.019=$0.2104 + s15:3.561kWh*$0.019=$0.0672
+  t12: s14:11.444kWh*$0.017=$0.1987 + s15:3.600kWh*$0.017=$0.0625
+  t13: s14:6.600kWh*$0.017=$0.1122 + s15:3.600kWh*$0.017=$0.0612 + s37:0.199kWh*$0.017=$0.0034
+  t14: s14:1.910kWh*$0.018=$0.0338 + s15:3.600kWh*$0.018=$0.0637 + s37:3.650kWh*$0.018=$0.0646
+  t15: s15:0.039kWh*$0.015=$0.0006 + s37:3.600kWh*$0.015=$0.0541
+  t16: s37:3.319kWh*$0.013=$0.0437
+  t17: s37:3.433kWh*$0.014=$0.0484
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $26.7877
+  Station 15: $11.2649
+  Station 26: $0.0000
+  Station 37: $11.1468
+
+Total Revenue: $50.3540
+Total Cost: $1.1546
+Profit: $49.1994
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(26.787716318349794), '15': np.float64(11.264855604341767), '26': np.float64(0.0), '37': np.float64(11.146793253230154)}
+Max prices profit: $49.1994
+
+
+============================================================
+Testing with trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [11, 14, 15, 26, 37]
+Competitor stations: [] with fixed prices: []
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 11: Best algorithm mlp (R² = 0.4430)
+Station 14: Best algorithm mlp (R² = 0.6709)
+Station 15: Best algorithm mlp (R² = 0.6750)
+Station 26: Best algorithm mlp (R² = 0.8269)
+Station 37: Best algorithm mlp (R² = 0.7336)
+     outcome model_type  ...        task objective
+0  profit_11        mlp  ...  continuous         1
+1  profit_14        mlp  ...  continuous         1
+2  profit_15        mlp  ...  continuous         1
+3  profit_26        mlp  ...  continuous         1
+4  profit_37        mlp  ...  continuous         1
+
+[5 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_11        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_11_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_14        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_14_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_15        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_15_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_26        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_26_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+4  profit_37        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Generating constraints for the trust region using 1001 samples.
+... Trust region defined.
+Embedding objective function for profit_11
+Embedding objective function for profit_14
+Embedding objective function for profit_15
+Embedding objective function for profit_26
+Embedding objective function for profit_37
+Model created with 937 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $50.72
+Charging prices:
+  Station 11 (AGGREGATOR): $0.781/kWh (range: $0.2-$0.8)
+  Station 14 (AGGREGATOR): $0.640/kWh (range: $0.2-$0.8)
+  Station 15 (AGGREGATOR): $0.538/kWh (range: $0.2-$0.8)
+  Station 26 (AGGREGATOR): $0.628/kWh (range: $0.2-$0.8)
+  Station 37 (AGGREGATOR): $0.788/kWh (range: $0.2-$0.8)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $50.72
+Solution prices: 11:0.781, 14:0.640, 15:0.538, 26:0.628, 37:0.788
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.7808988404085229, 14: 0.6399917685837899, 15: 0.5375717818043936, 26: 0.6284512911164338, 37: 0.788106816589409}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 12.052336289134933
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 18.167367789401016
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 10.34667234257982
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 12.05
+EV 2: Objective = 18.17
+EV 3: Objective = 10.35
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.7808988404085229), '14': np.float64(0.6399917685837899), '15': np.float64(0.5375717818043936), '26': np.float64(0.6284512911164338), '37': np.float64(0.788106816589409)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 15: t11:5.768kWh*$0.538=$3.1008 + t12:7.200kWh*$0.538=$3.8705 + t13:7.200kWh*$0.538=$3.8705 + t14:7.200kWh*$0.538=$3.8705 + t15:1.432kWh*$0.538=$0.7697
+  Station 26: t11:1.348kWh*$0.628=$0.8469 + t12:6.600kWh*$0.628=$4.1478 + t13:6.600kWh*$0.628=$4.1478 + t14:2.602kWh*$0.628=$1.6353 + t16:4.297kWh*$0.628=$2.7002 + t17:6.600kWh*$0.628=$4.1478 + t18:3.489kWh*$0.628=$2.1928
+  Station 37: t16:2.674kWh*$0.788=$2.1077 + t17:3.433kWh*$0.788=$2.7058 + t19:2.719kWh*$0.788=$2.1425
+
+Cost breakdown by time period:
+  t11: s15:5.768kWh*$0.019=$0.1088 + s26:1.348kWh*$0.019=$0.0254
+  t12: s15:7.200kWh*$0.017=$0.1250 + s26:6.600kWh*$0.017=$0.1146
+  t13: s15:7.200kWh*$0.017=$0.1224 + s26:6.600kWh*$0.017=$0.1122
+  t14: s15:7.200kWh*$0.018=$0.1274 + s26:2.602kWh*$0.018=$0.0460
+  t15: s15:1.432kWh*$0.015=$0.0215
+  t16: s26:4.297kWh*$0.013=$0.0566 + s37:2.674kWh*$0.013=$0.0352
+  t17: s26:6.600kWh*$0.014=$0.0931 + s37:3.433kWh*$0.014=$0.0484
+  t18: s26:3.489kWh*$0.012=$0.0407
+  t19: s37:2.719kWh*$0.015=$0.0400
+
+Profit breakdown by station:
+  Station 11: $0.0000
+  Station 14: $0.0000
+  Station 15: $14.9770
+  Station 26: $19.3301
+  Station 37: $6.8323
+
+Total Revenue: $42.2566
+Total Cost: $1.1173
+Profit: $41.1394
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(0.0), '14': np.float64(0.0), '15': np.float64(14.976970135155204), '26': np.float64(19.330062740132945), '37': np.float64(6.832348305417233)}
+Real profit: $41.1394
+
+========================================
+RESULTS: with trust_region
+========================================
+ Predicted profit: $50.7203
+ Real profit: $41.1394
+ Improvement over base: $10.9329 (36.2%)
+
+
+============================================================
+Testing without trust region
+============================================================
+
+
+========================================
+Solving aggregator model...
+========================================
+Using provided input data...
+Using competition model...
+Total stations: 5
+Aggregator-controlled stations: [11, 14, 15, 26, 37]
+Competitor stations: [] with fixed prices: []
+Loading regression model data...
+Feature columns: ['rc_11', 'rc_14', 'rc_15', 'rc_26', 'rc_37']
+Profit columns: ['profit_11', 'profit_14', 'profit_15', 'profit_26', 'profit_37']
+Station 11: Best algorithm mlp (R² = 0.4430)
+Station 14: Best algorithm mlp (R² = 0.6709)
+Station 15: Best algorithm mlp (R² = 0.6750)
+Station 26: Best algorithm mlp (R² = 0.8269)
+Station 37: Best algorithm mlp (R² = 0.7336)
+     outcome model_type  ...        task objective
+0  profit_11        mlp  ...  continuous         1
+1  profit_14        mlp  ...  continuous         1
+2  profit_15        mlp  ...  continuous         1
+3  profit_26        mlp  ...  continuous         1
+4  profit_37        mlp  ...  continuous         1
+
+[5 rows x 5 columns]
+
+Model master:
+     outcome model_type                                                              save_path        task  objective    lb    ub SCM_counterfactuals                             features
+0  profit_11        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_11_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+1  profit_14        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_14_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+2  profit_15        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_15_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+3  profit_26        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_26_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+4  profit_37        mlp  ../regressors\mlp\37map_1001scenarios_competition_profit_37_model.csv  continuous          1  None  None                None  [rc_11, rc_14, rc_15, rc_26, rc_37]
+
+Creating concrete model...
+Embedding regression models with OptiCL...
+Embedding objective function for profit_11
+Embedding objective function for profit_14
+Embedding objective function for profit_15
+Embedding objective function for profit_26
+Embedding objective function for profit_37
+Model created with 935 constraints
+Solving with gurobi...
+Solver status: ok
+Termination: optimal
+Predicted aggregator profit: $51.97
+Charging prices:
+  Station 11 (AGGREGATOR): $0.800/kWh (range: $0.2-$0.8)
+  Station 14 (AGGREGATOR): $0.651/kWh (range: $0.2-$0.8)
+  Station 15 (AGGREGATOR): $0.502/kWh (range: $0.2-$0.8)
+  Station 26 (AGGREGATOR): $0.639/kWh (range: $0.2-$0.8)
+  Station 37 (AGGREGATOR): $0.800/kWh (range: $0.2-$0.8)
+Extracting solution data...
+Aggregator solver status: optimal
+Predicted profit: $51.97
+Solution prices: 11:0.800, 14:0.651, 15:0.502, 26:0.639, 37:0.800
+
+========================================
+Testing solution against routing model...
+========================================
+
+Solving routing model for prices {11: 0.8, 14: 0.6510472831988007, 15: 0.5017290632597977, 26: 0.639425804072863, 37: 0.8}...
+
+Extracting electricity costs from map data...
+Electricity costs: {0: 0.0271504, 1: 0.0407256, 2: 0.033512, 3: 0.032447000000000004, 4: 0.0344208, 5: 0.037133, 6: 0.039689, 7: 0.0524122, 8: 0.0708438, 9: 0.07540200000000001, 10: 0.040313800000000004, 11: 0.0188576, 12: 0.0173666, 13: 0.016997400000000003, 14: 0.017693200000000003, 15: 0.0150236, 16: 0.0131634, 17: 0.0141006, 18: 0.011658200000000002, 19: 0.014711199999999999, 20: 0.0195392, 21: 0.0622386, 22: 0.06818840000000001, 23: 0.04544}
+
+Processing EV 1
+--------------------------------------------------
+Filtering data for EV 1...
+Creating abstract routing_model for EV 1 with linearized constraints...
+Creating concrete routing_model instance for EV 1...
+
+Model Information for EV 1:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 1...
+Solving the routing_model for EV 1...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 1! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 1: 11.626580412849439
+
+Extracting solution data for EV 1...
+Solution data extracted successfully for EV 1!
+
+Processing EV 2
+--------------------------------------------------
+Filtering data for EV 2...
+Creating abstract routing_model for EV 2 with linearized constraints...
+Creating concrete routing_model instance for EV 2...
+
+Model Information for EV 2:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 5
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 2...
+Solving the routing_model for EV 2...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 2! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 2: 18.21111249552341
+
+Extracting solution data for EV 2...
+Solution data extracted successfully for EV 2!
+
+Processing EV 3
+--------------------------------------------------
+Filtering data for EV 3...
+Creating abstract routing_model for EV 3 with linearized constraints...
+Creating concrete routing_model instance for EV 3...
+
+Model Information for EV 3:
+Number of intersections: 38
+Number of paths: 166
+Number of delivery points: 4
+Number of charging stations: 5
+
+Setting up gurobi solver for EV 3...
+Solving the routing_model for EV 3...
+WARNING: Loading a SolverResults object with an 'aborted' status, but
+containing a solution
+
+Solver returned a solution for EV 3! :)
+	Status: aborted
+	Termination condition: maxTimeLimit
+Objective function value for EV 3: 7.799406805182412
+
+Extracting solution data for EV 3...
+Solution data extracted successfully for EV 3!
+
+SUMMARY OF ALL EVs
+--------------------------------------------------
+EV 1: Objective = 11.63
+EV 2: Objective = 18.21
+EV 3: Objective = 7.80
+
+Extracting aggregated demand...
+--------------------------------------------------
+Aggregated demand extracted successfully!
+
+Computing station profits...
+--------------------------------------------------
+
+--- Profit Computation ---
+Charging prices: {'11': np.float64(0.8), '14': np.float64(0.6510472831988007), '15': np.float64(0.5017290632597977), '26': np.float64(0.639425804072863), '37': np.float64(0.8)}
+Total demand records: 120
+
+Revenue breakdown by station:
+  Station 11: t11:1.650kWh*$0.800=$1.3200
+  Station 14: t9:2.387kWh*$0.651=$1.5543 + t10:1.650kWh*$0.651=$1.0742
+  Station 15: t11:5.310kWh*$0.502=$2.6643 + t12:7.200kWh*$0.502=$3.6124 + t13:7.200kWh*$0.502=$3.6124 + t14:7.200kWh*$0.502=$3.6124 + t15:1.541kWh*$0.502=$0.7734
+  Station 26: t12:4.975kWh*$0.639=$3.1810 + t13:6.600kWh*$0.639=$4.2202 + t14:6.600kWh*$0.639=$4.2202 + t15:3.596kWh*$0.639=$2.2994
+  Station 37: t16:5.393kWh*$0.800=$4.3143 + t17:3.433kWh*$0.800=$2.7466
+
+Cost breakdown by time period:
+  t11: s11:1.650kWh*$0.019=$0.0311 + s15:5.310kWh*$0.019=$0.1001
+  t9: s14:2.387kWh*$0.075=$0.1800
+  t10: s14:1.650kWh*$0.040=$0.0665
+  t12: s15:7.200kWh*$0.017=$0.1250 + s26:4.975kWh*$0.017=$0.0864
+  t13: s15:7.200kWh*$0.017=$0.1224 + s26:6.600kWh*$0.017=$0.1122
+  t14: s15:7.200kWh*$0.018=$0.1274 + s26:6.600kWh*$0.018=$0.1168
+  t15: s15:1.541kWh*$0.015=$0.0232 + s26:3.596kWh*$0.015=$0.0540
+  t16: s37:5.393kWh*$0.013=$0.0710
+  t17: s37:3.433kWh*$0.014=$0.0484
+
+Profit breakdown by station:
+  Station 11: $1.2889
+  Station 14: $2.3820
+  Station 15: $13.7769
+  Station 26: $13.5515
+  Station 37: $6.9415
+
+Total Revenue: $39.2053
+Total Cost: $1.2645
+Profit: $37.9408
+--- End Profit Computation ---
+
+Station profits computed successfully!
+Station profits: {'11': np.float64(1.28888496), '14': np.float64(2.381971905910211), '15': np.float64(13.776943485600047), '26': np.float64(13.551454078056732), '37': np.float64(6.941527133403307)}
+Real profit: $37.9408
+
+========================================
+RESULTS: without trust_region
+========================================
+ Predicted profit: $51.9717
+ Real profit: $37.9408
+ Improvement over base: $7.7343 (25.6%)
+✓ Completed combination 6/6
+
+================================================================================
+SAVING RESULTS
+================================================================================
+Total experiments completed: 36
+Results saved to: ../results/aggregator_experiments_20250614_164920.csv
+Log saved to: ../logs/aggregator_experiments_20250614_164920.txt
+
+Results preview:
+--------------------------------------------------------------------------------
+controlled_stations             type    profit    rc_11    rc_14    rc_15    rc_26    rc_37
+        11|14|15|26        base_case 20.257940 0.600000 0.600000 0.500000 0.600000 0.500000
+        11|14|15|26       max_prices 15.363756 0.800000 0.800000 0.800000 0.800000 0.500000
+        11|14|15|26 sol_tr_predicted 35.801837 0.661089 0.795423 0.660937 0.413552 0.500000
+        11|14|15|26      sol_tr_real 26.268319 0.661089 0.795423 0.660937 0.413552 0.500000
+        11|14|15|26    sol_predicted 35.884715 0.663980 0.800000 0.661802 0.413722 0.500000
+        11|14|15|26         sol_real 26.298932 0.663980 0.800000 0.661802 0.413722 0.500000
+        11|14|15|37        base_case 30.206443 0.600000 0.600000 0.500000 0.600000 0.500000
+        11|14|15|37       max_prices  9.339061 0.800000 0.800000 0.800000 0.600000 0.800000
+        11|14|15|37 sol_tr_predicted 37.149674 0.793738 0.498797 0.482829 0.600000 0.602423
+        11|14|15|37      sol_tr_real 31.482586 0.793738 0.498797 0.482829 0.600000 0.602423
+        11|14|15|37    sol_predicted 37.316777 0.800000 0.498268 0.481831 0.600000 0.602212
+        11|14|15|37         sol_real 29.579238 0.800000 0.498268 0.481831 0.600000 0.602212
+        11|14|26|37        base_case 16.478694 0.600000 0.600000 0.500000 0.600000 0.500000
+        11|14|26|37       max_prices 19.103541 0.800000 0.800000 0.500000 0.800000 0.800000
+        11|14|26|37 sol_tr_predicted 38.486738 0.786243 0.638490 0.500000 0.623724 0.779881
+        11|14|26|37      sol_tr_real 17.822603 0.786243 0.638490 0.500000 0.623724 0.779881
+        11|14|26|37    sol_predicted 40.018275 0.800000 0.651234 0.500000 0.639511 0.800000
+        11|14|26|37         sol_real 21.070468 0.800000 0.651234 0.500000 0.639511 0.800000
+        11|15|26|37        base_case 23.676251 0.600000 0.600000 0.500000 0.600000 0.500000
+        11|15|26|37       max_prices  8.325047 0.800000 0.600000 0.800000 0.800000 0.800000
+        11|15|26|37 sol_tr_predicted 32.583805 0.791613 0.600000 0.447236 0.555218 0.689195
+        11|15|26|37      sol_tr_real 25.268141 0.791613 0.600000 0.447236 0.555218 0.689195
+        11|15|26|37    sol_predicted 32.668421 0.800000 0.600000 0.442306 0.552232 0.685076
+        11|15|26|37         sol_real 28.256027 0.800000 0.600000 0.442306 0.552232 0.685076
+        14|15|26|37        base_case 30.206443 0.600000 0.600000 0.500000 0.600000 0.500000
+        14|15|26|37       max_prices 49.146356 0.600000 0.800000 0.800000 0.800000 0.800000
+        14|15|26|37 sol_tr_predicted 45.214905 0.600000 0.631913 0.575867 0.636842 0.799751
+        14|15|26|37      sol_tr_real 38.429480 0.600000 0.631913 0.575867 0.636842 0.799751
+        14|15|26|37    sol_predicted 45.230660 0.600000 0.632102 0.576095 0.637030 0.800000
+        14|15|26|37         sol_real 36.643970 0.600000 0.632102 0.576095 0.637030 0.800000
+     11|14|15|26|37        base_case 30.206443 0.600000 0.600000 0.500000 0.600000 0.500000
+     11|14|15|26|37       max_prices 49.199365 0.800000 0.800000 0.800000 0.800000 0.800000
+     11|14|15|26|37 sol_tr_predicted 50.720286 0.780899 0.639992 0.537572 0.628451 0.788107
+     11|14|15|26|37      sol_tr_real 41.139381 0.780899 0.639992 0.537572 0.628451 0.788107
+     11|14|15|26|37    sol_predicted 51.971744 0.800000 0.651047 0.501729 0.639426 0.800000
+     11|14|15|26|37         sol_real 37.940782 0.800000 0.651047 0.501729 0.639426 0.800000
+--------------------------------------------------------------------------------
+
+================================================================================
+EXPERIMENTS COMPLETED
+================================================================================

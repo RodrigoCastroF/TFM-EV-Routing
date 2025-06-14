@@ -12,7 +12,7 @@ import numpy as np
 
 
 def solve_aggregator_model(input_excel_file=None, input_data=None, performance_csv_file=None, training_data_csv_file=None, trust_region=True,
-                          output_excel_file=None, solver="gurobi", time_limit=300, verbose=1):
+                          output_excel_file=None, model="auto", solver="gurobi", time_limit=300, verbose=1):
     """
     Solve the aggregator optimization problem with embedded regression model.
     Automatically detects whether to use monopoly or competition model based on input data.
@@ -33,6 +33,9 @@ def solve_aggregator_model(input_excel_file=None, input_data=None, performance_c
         If True, solutions are restricted to lie in the trust region (the domain of the training data)
     output_excel_file: str, optional
         Path to save the solution Excel file (optional).
+    model: str
+        Model to use (default: "auto"). Options: "auto", "monopoly", "competition".
+        "auto" will detect whether to use monopoly or competition model based on input data.
     solver: str
         Solver to use (default: "gurobi").
     time_limit: int
@@ -61,16 +64,25 @@ def solve_aggregator_model(input_excel_file=None, input_data=None, performance_c
     fixed_prices = input_data[None].get('pChargingPrice', {})
     has_competitors = any(not pd.isna(price) for price in fixed_prices.values())
     
-    if has_competitors:
-        if verbose >= 1:
-            print("Detected competition model (some stations have fixed prices)")
+    if model == "auto":
+        if has_competitors:
+            if verbose >= 1:
+                print("Detected competition model (some stations have fixed prices)")
+            model = "competition"
+        else:
+            if verbose >= 1:
+                print("Detected monopoly model (all stations are optimizable)")
+            model = "monopoly"
+
+    if verbose >= 1:
+        print(f"Using {model} model...")
+    
+    if model == "competition":
         return solve_competition_model(input_data=input_data, performance_csv_file=performance_csv_file, 
                                      training_data_csv_file=training_data_csv_file, 
                                      trust_region=trust_region, output_excel_file=output_excel_file, 
                                      solver=solver, time_limit=time_limit, verbose=verbose)
     else:
-        if verbose >= 1:
-            print("Detected monopoly model (all stations are optimizable)")
         return solve_monopoly_model(input_data=input_data, performance_csv_file=performance_csv_file, 
                                   training_data_csv_file=training_data_csv_file, 
                                   trust_region=trust_region, output_excel_file=output_excel_file, 
