@@ -273,8 +273,8 @@ def main():
     
     # Output files
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_csv_file = f"../results/aggregator_experiments_{timestamp}.csv"
-    log_file_path = f"../logs/aggregator_experiments_{timestamp}.txt"
+    output_csv_file = f"../results/aggregator_37map_experiments_{timestamp}.csv"
+    log_file_path = f"../logs/aggregator_37map_experiments_{timestamp}.txt"
     
     # Create output directories if they don't exist
     os.makedirs(os.path.dirname(output_csv_file), exist_ok=True)

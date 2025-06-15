@@ -12,7 +12,7 @@ import numpy as np
 
 
 def solve_aggregator_model(input_excel_file=None, input_data=None, performance_csv_file=None, training_data_csv_file=None, trust_region=True,
-                          output_excel_file=None, model="auto", solver="gurobi", time_limit=300, verbose=1):
+                          output_excel_file=None, model="auto", alg=None, solver="gurobi", time_limit=300, verbose=1):
     """
     Solve the aggregator optimization problem with embedded regression model.
     Automatically detects whether to use monopoly or competition model based on input data.
@@ -36,6 +36,10 @@ def solve_aggregator_model(input_excel_file=None, input_data=None, performance_c
     model: str
         Model to use (default: "auto"). Options: "auto", "monopoly", "competition".
         "auto" will detect whether to use monopoly or competition model based on input data.
+    alg: str, optional
+        Algorithm to use for regression models (default: None for automatic selection).
+        When None, the best algorithm is selected automatically.
+        When specified (e.g., "mlp", "linear"), the provided algorithm is used for all regression models.
     solver: str
         Solver to use (default: "gurobi").
     time_limit: int
@@ -81,16 +85,16 @@ def solve_aggregator_model(input_excel_file=None, input_data=None, performance_c
         return solve_competition_model(input_data=input_data, performance_csv_file=performance_csv_file, 
                                      training_data_csv_file=training_data_csv_file, 
                                      trust_region=trust_region, output_excel_file=output_excel_file, 
-                                     solver=solver, time_limit=time_limit, verbose=verbose)
+                                     alg=alg, solver=solver, time_limit=time_limit, verbose=verbose)
     else:
         return solve_monopoly_model(input_data=input_data, performance_csv_file=performance_csv_file, 
                                   training_data_csv_file=training_data_csv_file, 
                                   trust_region=trust_region, output_excel_file=output_excel_file, 
-                                  solver=solver, time_limit=time_limit, verbose=verbose)
+                                  alg=alg, solver=solver, time_limit=time_limit, verbose=verbose)
 
 
 def solve_monopoly_model(input_data, performance_csv_file, training_data_csv_file, trust_region=True,
-                        output_excel_file=None, solver="gurobi", time_limit=300, verbose=1):
+                        output_excel_file=None, alg=None, solver="gurobi", time_limit=300, verbose=1):
     """
     Solve the monopoly aggregator optimization problem with embedded regression model.
     (Original model that optimizes all stations)
@@ -107,6 +111,8 @@ def solve_monopoly_model(input_data, performance_csv_file, training_data_csv_fil
         If True, solutions are restricted to lie in the trust region (the domain of the training data)
     output_excel_file: str, optional
         Path to save the solution Excel file (optional).
+    alg: str, optional
+        Algorithm to use for regression model (default: None for automatic selection).
     solver: str
         Solver to use (default: "gurobi").
     time_limit: int
@@ -139,11 +145,22 @@ def solve_monopoly_model(input_data, performance_csv_file, training_data_csv_fil
         print(f"Available algorithms: {performance_df['alg'].tolist()}")
         print(f"Feature columns: {feature_columns}")
 
-    # Select best regression model
-    best_row = performance_df.loc[performance_df['test_r2'].idxmax()]
-    best_alg = best_row['alg']
-    if verbose >= 1:
-        print(f"Selected best algorithm: {best_alg} (R² = {best_row['test_r2']:.4f})")
+    # Select regression model
+    if alg is not None:
+        # Use specified algorithm
+        alg_rows = performance_df[performance_df['alg'] == alg]
+        if alg_rows.empty:
+            raise ValueError(f"Algorithm '{alg}' not found in performance data. Available algorithms: {performance_df['alg'].unique().tolist()}")
+        best_row = alg_rows.iloc[0]  # Take first row if multiple exist
+        best_alg = alg
+        if verbose >= 1:
+            print(f"Using specified algorithm: {best_alg} (R² = {best_row['test_r2']:.4f})")
+    else:
+        # Select best algorithm automatically
+        best_row = performance_df.loc[performance_df['test_r2'].idxmax()]
+        best_alg = best_row['alg']
+        if verbose >= 1:
+            print(f"Selected best algorithm: {best_alg} (R² = {best_row['test_r2']:.4f})")
 
     # Prepare OptiCL model selection
     performance_for_selection = pd.DataFrame([{
@@ -264,7 +281,7 @@ def solve_monopoly_model(input_data, performance_csv_file, training_data_csv_fil
 
 
 def solve_competition_model(input_data, performance_csv_file, training_data_csv_file, trust_region=True,
-                           output_excel_file=None, solver="gurobi", time_limit=300, verbose=1):
+                           output_excel_file=None, alg=None, solver="gurobi", time_limit=300, verbose=1):
     """
     Solve the competition aggregator optimization problem with embedded regression models.
     (New model that optimizes only aggregator-controlled stations against fixed competitor prices)
@@ -281,6 +298,8 @@ def solve_competition_model(input_data, performance_csv_file, training_data_csv_
         If True, solutions are restricted to lie in the trust region (the domain of the training data)
     output_excel_file: str, optional
         Path to save the solution Excel file (optional).
+    alg: str, optional
+        Algorithm to use for regression models (default: None for automatic selection).
     solver: str
         Solver to use (default: "gurobi").
     time_limit: int
@@ -323,7 +342,7 @@ def solve_competition_model(input_data, performance_csv_file, training_data_csv_
         print(f"Feature columns: {feature_columns}")
         print(f"Profit columns: {profit_columns}")
 
-    # Select best regression model for each aggregator station
+    # Select regression model for each aggregator station
     station_models = {}
     performance_list = []
     
@@ -337,12 +356,22 @@ def solve_competition_model(input_data, performance_csv_file, training_data_csv_
         if station_perf.empty:
             raise ValueError(f"No performance data found for outcome {profit_col}")
         
-        # Select best model for this station
-        best_row = station_perf.loc[station_perf['test_r2'].idxmax()]
-        station_models[station] = best_row
+        # Select model for this station
+        if alg is not None:
+            # Use specified algorithm
+            alg_rows = station_perf[station_perf['alg'] == alg]
+            if alg_rows.empty:
+                raise ValueError(f"Algorithm '{alg}' not found for station {station}. Available algorithms: {station_perf['alg'].unique().tolist()}")
+            best_row = alg_rows.iloc[0]  # Take first row if multiple exist
+            if verbose >= 1:
+                print(f"Station {station}: Using specified algorithm {alg} (R² = {best_row['test_r2']:.4f})")
+        else:
+            # Select best algorithm automatically
+            best_row = station_perf.loc[station_perf['test_r2'].idxmax()]
+            if verbose >= 1:
+                print(f"Station {station}: Best algorithm {best_row['alg']} (R² = {best_row['test_r2']:.4f})")
         
-        if verbose >= 1:
-            print(f"Station {station}: Best algorithm {best_row['alg']} (R² = {best_row['test_r2']:.4f})")
+        station_models[station] = best_row
         
         # Add to performance list for OptiCL
         performance_list.append({

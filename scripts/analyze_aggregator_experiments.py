@@ -396,11 +396,8 @@ def prepare_analysis_data(df):
     return pred_real_df, tr_comp_df, imp_df
 
 
-def create_comprehensive_analysis(df, output_dir="../images"):
+def create_comprehensive_analysis(df, output_files):
     """Create comprehensive visualizations for the analysis."""
-    # Create output directory
-    os.makedirs(output_dir, exist_ok=True)
-    
     # Set up the plotting style
     plt.style.use('default')
     sns.set_palette("husl")
@@ -425,9 +422,8 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     plt.tight_layout()
     
     # Save the comprehensive plot
-    output_file = os.path.join(output_dir, "aggregator_analysis_comprehensive_corrected.png")
-    plt.savefig(output_file, dpi=300, bbox_inches='tight')
-    print(f"Comprehensive analysis saved to: {output_file}")
+    plt.savefig(output_files[0], dpi=300, bbox_inches='tight')
+    print(f"Comprehensive analysis saved to: {output_files[0]}")
     
     plt.show()
     
@@ -437,44 +433,39 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     # 1. Save profit comparison plot
     fig1, ax = plt.subplots(figsize=(12, 8))
     create_profit_by_stations_plot(df, ax, title_size=12)
-    plot1_file = os.path.join(output_dir, "aggregator_analysis_profit_by_stations.png")
-    plt.savefig(plot1_file, dpi=300, bbox_inches='tight')
-    print(f"  → Profit comparison plot saved to: {plot1_file}")
+    plt.savefig(output_files[1], dpi=300, bbox_inches='tight')
+    print(f"  → Profit comparison plot saved to: {output_files[1]}")
     plt.close()
     
     # 2. Save prediction accuracy plot
     fig2, ax = plt.subplots(figsize=(10, 8))
     create_prediction_accuracy_plot(pred_real_df, ax, title_size=12)
-    plot2_file = os.path.join(output_dir, "aggregator_analysis_prediction_accuracy.png")
-    plt.savefig(plot2_file, dpi=300, bbox_inches='tight')
-    print(f"  → Prediction accuracy plot saved to: {plot2_file}")
+    plt.savefig(output_files[2], dpi=300, bbox_inches='tight')
+    print(f"  → Prediction accuracy plot saved to: {output_files[2]}")
     plt.close()
     
     # 3. Save trust region effectiveness plot
     fig3, ax = plt.subplots(figsize=(10, 8))
     create_trust_region_effectiveness_plot(tr_comp_df, ax, title_size=12)
-    plot3_file = os.path.join(output_dir, "aggregator_analysis_trust_region_effectiveness.png")
-    plt.savefig(plot3_file, dpi=300, bbox_inches='tight')
-    print(f"  → Trust region effectiveness plot saved to: {plot3_file}")
+    plt.savefig(output_files[3], dpi=300, bbox_inches='tight')
+    print(f"  → Trust region effectiveness plot saved to: {output_files[3]}")
     plt.close()
     
     # 4. Save improvement over baselines plot
     fig4, ax = plt.subplots(figsize=(12, 8))
     create_improvement_over_baseline_plot(imp_df, ax, title_size=12)
-    plot4_file = os.path.join(output_dir, "aggregator_analysis_improvement_over_baseline_corrected.png")
-    plt.savefig(plot4_file, dpi=300, bbox_inches='tight')
-    print(f"  → Improvement over baseline plot saved to: {plot4_file}")
+    plt.savefig(output_files[4], dpi=300, bbox_inches='tight')
+    print(f"  → Improvement over baseline plot saved to: {output_files[4]}")
     plt.close()
     
     # 5. Save improvement histogram plot
     fig5, ax = plt.subplots(figsize=(12, 8))
     create_improvement_histogram_plot(imp_df, ax, title_size=12)
-    plot5_file = os.path.join(output_dir, "aggregator_analysis_improvement_histogram_corrected.png")
-    plt.savefig(plot5_file, dpi=300, bbox_inches='tight')
-    print(f"  → Improvement histogram plot saved to: {plot5_file}")
+    plt.savefig(output_files[5], dpi=300, bbox_inches='tight')
+    print(f"  → Improvement histogram plot saved to: {output_files[5]}")
     plt.close()
     
-    print(f"\nAll plots saved in directory: {output_dir}")
+    print(f"\nAll plots saved successfully!")
     
     return pred_real_df, tr_comp_df, imp_df
 
@@ -587,8 +578,18 @@ def main():
     
     # Define the specific CSV files to analyze
     csv_files = [
-        "../results/aggregator_experiments_20250614_150755.csv",  # 1-3 stations
-        "../results/aggregator_experiments_20250614_164920.csv"   # 4-5 stations
+        "../results/aggregator_37map_experiments_20250614_150755.csv",  # 1-3 stations
+        "../results/aggregator_37map_experiments_20250614_164920.csv"   # 4-5 stations
+    ]
+    
+    # Define output image files with full paths
+    output_image_files = [
+        "../images/aggregator_37map_experiments_comprehensive_corrected.png",
+        "../images/aggregator_37map_experiments_profit_by_stations.png",
+        "../images/aggregator_37map_experiments_prediction_accuracy.png",
+        "../images/aggregator_37map_experiments_trust_region_effectiveness.png",
+        "../images/aggregator_37map_experiments_improvement_over_baseline_corrected.png",
+        "../images/aggregator_37map_experiments_improvement_histogram_corrected.png"
     ]
     
     try:
@@ -607,7 +608,7 @@ def main():
         
         # Create visualizations
         print("\nCreating visualizations...")
-        pred_real_df, tr_comp_df, imp_df = create_comprehensive_analysis(df)
+        pred_real_df, tr_comp_df, imp_df = create_comprehensive_analysis(df, output_image_files)
         
         # Print summary statistics
         print_summary_statistics(df, pred_real_df, tr_comp_df, imp_df)

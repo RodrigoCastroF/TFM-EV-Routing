@@ -10,7 +10,7 @@ from utils import TeeOutput
 
 
 def main(input_excel_file, performance_csv_file, training_data_csv_file, trust_region=True, output_excel_file=None,
-         solver="gurobi", time_limit=300, verbose=1, log_file=None):
+         alg=None, solver="gurobi", time_limit=300, verbose=1, log_file=None):
     """
     Main function to solve the aggregator optimization problem with embedded regression.
     
@@ -26,6 +26,8 @@ def main(input_excel_file, performance_csv_file, training_data_csv_file, trust_r
         If True, solutions are restricted to lie in the trust region (the domain of the training data)
     output_excel_file: str, optional
         Path to save the solution Excel file (optional).
+    alg: str, optional
+        Algorithm to use for regression models (default: None for automatic selection).
     solver: str
         Solver to use (default: "gurobi").
     time_limit: int
@@ -62,6 +64,7 @@ def main(input_excel_file, performance_csv_file, training_data_csv_file, trust_r
             training_data_csv_file=training_data_csv_file,
             trust_region=trust_region,
             output_excel_file=output_excel_file,
+            alg=alg,
             solver=solver,
             time_limit=time_limit,
             verbose=verbose
@@ -105,28 +108,32 @@ if __name__ == "__main__":
     solver = "gurobi"  # or "cbc", "glpk", "cplex"
     time_limit = 15  # seconds
     verbose = 2  # 0=silent, 1=basic, 2=detailed
-    trust_region = True
+    trust_region = False
     model_type = 'competition'
+    alg = 'rf'  # Algorithm to use (None for automatic selection, or specify: "linear", "rf", "svm", "cart", "gbm", "mlp")
 
     # Model type-specific files
+    alg_suffix = f" {alg.title() if alg == 'linear' else alg.upper()}" if alg is not None else ""
+    tr_suffix = " TR" if trust_region else ""
+    
     model_type_files = {
         'restricted': (
             "../data/37-intersection map Aggregator Restricted.xlsx",
             "../regressors/37map_1001scenarios_performance_comparison.csv",
             "../regressors/37map_1001scenarios_training_data.csv",
-            f"../solutions/37-intersection map Aggregator Restricted Solution{' TR' if trust_region else ''}.xlsx"
+            f"../solutions/37-intersection map Aggregator Restricted Solution{alg_suffix}{tr_suffix}.xlsx"
         ),
         'unrestricted': (
             "../data/37-intersection map Aggregator Unrestricted.xlsx",
             "../regressors/37map_1001scenarios_performance_comparison.csv",
             "../regressors/37map_1001scenarios_training_data.csv",
-            f"../solutions/37-intersection map Aggregator Unrestricted Solution{' TR' if trust_region else ''}.xlsx"
+            f"../solutions/37-intersection map Aggregator Unrestricted Solution{alg_suffix}{tr_suffix}.xlsx"
         ),
         'competition': (
             "../data/37-intersection map Aggregator Competition.xlsx",
             "../regressors/37map_1001scenarios_competition_performance_comparison.csv",
             "../regressors/37map_1001scenarios_competition_training_data.csv",
-            f"../solutions/37-intersection map Aggregator Competition Solution{' TR' if trust_region else ''}.xlsx"
+            f"../solutions/37-intersection map Aggregator Competition Solution{alg_suffix}{tr_suffix}.xlsx"
         ),
     }[model_type]
 
@@ -163,6 +170,7 @@ if __name__ == "__main__":
         training_data_csv_file=training_data_csv_file,
         trust_region=trust_region,
         output_excel_file=output_excel_file,
+        alg=alg,
         solver=solver,
         time_limit=time_limit,
         verbose=verbose,
