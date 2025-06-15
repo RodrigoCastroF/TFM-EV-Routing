@@ -1,0 +1,243 @@
+Aggregator Algorithm Comparison Analysis
+==================================================
+Loading and preprocessing data...
+Loading CSV file: ../results/aggregator_37map_alg_comparison_20250615_130521.csv
+  → Loaded 403 rows
+Data overview:
+  Total combinations: 31
+  Number of controlled stations range: 1-5
+  Algorithms: ['base_case', 'cart', 'gbm', 'linear', 'mlp', 'rf', 'svm']
+  Total records: 403
+
+Creating visualizations...
+Creating Average Profit by Number of Controlled Stations plot...
+  → Profit comparison plot saved to: ../images/aggregator_37map_alg_comparison_profit_by_stations.png
+Creating Profit Improvement over Base Case plot...
+  → Excluded 18 cases where base case profit was $0 from percentage calculations
+
+  QUARTILES FOR IMPROVEMENT OVER BASE CASE (%) - Excluding cases with $0 base profit
+  ------------------------------------------------------------------------------
+  Linear Regression:
+    Q1 (25th percentile): -43.31%
+    Q2 (50th percentile/Median): -30.25%
+    Q3 (75th percentile): 23.47%
+    Valid cases: 28
+
+  Random Forest:
+    Q1 (25th percentile): -1.49%
+    Q2 (50th percentile/Median): 38.27%
+    Q3 (75th percentile): 73.72%
+    Valid cases: 28
+
+  Support Vector Machine:
+    Q1 (25th percentile): -35.77%
+    Q2 (50th percentile/Median): -18.92%
+    Q3 (75th percentile): 25.19%
+    Valid cases: 28
+
+  Decision Tree (CART):
+    Q1 (25th percentile): -10.14%
+    Q2 (50th percentile/Median): 15.36%
+    Q3 (75th percentile): 82.24%
+    Valid cases: 28
+
+  Gradient Boosting:
+    Q1 (25th percentile): 6.91%
+    Q2 (50th percentile/Median): 30.07%
+    Q3 (75th percentile): 76.69%
+    Valid cases: 28
+
+  Neural Network (MLP):
+    Q1 (25th percentile): 10.11%
+    Q2 (50th percentile/Median): 28.83%
+    Q3 (75th percentile): 93.25%
+    Valid cases: 28
+
+  → Improvement over baseline plot saved to: ../images/aggregator_37map_alg_comparison_improvement_over_baseline.png
+Creating Prediction Accuracy plot...
+  → Prediction accuracy plot saved to: ../images/aggregator_37map_alg_comparison_prediction_accuracy.png
+
+Calculating R2 scores...
+Loading competition performance data: ../regressors/37map_1001scenarios_competition_performance_comparison.csv
+
+================================================================================
+SUMMARY STATISTICS AND ANALYSIS
+================================================================================
+
+1. PROFIT COMPARISON BY ALGORITHM
+--------------------------------------------------
+BASE_CASE:
+  Average profit: $15.59
+  Median profit: $16.48
+  Std deviation: $8.95
+  Min profit: $0.00
+  Max profit: $30.21
+
+LINEAR:
+  Average profit: $12.74
+  Median profit: $12.23
+  Std deviation: $4.53
+  Min profit: $6.50
+  Max profit: $26.04
+
+RF:
+  Average profit: $20.98
+  Median profit: $22.02
+  Std deviation: $7.95
+  Min profit: $5.20
+  Max profit: $40.52
+
+SVM:
+  Average profit: $14.99
+  Median profit: $12.35
+  Std deviation: $10.09
+  Min profit: $6.49
+  Max profit: $49.20
+
+CART:
+  Average profit: $19.26
+  Median profit: $21.08
+  Std deviation: $6.36
+  Min profit: $3.31
+  Max profit: $27.23
+
+GBM:
+  Average profit: $21.43
+  Median profit: $22.02
+  Std deviation: $6.62
+  Min profit: $8.71
+  Max profit: $39.37
+
+MLP:
+  Average profit: $23.05
+  Median profit: $22.45
+  Std deviation: $6.47
+  Min profit: $6.85
+  Max profit: $37.94
+
+2. IMPROVEMENT OVER BASE CASE
+--------------------------------------------------
+Note: Excluded 18 cases where base case profit was $0
+
+LINEAR:
+  Better than base case: 12/31 cases (38.7%)
+  Worse than base case: 19/31 cases (61.3%)
+  Average improvement: -10.8% (from 28 valid cases)
+
+RF:
+  Better than base case: 23/31 cases (74.2%)
+  Worse than base case: 8/31 cases (25.8%)
+  Average improvement: 54.9% (from 28 valid cases)
+
+SVM:
+  Better than base case: 14/31 cases (45.2%)
+  Worse than base case: 17/31 cases (54.8%)
+  Average improvement: -2.3% (from 28 valid cases)
+
+CART:
+  Better than base case: 21/31 cases (67.7%)
+  Worse than base case: 10/31 cases (32.3%)
+  Average improvement: 35.2% (from 28 valid cases)
+
+GBM:
+  Better than base case: 24/31 cases (77.4%)
+  Worse than base case: 7/31 cases (22.6%)
+  Average improvement: 46.7% (from 28 valid cases)
+
+MLP:
+  Better than base case: 26/31 cases (83.9%)
+  Worse than base case: 5/31 cases (16.1%)
+  Average improvement: 63.1% (from 28 valid cases)
+
+3. PREDICTION ACCURACY
+--------------------------------------------------
+LINEAR:
+  Correlation: 0.741
+  Mean Absolute Error: $3.67
+  Root Mean Square Error: $4.57
+
+RF:
+  Correlation: 0.617
+  Mean Absolute Error: $5.89
+  Root Mean Square Error: $7.81
+
+SVM:
+  Correlation: 0.872
+  Mean Absolute Error: $5.25
+  Root Mean Square Error: $6.27
+
+CART:
+  Correlation: 0.728
+  Mean Absolute Error: $10.93
+  Root Mean Square Error: $12.93
+
+GBM:
+  Correlation: 0.855
+  Mean Absolute Error: $6.54
+  Root Mean Square Error: $8.67
+
+MLP:
+  Correlation: 0.857
+  Mean Absolute Error: $4.45
+  Root Mean Square Error: $6.08
+
+4. R2 SCORE COMPARISON
+--------------------------------------------------
+Aggregator Context R2 Scores (using competition formula):
+  LINEAR: -0.049
+  RF: 0.001
+  SVM: 0.601
+  CART: -3.263
+  GBM: -0.773
+  MLP: 0.087
+
+Aggregator Context R2 Scores (correlation-based, for comparison):
+  LINEAR: 0.550
+  RF: 0.381
+  SVM: 0.760
+  CART: 0.530
+  GBM: 0.730
+  MLP: 0.735
+
+Aggregator Context R2 Scores for Single Stations Only (using competition formula):
+  LINEAR: -1.818
+  RF: -0.165
+  SVM: -6.712
+  CART: -0.411
+  GBM: 0.765
+  MLP: 0.636
+
+Competition Baseline R2 Scores (Average across stations):
+  CART: 0.529
+  GBM: 0.616
+  LINEAR: 0.353
+  MLP: 0.670
+  RF: 0.521
+  SVM: 0.493
+
+R2 Scores Comprehensive Comparison (Markdown Table):
+
+| Algorithm | Aggregator (Competition Formula) | Aggregator (Correlation-based) | Single Stations Only | Competition Baseline |
+|-----------|----------------------------------|--------------------------------|---------------------|---------------------|
+| LINEAR | -0.049 | 0.550 | -1.818 | 0.353 |
+| RF | 0.001 | 0.381 | -0.165 | 0.521 |
+| SVM | 0.601 | 0.760 | -6.712 | 0.493 |
+| CART | -3.263 | 0.530 | -0.411 | 0.529 |
+| GBM | -0.773 | 0.730 | 0.765 | 0.616 |
+| MLP | 0.087 | 0.735 | 0.636 | 0.670 |
+
+5. SUMMARY STATISTICS TABLE
+--------------------------------------------------
+
+| Algorithm | Average Saved R2 | Correlation (Pred vs Real) | MAE (Pred vs Real) | Better than Base Case (%) | Avg Improvement (%) | Mean Profit ($) |
+|-----------|------------------|----------------------------|--------------------|---------------------------|---------------------|-----------------|
+| LINEAR | 0.353 | 0.741 | 3.67 | 38.7 | -10.8 | 12.74 |
+| RF | 0.521 | 0.617 | 5.89 | 74.2 | 54.9 | 20.98 |
+| SVM | 0.493 | 0.872 | 5.25 | 45.2 | -2.3 | 14.99 |
+| CART | 0.529 | 0.728 | 10.93 | 67.7 | 35.2 | 19.26 |
+| GBM | 0.616 | 0.855 | 6.54 | 77.4 | 46.7 | 21.43 |
+| MLP | 0.670 | 0.857 | 4.45 | 83.9 | 63.1 | 23.05 |
+
+
+Analysis completed successfully!
+All plots saved to the images/ directory
