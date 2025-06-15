@@ -1,0 +1,141 @@
+Aggregator Experiments Analysis
+==================================================
+Loading and combining data...
+Loading 2 CSV files:
+  - ../results/aggregator_experiments_20250614_150755.csv
+  - ../results/aggregator_experiments_20250614_164920.csv
+    → Loaded 150 rows from aggregator_experiments_20250614_150755.csv
+    → Loaded 36 rows from aggregator_experiments_20250614_164920.csv
+
+Combined dataset: 186 rows
+Preprocessing data...
+Data overview:
+  Total combinations: 31
+  Number of controlled stations range: 1-5
+  Profit types: ['base_case', 'max_prices', 'sol_predicted', 'sol_real', 'sol_tr_predicted', 'sol_tr_real']
+
+Creating visualizations...
+
+QUARTILES FOR IMPROVEMENT OVER BASE CASE (%) - Excluding cases with 0 base profit
+--------------------------------------------------------------------------------
+Note: Excluded 9 cases where base case profit was $0
+
+Aggregator (Trust Region):
+  Q1 (25th percentile): -0.12%
+  Q2 (50th percentile/Median): 29.03%
+  Q3 (75th percentile): 72.11%
+  Valid cases: 28
+
+Aggregator (No Trust Region):
+  Q1 (25th percentile): 10.11%
+  Q2 (50th percentile/Median): 28.83%
+  Q3 (75th percentile): 93.25%
+  Valid cases: 28
+
+Max Prices:
+  Q1 (25th percentile): -78.09%
+  Q2 (50th percentile/Median): -52.44%
+  Q3 (75th percentile): -17.26%
+  Valid cases: 28
+
+Comprehensive analysis saved to: ../images\aggregator_analysis_comprehensive_corrected.png
+
+Saving individual plots...
+  → Profit comparison plot saved to: ../images\aggregator_analysis_profit_by_stations_corrected.png
+  → Prediction accuracy plot saved to: ../images\aggregator_analysis_prediction_accuracy_corrected.png
+  → Trust region effectiveness plot saved to: ../images\aggregator_analysis_trust_region_effectiveness_corrected.png
+
+QUARTILES FOR IMPROVEMENT OVER BASE CASE (%) - Excluding cases with 0 base profit
+--------------------------------------------------------------------------------
+Note: Excluded 9 cases where base case profit was $0
+
+Aggregator (Trust Region):
+  Q1 (25th percentile): -0.12%
+  Q2 (50th percentile/Median): 29.03%
+  Q3 (75th percentile): 72.11%
+  Valid cases: 28
+
+Aggregator (No Trust Region):
+  Q1 (25th percentile): 10.11%
+  Q2 (50th percentile/Median): 28.83%
+  Q3 (75th percentile): 93.25%
+  Valid cases: 28
+
+Max Prices:
+  Q1 (25th percentile): -78.09%
+  Q2 (50th percentile/Median): -52.44%
+  Q3 (75th percentile): -17.26%
+  Valid cases: 28
+
+  → Improvement over baseline plot saved to: ../images\aggregator_analysis_improvement_over_baseline_corrected.png
+  → Improvement histogram plot saved to: ../images\aggregator_analysis_improvement_histogram_corrected.png
+
+All plots saved in directory: ../images
+
+================================================================================
+SUMMARY STATISTICS AND ANALYSIS
+================================================================================
+
+1. PREDICTION ACCURACY (Predicted vs Real Profit)
+--------------------------------------------------
+With Trust Region:
+  Correlation: 0.773
+  Mean Absolute Error: $5.10
+  Root Mean Square Error: $7.17
+
+No Trust Region:
+  Correlation: 0.857
+  Mean Absolute Error: $4.61
+  Root Mean Square Error: $6.16
+
+2. TRUST REGION EFFECTIVENESS
+--------------------------------------------------
+Trust Region performs better: 9/31 cases (29.0%)
+Trust Region performs worse: 16/31 cases (51.6%)
+Trust Region performs same: 6/31 cases (19.4%)
+Average improvement with TR: $-1.36
+
+3. COMPARISON WITH BASELINES
+--------------------------------------------------
+Note: Excluded 9 cases where base case profit was $0 from percentage calculations
+
+Aggregator (Trust Region):
+  Better than base case: 24/31 cases (77.4%)
+  Worse than base case: 7/31 cases (22.6%)
+  Average improvement: 53.6% (from 28 valid cases)
+
+Aggregator (No Trust Region):
+  Better than base case: 26/31 cases (83.9%)
+  Worse than base case: 5/31 cases (16.1%)
+  Average improvement: 63.0% (from 28 valid cases)
+
+Max Prices:
+  Better than base case: 6/31 cases (19.4%)
+  Worse than base case: 22/31 cases (71.0%)
+  Average improvement: -40.6% (from 28 valid cases)
+
+4. EFFECT OF NUMBER OF CONTROLLED STATIONS
+--------------------------------------------------
+Aggregator (No Trust Region):
+  1 stations: 84.9% improvement (from 3/5 valid cases)
+  2 stations: 86.2% improvement (from 9/10 valid cases)
+  3 stations: 61.2% improvement (from 10/10 valid cases)
+  4 stations: 19.3% improvement (from 5/5 valid cases)
+  5 stations: 25.6% improvement (from 1/1 valid cases)
+
+Aggregator (Trust Region):
+  1 stations: 50.6% improvement (from 3/5 valid cases)
+  2 stations: 88.3% improvement (from 9/10 valid cases)
+  3 stations: 44.1% improvement (from 10/10 valid cases)
+  4 stations: 15.2% improvement (from 5/5 valid cases)
+  5 stations: 36.2% improvement (from 1/1 valid cases)
+
+Max Prices:
+  1 stations: -100.0% improvement (from 3/5 valid cases)
+  2 stations: -49.6% improvement (from 9/10 valid cases)
+  3 stations: -37.2% improvement (from 10/10 valid cases)
+  4 stations: -15.9% improvement (from 5/5 valid cases)
+  5 stations: 62.9% improvement (from 1/1 valid cases)
+
+
+Analysis completed successfully!

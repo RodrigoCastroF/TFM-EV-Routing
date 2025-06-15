@@ -17,7 +17,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 import os
+import sys
 from datetime import datetime
+from utils.tee_output import TeeOutput
 
 
 def load_and_combine_results(csv_files):
@@ -215,19 +217,34 @@ def create_improvement_over_baseline_plot(imp_df, ax, title_size=12):
                horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
         return
     
-    # Calculate and print quartiles for each method
-    print("\nQUARTILES FOR IMPROVEMENT OVER BASE CASE (%)")
-    print("-" * 50)
-    for method in imp_df['method'].unique():
-        method_data = imp_df[imp_df['method'] == method]['improvement_pct']
-        q1 = method_data.quantile(0.25)
-        median = method_data.quantile(0.50)
-        q3 = method_data.quantile(0.75)
-        print(f"{method}:")
-        print(f"  Q1 (25th percentile): {q1:.2f}%")
-        print(f"  Q2 (50th percentile/Median): {median:.2f}%")
-        print(f"  Q3 (75th percentile): {q3:.2f}%")
+    # Filter out cases with None improvement_pct (base case with 0 profit)
+    imp_df_filtered = imp_df[imp_df['improvement_pct'].notna()].copy()
+    
+    if imp_df_filtered.empty:
+        ax.text(0.5, 0.5, 'No valid improvement data (all base cases have 0 profit)', 
+               horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+        return
+    
+    # Calculate and print quartiles for each method (excluding None values)
+    print("\nQUARTILES FOR IMPROVEMENT OVER BASE CASE (%) - Excluding cases with 0 base profit")
+    print("-" * 80)
+    excluded_count = len(imp_df) - len(imp_df_filtered)
+    if excluded_count > 0:
+        print(f"Note: Excluded {excluded_count} cases where base case profit was $0")
         print()
+    
+    for method in imp_df_filtered['method'].unique():
+        method_data = imp_df_filtered[imp_df_filtered['method'] == method]['improvement_pct']
+        if len(method_data) > 0:
+            q1 = method_data.quantile(0.25)
+            median = method_data.quantile(0.50)
+            q3 = method_data.quantile(0.75)
+            print(f"{method}:")
+            print(f"  Q1 (25th percentile): {q1:.2f}%")
+            print(f"  Q2 (50th percentile/Median): {median:.2f}%")
+            print(f"  Q3 (75th percentile): {q3:.2f}%")
+            print(f"  Valid cases: {len(method_data)}")
+            print()
     
     # Box plot showing improvement distribution by method with consistent colors
     method_colors = {
@@ -236,11 +253,11 @@ def create_improvement_over_baseline_plot(imp_df, ax, title_size=12):
         'Max Prices': 'red'
     }
     
-    sns.boxplot(data=imp_df, x='method', y='improvement_pct', hue='method', ax=ax, 
+    sns.boxplot(data=imp_df_filtered, x='method', y='improvement_pct', hue='method', ax=ax, 
                palette=method_colors, legend=False)
     ax.set_xlabel('Method', fontsize=title_size)
     ax.set_ylabel('Improvement over Base Case (%)', fontsize=title_size)
-    ax.set_title('Profit Improvement over Base Case', fontsize=title_size+2, fontweight='bold')
+    ax.set_title('Profit Improvement over Base Case (Excluding $0 Base Cases)', fontsize=title_size+2, fontweight='bold')
     ax.grid(True, alpha=0.3)
     ax.axhline(y=0, color='red', linestyle='--', alpha=0.5)
 
@@ -249,6 +266,14 @@ def create_improvement_histogram_plot(imp_df, ax, title_size=12):
     """Create histogram of improvement over baseline on the given axis."""
     if imp_df.empty:
         ax.text(0.5, 0.5, 'No improvement data available', 
+               horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+        return
+    
+    # Filter out cases with None improvement_pct (base case with 0 profit)
+    imp_df_filtered = imp_df[imp_df['improvement_pct'].notna()].copy()
+    
+    if imp_df_filtered.empty:
+        ax.text(0.5, 0.5, 'No valid improvement data (all base cases have 0 profit)', 
                horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
         return
     
@@ -263,15 +288,15 @@ def create_improvement_histogram_plot(imp_df, ax, title_size=12):
     alpha_value = 0.7
     bins = 15
     
-    for method in imp_df['method'].unique():
-        method_data = imp_df[imp_df['method'] == method]['improvement_pct']
+    for method in imp_df_filtered['method'].unique():
+        method_data = imp_df_filtered[imp_df_filtered['method'] == method]['improvement_pct']
         color = method_colors.get(method, 'gray')
         ax.hist(method_data, bins=bins, alpha=alpha_value, label=method, 
                color=color, edgecolor='black', linewidth=0.5)
     
     ax.set_xlabel('Improvement over Base Case (%)', fontsize=title_size)
     ax.set_ylabel('Frequency', fontsize=title_size)
-    ax.set_title('Distribution of Profit Improvements over Base Case', fontsize=title_size+2, fontweight='bold')
+    ax.set_title('Distribution of Profit Improvements over Base Case (Excluding $0 Base Cases)', fontsize=title_size+2, fontweight='bold')
     ax.legend()
     ax.grid(True, alpha=0.3)
     ax.axvline(x=0, color='red', linestyle='--', alpha=0.5, label='Break-even')
@@ -344,7 +369,7 @@ def prepare_analysis_data(df):
                     'combination': combination,
                     'method': 'Aggregator (Trust Region)',
                     'improvement': tr_real[0] - base_profit,
-                    'improvement_pct': (tr_real[0] - base_profit) / base_profit * 100 if base_profit != 0 else 0,
+                    'improvement_pct': (tr_real[0] - base_profit) / base_profit * 100 if base_profit != 0 else None,
                     'num_controlled': num_controlled
                 })
             
@@ -353,7 +378,7 @@ def prepare_analysis_data(df):
                     'combination': combination,
                     'method': 'Aggregator (No Trust Region)',
                     'improvement': no_tr_real[0] - base_profit,
-                    'improvement_pct': (no_tr_real[0] - base_profit) / base_profit * 100 if base_profit != 0 else 0,
+                    'improvement_pct': (no_tr_real[0] - base_profit) / base_profit * 100 if base_profit != 0 else None,
                     'num_controlled': num_controlled
                 })
             
@@ -362,7 +387,7 @@ def prepare_analysis_data(df):
                     'combination': combination,
                     'method': 'Max Prices',
                     'improvement': max_prices[0] - base_profit,
-                    'improvement_pct': (max_prices[0] - base_profit) / base_profit * 100 if base_profit != 0 else 0,
+                    'improvement_pct': (max_prices[0] - base_profit) / base_profit * 100 if base_profit != 0 else None,
                     'num_controlled': num_controlled
                 })
     
@@ -400,7 +425,7 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     plt.tight_layout()
     
     # Save the comprehensive plot
-    output_file = os.path.join(output_dir, "aggregator_analysis_comprehensive.png")
+    output_file = os.path.join(output_dir, "aggregator_analysis_comprehensive_corrected.png")
     plt.savefig(output_file, dpi=300, bbox_inches='tight')
     print(f"Comprehensive analysis saved to: {output_file}")
     
@@ -436,7 +461,7 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     # 4. Save improvement over baselines plot
     fig4, ax = plt.subplots(figsize=(12, 8))
     create_improvement_over_baseline_plot(imp_df, ax, title_size=12)
-    plot4_file = os.path.join(output_dir, "aggregator_analysis_improvement_over_baseline.png")
+    plot4_file = os.path.join(output_dir, "aggregator_analysis_improvement_over_baseline_corrected.png")
     plt.savefig(plot4_file, dpi=300, bbox_inches='tight')
     print(f"  → Improvement over baseline plot saved to: {plot4_file}")
     plt.close()
@@ -444,7 +469,7 @@ def create_comprehensive_analysis(df, output_dir="../images"):
     # 5. Save improvement histogram plot
     fig5, ax = plt.subplots(figsize=(12, 8))
     create_improvement_histogram_plot(imp_df, ax, title_size=12)
-    plot5_file = os.path.join(output_dir, "aggregator_analysis_improvement_histogram.png")
+    plot5_file = os.path.join(output_dir, "aggregator_analysis_improvement_histogram_corrected.png")
     plt.savefig(plot5_file, dpi=300, bbox_inches='tight')
     print(f"  → Improvement histogram plot saved to: {plot5_file}")
     plt.close()
@@ -497,8 +522,18 @@ def print_summary_statistics(df, pred_real_df, tr_comp_df, imp_df):
     print("-" * 50)
     
     if not imp_df.empty:
+        # Filter out cases with None improvement_pct (base case with 0 profit)
+        imp_df_filtered = imp_df[imp_df['improvement_pct'].notna()].copy()
+        excluded_count = len(imp_df) - len(imp_df_filtered)
+        
+        if excluded_count > 0:
+            print(f"Note: Excluded {excluded_count} cases where base case profit was $0 from percentage calculations")
+            print()
+        
         for method in imp_df['method'].unique():
             method_data = imp_df[imp_df['method'] == method]
+            method_data_filtered = imp_df_filtered[imp_df_filtered['method'] == method]
+            
             better_cases = (method_data['improvement'] > 0).sum()
             worse_cases = (method_data['improvement'] < 0).sum()
             same_cases = (method_data['improvement'] == 0).sum()
@@ -506,7 +541,12 @@ def print_summary_statistics(df, pred_real_df, tr_comp_df, imp_df):
             print(f"{method}:")
             print(f"  Better than base case: {better_cases}/{len(method_data)} cases ({better_cases/len(method_data)*100:.1f}%)")
             print(f"  Worse than base case: {worse_cases}/{len(method_data)} cases ({worse_cases/len(method_data)*100:.1f}%)")
-            print(f"  Average improvement: {method_data['improvement_pct'].mean():.1f}%")
+            
+            if len(method_data_filtered) > 0:
+                avg_improvement = method_data_filtered['improvement_pct'].mean()
+                print(f"  Average improvement: {avg_improvement:.1f}% (from {len(method_data_filtered)} valid cases)")
+            else:
+                print(f"  Average improvement: N/A (all base cases had $0 profit)")
             print()
     
     # Question 4: Effect of number of controlled stations
@@ -514,13 +554,29 @@ def print_summary_statistics(df, pred_real_df, tr_comp_df, imp_df):
     print("-" * 50)
     
     if not imp_df.empty:
-        by_size = imp_df.groupby(['num_controlled', 'method'])['improvement_pct'].mean().reset_index()
+        # Filter out cases with None improvement_pct (base case with 0 profit)
+        imp_df_filtered = imp_df[imp_df['improvement_pct'].notna()].copy()
         
-        for method in by_size['method'].unique():
-            method_data = by_size[by_size['method'] == method]
-            print(f"{method}:")
-            for _, row in method_data.iterrows():
-                print(f"  {int(row['num_controlled'])} stations: {row['improvement_pct']:.1f}% improvement")
+        if not imp_df_filtered.empty:
+            by_size = imp_df_filtered.groupby(['num_controlled', 'method'])['improvement_pct'].mean().reset_index()
+            
+            for method in by_size['method'].unique():
+                method_data = by_size[by_size['method'] == method]
+                print(f"{method}:")
+                for _, row in method_data.iterrows():
+                    # Count valid cases for this combination
+                    valid_cases = len(imp_df_filtered[
+                        (imp_df_filtered['method'] == method) & 
+                        (imp_df_filtered['num_controlled'] == row['num_controlled'])
+                    ])
+                    total_cases = len(imp_df[
+                        (imp_df['method'] == method) & 
+                        (imp_df['num_controlled'] == row['num_controlled'])
+                    ])
+                    print(f"  {int(row['num_controlled'])} stations: {row['improvement_pct']:.1f}% improvement (from {valid_cases}/{total_cases} valid cases)")
+                print()
+        else:
+            print("No valid improvement data (all base cases have $0 profit)")
             print()
 
 
@@ -564,4 +620,26 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    # Set up logging with TeeOutput
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file_path = f"../logs/aggregator_analysis_corrected_{timestamp}.txt"
+    
+    # Create logs directory if it doesn't exist
+    os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+    
+    # Set up output redirection to both console and file
+    tee_output = TeeOutput(log_file_path)
+    original_stdout = sys.stdout
+    sys.stdout = tee_output
+    
+    try:
+        main()
+    except Exception as e:
+        print(f"Error during execution: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        # Restore original stdout and close the log file
+        sys.stdout = original_stdout
+        tee_output.close()
+        print(f"All output has been saved to: {log_file_path}") 
