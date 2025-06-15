@@ -1,12 +1,12 @@
 """
-Comprehensive script to run aggregator experiments for different combinations of controlled stations.
+Comprehensive script to compare aggregator algorithms for different combinations of controlled stations.
 
 This script:
 1. Tests different combinations of controlled stations (e.g., 11,14,15), (11,14,37), (11,15), etc.
-2. For each combination, runs the aggregator model with and without trust region
+2. For each combination, runs the aggregator model with different algorithms
 3. For each solution, tests it against the routing model to get real profit
-4. Also tests base case and max prices scenarios
-5. Generates a CSV table with results
+4. Also tests base case scenario
+5. Generates a CSV table with results comparing all algorithms
 """
 
 from aggregator_model import solve_aggregator_model, load_aggregator_excel_data
@@ -28,7 +28,7 @@ from datetime import datetime
 
 def run_experiment_for_combination(controlled_stations, base_case_prices, general_min_price, general_max_price,
                                  performance_csv_file, training_data_csv_file, base_map_file,
-                                 all_stations, base_case_station_profits, solver="gurobi", time_limit=300, verbose=1):
+                                 all_stations, base_case_station_profits, algorithms, solver="gurobi", time_limit=300, verbose=1):
     """Run complete experiment for a specific combination of controlled stations."""
     results = []
     
@@ -44,11 +44,6 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
         print(f"Creating synthetic aggregator data for stations {controlled_stations}...")
     synthetic_data = create_aggregator_data(controlled_stations, base_case_prices, general_min_price, general_max_price)
     
-    # Create max prices scenario
-    max_case_prices = base_case_prices.copy()
-    for station in controlled_stations:
-        max_case_prices[station] = general_max_price
-    
     if verbose >= 2:
         print(f"Price bounds: ${general_min_price:.3f} - ${general_max_price:.3f}")
         print(f"Controlled stations: {controlled_stations}")
@@ -59,19 +54,8 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
     if verbose >= 1:
         print(f"Base case profit: ${base_case_profit:.4f}")
 
-    # Run max prices once per combination  
-    if verbose >= 1:
-        print(f"\n{'=' * 40}")
-        print(f"Testing max prices scenario...")
-        print(f"{'=' * 40}")
-    max_prices_profit = solve_routing_and_get_profit(max_case_prices, controlled_stations, base_map_file, solver, time_limit, max(0, verbose-1))
-    if verbose >= 1:
-        print(f"Max prices profit: ${max_prices_profit:.4f}")
-
-    # Store base case and max prices results
+    # Store base case result
     controlled_stations_str = "|".join(map(str, controlled_stations))
-    
-    # Base case result
     base_case_result = {
         'controlled_stations': controlled_stations_str,
         'type': 'base_case',
@@ -81,39 +65,27 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
         base_case_result[f'rc_{station}'] = base_case_prices[station]
     results.append(base_case_result)
     
-    # Max prices result
-    max_prices_result = {
-        'controlled_stations': controlled_stations_str,
-        'type': 'max_prices', 
-        'profit': max_prices_profit
-    }
-    for station in all_stations:
-        max_prices_result[f'rc_{station}'] = max_case_prices[station]
-    results.append(max_prices_result)
-    
-    # Test both trust region settings
-    for trust_region in [True, False]:
-        tr_str = "with" if trust_region else "without"
-        type_prefix = "sol_tr" if trust_region else "sol"
-        
+    # Test each algorithm
+    for alg in algorithms:
         if verbose >= 1:
             print()
             print(f"\n{'=' * 60}")
-            print(f"Testing {tr_str} trust region")
+            print(f"Testing algorithm: {alg}")
             print(f"{'=' * 60}")
             print()
         
         # Solve aggregator model
         if verbose >= 2:
             print(f"\n{'=' * 40}")
-            print(f"Solving aggregator model...")
+            print(f"Solving aggregator model with {alg}...")
             print(f"{'=' * 40}")
         
         agg_results = solve_aggregator_model(
             input_data=synthetic_data,
             performance_csv_file=performance_csv_file,
             training_data_csv_file=training_data_csv_file,
-            trust_region=trust_region,
+            trust_region=False,  # No trust region for algorithm comparison
+            alg=alg,
             model="competition",
             solver=solver,
             time_limit=time_limit,
@@ -132,14 +104,16 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
                 solution_parts = []
                 for station in sorted(all_stations):
                     price = solution_prices[station]
-                    solution_parts.append(f"{station}:{price:.3f}")
+                    # Handle None prices for formatting
+                    price_str = "None" if price is None else f"{price:.3f}"
+                    solution_parts.append(f"{station}:{price_str}")
                 solution_str = ", ".join(solution_parts)
                 print(f"Solution prices: {solution_str}")
         
         # Store predicted result
         predicted_result = {
             'controlled_stations': controlled_stations_str,
-            'type': f'{type_prefix}_predicted',
+            'type': f'{alg}_predicted',
             'profit': predicted_profit
         }
         for station in all_stations:
@@ -151,14 +125,29 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
             print(f"\n{'=' * 40}")
             print(f"Testing solution against routing model...")
             print(f"{'=' * 40}")
-        real_profit = solve_routing_and_get_profit(solution_prices, controlled_stations, base_map_file, solver, time_limit, max(0, verbose-1))
+        
+        # Create a copy of solution_prices with None values replaced appropriately for routing model
+        routing_prices = {}
+        for station in all_stations:
+            price = solution_prices[station]
+            if price is None:
+                if station in controlled_stations:
+                    # For controlled stations, use minimum price if not set by optimizer
+                    routing_prices[station] = general_min_price
+                else:
+                    # For competitor stations, use their fixed price from base case
+                    routing_prices[station] = base_case_prices[station]
+            else:
+                routing_prices[station] = price
+        
+        real_profit = solve_routing_and_get_profit(routing_prices, controlled_stations, base_map_file, solver, time_limit, max(0, verbose-1))
         if verbose >= 1:
             print(f"Real profit: ${real_profit:.4f}")
 
         # Store real result
         real_result = {
             'controlled_stations': controlled_stations_str,
-            'type': f'{type_prefix}_real',
+            'type': f'{alg}_real',
             'profit': real_profit
         }
         for station in all_stations:
@@ -167,18 +156,19 @@ def run_experiment_for_combination(controlled_stations, base_case_prices, genera
         
         if verbose >= 1:
             print(f"\n{'=' * 40}")
-            print(f"RESULTS: {tr_str} trust_region")
+            print(f"RESULTS: {alg} algorithm")
             print(f"{'=' * 40}")
             print(f" Predicted profit: ${predicted_profit:.4f}")
             print(f" Real profit: ${real_profit:.4f}" if real_profit is not None else "    Real profit: N/A")
             if real_profit is not None and base_case_profit is not None:
                 improvement = real_profit - base_case_profit
-                print(f" Improvement over base: ${improvement:.4f} ({improvement/base_case_profit*100:.1f}%)")
+                if base_case_profit != 0:
+                    percentage = improvement/base_case_profit*100
+                    print(f" Improvement over base: ${improvement:.4f} ({percentage:.1f}%)")
+                else:
+                    print(f" Improvement over base: ${improvement:.4f} (base profit is zero)")
     
     return results
-
-
-
 
 
 def main():
@@ -188,6 +178,9 @@ def main():
     time_limit = 15  # seconds
     verbose = 2  # 0=silent, 1=basic, 2=detailed
     
+    # Available algorithms to test
+    algorithms = ["linear", "rf", "svm", "cart", "gbm", "mlp"]
+    
     # Input files
     base_aggregator_file = "../data/37-intersection map Aggregator Competition.xlsx"
     base_map_file = "../data/37-intersection map.xlsx"
@@ -196,8 +189,8 @@ def main():
     
     # Output files
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_csv_file = f"../results/aggregator_37map_experiments_{timestamp}.csv"
-    log_file_path = f"../logs/aggregator_37map_experiments_{timestamp}.txt"
+    output_csv_file = f"../results/aggregator_37map_alg_comparison_{timestamp}.csv"
+    log_file_path = f"../logs/aggregator_37map_alg_comparison_{timestamp}.txt"
     
     # Create output directories if they don't exist
     os.makedirs(os.path.dirname(output_csv_file), exist_ok=True)
@@ -214,12 +207,13 @@ def main():
                 raise FileNotFoundError(f"Input file not found: {file_path}")
         
         print("=" * 80)
-        print("AGGREGATOR EXPERIMENTS - STATION COMBINATIONS")
+        print("AGGREGATOR ALGORITHM COMPARISON - STATION COMBINATIONS")
         print("=" * 80)
         print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"Solver: {solver}")
         print(f"Time limit: {time_limit} seconds")
         print(f"Verbosity level: {verbose}")
+        print(f"Algorithms to test: {', '.join(algorithms)}")
         print(f"Output CSV: {output_csv_file}")
         print(f"Log file: {log_file_path}")
         print()
@@ -242,7 +236,7 @@ def main():
         
         # Generate combinations to test
         print("Generating station combinations...")
-        combinations_to_test = generate_station_combinations(all_stations, min_size=4, max_size=5)
+        combinations_to_test = generate_station_combinations(all_stations, min_size=1, max_size=5)
         print(f"→ Testing {len(combinations_to_test)} combinations:")
         for i, combo in enumerate(combinations_to_test, 1):
             print(f"    {i:2d}. {combo}")
@@ -286,6 +280,7 @@ def main():
                 base_map_file=base_map_file,
                 all_stations=all_stations,
                 base_case_station_profits=base_case_station_profits,
+                algorithms=algorithms,
                 solver=solver,
                 time_limit=time_limit,
                 verbose=verbose
@@ -315,7 +310,7 @@ def main():
             print(f"\nERROR: No results generated!")
         
         print(f"\n{'='*80}")
-        print("EXPERIMENTS COMPLETED")
+        print("ALGORITHM COMPARISON COMPLETED")
         print(f"{'='*80}")
         
     finally:
@@ -326,4 +321,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main() 

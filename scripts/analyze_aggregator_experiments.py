@@ -573,9 +573,6 @@ def print_summary_statistics(df, pred_real_df, tr_comp_df, imp_df):
 
 def main():
     """Main function to run the complete analysis."""
-    print("Aggregator Experiments Analysis")
-    print("=" * 50)
-    
     # Define the specific CSV files to analyze
     csv_files = [
         "../results/aggregator_37map_experiments_20250614_150755.csv",  # 1-3 stations
@@ -592,7 +589,22 @@ def main():
         "../images/aggregator_37map_experiments_improvement_histogram_corrected.png"
     ]
     
+    # Define log file path
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file_path = f"../logs/aggregator_37map_experiments_analysis_{timestamp}.txt"
+    
+    # Create logs directory if it doesn't exist
+    os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+    
+    # Set up output redirection to both console and file
+    tee_output = TeeOutput(log_file_path)
+    original_stdout = sys.stdout
+    sys.stdout = tee_output
+    
     try:
+        print("Aggregator Experiments Analysis")
+        print("=" * 50)
+        
         # Load and combine data
         print("Loading and combining data...")
         df = load_and_combine_results(csv_files)
@@ -617,30 +629,15 @@ def main():
         
     except Exception as e:
         print(f"Error during analysis: {e}")
-        raise
-
-
-if __name__ == "__main__":
-    # Set up logging with TeeOutput
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file_path = f"../logs/aggregator_analysis_corrected_{timestamp}.txt"
-    
-    # Create logs directory if it doesn't exist
-    os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
-    
-    # Set up output redirection to both console and file
-    tee_output = TeeOutput(log_file_path)
-    original_stdout = sys.stdout
-    sys.stdout = tee_output
-    
-    try:
-        main()
-    except Exception as e:
-        print(f"Error during execution: {e}")
         import traceback
         traceback.print_exc()
+        raise
     finally:
         # Restore original stdout and close the log file
         sys.stdout = original_stdout
         tee_output.close()
-        print(f"All output has been saved to: {log_file_path}") 
+        print(f"All output has been saved to: {log_file_path}")
+
+
+if __name__ == "__main__":
+    main() 
