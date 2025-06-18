@@ -283,30 +283,97 @@ def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, 
     start_point = paths_data['pStartingPoint'][None]
     end_point = paths_data['pEndingPoint'][None]
     
+    # Handle case where start and end points are different but at same coordinates
+    same_physical_location = False
+    modified_pos = pos.copy()  # Create a copy to modify positions if needed
+    
+    if start_point != end_point and start_point in pos and end_point in pos:
+        start_coords = pos[start_point]
+        end_coords = pos[end_point]
+        # Check if they have the same coordinates (within tolerance)
+        if abs(start_coords[0] - end_coords[0]) < 1e-6 and abs(start_coords[1] - end_coords[1]) < 1e-6:
+            same_physical_location = True
+            # Create a small offset for both points - center them around the original location
+            offset = 0.025  # Half the previous offset since we're splitting the distance
+            modified_pos[start_point] = (start_coords[0], start_coords[1] + offset)  # Start point above
+            modified_pos[end_point] = (end_coords[0], end_coords[1] - offset)  # End point below
+    
     # Draw nodes
     start_end_points = [start_point, end_point] if start_point != end_point else [start_point]
     regular_nodes = [n for n in intersections if n not in delivery_points and n not in charging_stations and n not in start_end_points]
     delivery_only = [n for n in delivery_points if n not in start_end_points]
     
     # Regular intersections
-    nx.draw_networkx_nodes(G, pos, nodelist=regular_nodes, node_color='lightgray', 
+    nx.draw_networkx_nodes(G, modified_pos, nodelist=regular_nodes, node_color='lightgray', 
                           node_size=500, alpha=0.8, edgecolors='black', linewidths=0.5)
     
     # Charging stations (exclude start/end if they are also charging stations)
     charging_only = [n for n in charging_stations if n not in start_end_points]
-    nx.draw_networkx_nodes(G, pos, nodelist=charging_only, node_color='lightblue', 
+    nx.draw_networkx_nodes(G, modified_pos, nodelist=charging_only, node_color='lightblue', 
                           node_size=500, alpha=0.9, node_shape='s', edgecolors='black', linewidths=1)
     
     # Delivery points (exclude start/end)
-    nx.draw_networkx_nodes(G, pos, nodelist=delivery_only, node_color='orange', 
+    nx.draw_networkx_nodes(G, modified_pos, nodelist=delivery_only, node_color='orange', 
                           node_size=500, alpha=0.9, edgecolors='black', linewidths=1)
     
-    # Start/End points (same node or different nodes)
-    nx.draw_networkx_nodes(G, pos, nodelist=start_end_points, node_color='red', 
-                          node_size=500, alpha=0.9, edgecolors='darkred', linewidths=2)
+    # Start/End points - handle them separately if they're at the same location
+    if start_point != end_point and same_physical_location:
+        # Draw start point
+        nx.draw_networkx_nodes(G, modified_pos, nodelist=[start_point], node_color='red', 
+                              node_size=500, alpha=0.9, edgecolors='red', linewidths=2)
+        # Draw end point with different color to distinguish
+        nx.draw_networkx_nodes(G, modified_pos, nodelist=[end_point], node_color='green', 
+                              node_size=500, alpha=0.9, edgecolors='green', linewidths=2)
+    else:
+        # Original behavior for other cases
+        nx.draw_networkx_nodes(G, modified_pos, nodelist=start_end_points, node_color='red', 
+                              node_size=500, alpha=0.9, edgecolors='darkred', linewidths=2)
     
     # Add labels for intersections
-    nx.draw_networkx_labels(G, pos, font_size=12, font_weight='bold')
+    nx.draw_networkx_labels(G, modified_pos, font_size=12, font_weight='bold')
+    
+    # Add direction arrow for the start node (showing first path direction)
+    if start_point in modified_pos:
+        # Find the first path that starts from the start point
+        first_path = None
+        for _, row in paths_df.iterrows():
+            if row['pOriginIntersection'] == start_point:
+                first_path = row
+                break
+        
+        if first_path is not None:
+            dest = first_path['pDestinationIntersection']
+            if dest in modified_pos:
+                # Calculate direction vector using REAL physical locations (not modified positions)
+                start_pos_real = pos[start_point]  # Use original position for direction calculation
+                dest_pos_real = pos[dest] if dest in pos else modified_pos[dest]  # Use original dest position if available
+                
+                # Direction vector from real start to real destination
+                dx = dest_pos_real[0] - start_pos_real[0]
+                dy = dest_pos_real[1] - start_pos_real[1]
+                
+                # Use modified position for arrow placement but real position for direction
+                start_pos_visual = modified_pos[start_point]
+                
+                # Normalize the direction vector
+                length = np.sqrt(dx**2 + dy**2)
+                if length > 0:
+                    dx_norm = dx / length
+                    dy_norm = dy / length
+                    
+                    # Position arrow close to the start node, slightly higher up
+                    arrow_offset = 0.05  # Reduced distance - closer to the node center
+                    arrow_start_x = start_pos_visual[0] + dx_norm * arrow_offset
+                    arrow_start_y = start_pos_visual[1] + dy_norm * arrow_offset + 0.02  # Slightly higher up
+                    
+                    # Much bigger arrow length (2x size)
+                    arrow_length = 0.08  # 2x bigger than the previous 0.04
+                    arrow_end_x = arrow_start_x + dx_norm * arrow_length
+                    arrow_end_y = arrow_start_y + dy_norm * arrow_length
+                    
+                    # Draw arrow
+                    plt.annotate('', xy=(arrow_end_x, arrow_end_y), xytext=(arrow_start_x, arrow_start_y),
+                               arrowprops=dict(arrowstyle='->', color='red', lw=2, alpha=0.8))
     
     # Add solution information for all visited nodes
     for _, row in intersections_df.iterrows():
@@ -359,8 +426,20 @@ def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, 
                 info_text.append("Charging Cost: 0")
         
         if info_text:
+            # Special positioning for start/end nodes at same physical location
+            if same_physical_location and intersection in [start_point, end_point]:
+                if intersection == start_point:
+                    # Position start point label to the right and slightly up
+                    xytext_offset = (20, 10)
+                else:  # end_point
+                    # Position end point label to the right and slightly down
+                    xytext_offset = (20, -15)
+            else:
+                # Default positioning for other nodes
+                xytext_offset = (15, 15)
+            
             plt.annotate('\n'.join(info_text), 
-                       xy=pos[intersection], xytext=(15, 15),
+                       xy=modified_pos[intersection], xytext=xytext_offset,
                        textcoords='offset points', fontsize=10, fontweight='bold',
                        bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', alpha=0.9, edgecolor='gray'))
     
@@ -396,10 +475,21 @@ def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, 
         plt.Line2D([0], [0], color='black', linewidth=6, label='Main Type 2'),
         plt.Line2D([0], [0], color='black', linewidth=1, label='Secondary'),
         plt.Line2D([0], [0], color='red', linewidth=6, label='Solution Path'),
-        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='Start/End'),
         plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='orange', markersize=8, label='Delivery Points'),
         plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='lightblue', markersize=8, label='Charging Stations')
     ]
+    
+    # Add start/end legend elements based on whether they're at same location
+    if start_point != end_point and same_physical_location:
+        legend_elements.extend([
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='Start Point'),
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='green', markersize=10, label='End Point')
+        ])
+    else:
+        legend_elements.append(
+            plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='Start/End')
+        )
+    
     plt.legend(handles=legend_elements, loc='upper right')
     
     # Update title to include objective function value

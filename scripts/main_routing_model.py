@@ -221,7 +221,7 @@ if __name__ == "__main__":
     linearize_constraints = True
     solver = "gurobi"
     # scenarios = list(range(2,1000))  # from scenario 2 to 999
-    scenarios = [10_002]
+    scenarios = [0]
     # evs = [1]
     evs = None  # Solve for all EVs
     time_limit = 15
