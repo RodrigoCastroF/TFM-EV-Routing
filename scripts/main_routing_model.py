@@ -76,7 +76,11 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
     if ev is None:
         # Solve for all EVs using solve_for_all_evs
         if verbose >= 1:
-            print("Solving for all EVs")
+            print("\n\n", "=" * 100, sep="")
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            constraints_str = "linear" if linearize_constraints else "quadratic"
+            print(f"EV Routing Solver Output - Solver {solver}, Constraints {constraints_str}, Scenario {scenario}, All EVs - {now}")
+            print("=" * 100, "\n", sep="")
         
         results = solve_for_all_evs(
             map_data=map_data,
@@ -181,7 +185,8 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
             if verbose >= 1:
                 print("\n\n", "=" * 60, sep="")
                 now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print(f"EV Routing Solver Output - Scenario {scenario}, EV {current_ev} - {now}")
+                constraints_str = "linear" if linearize_constraints else "quadratic"
+                print(f"EV Routing Solver Output - Solver {solver}, Constraints {constraints_str}, Scenario {scenario}, EV {current_ev} - {now}")
                 print("=" * 60, "\n", sep="")
 
             # Generate output file paths if prefixes provided
@@ -218,66 +223,67 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
 if __name__ == "__main__":
 
     # Configuration
-    linearize_constraints = True
-    solver = "gurobi"
-    # scenarios = list(range(2,1000))  # from scenario 2 to 999
-    scenarios = [0]
-    # evs = [1]
-    evs = None  # Solve for all EVs
+    solvers = ["gurobi", "cplex"]
+    scenarios = [0, 1, 2]
+    evs = None  # evs = None to olve for all EVs; evs = [1] to solve for a specific EV
     time_limit = 15
-    load_if_exists = True
+    load_if_exists = False
 
     # Input files
     input_excel_file = "../data/37-intersection map.xlsx"
     scenarios_csv_file = "../data/scenarios.csv"
 
-    # Output files
-    sol_name = f"37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
-    output_prefix_solution = f"../solutions/{sol_name}"
-    # output_prefix = None  # Avoid saving solution
-    output_prefix_image = f"../images/{sol_name}"
-    # output_prefix_image = None  # Avoid saving image
-    # output_prefix_model = f"../gurobi_parameters/{sol_name}"
-    output_prefix_model = None  # Avoid saving concrete model
-    # training_data_path = "../data/training_data.csv"
-    training_data_path = None  # Avoid updating training data
-
     # Detailed logging
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file_path = f"../logs/routing_solver_output_{timestamp}.txt"
     # log_file_path = None
-    
+
     # Set up output redirection to both console and file
     if log_file_path:
         os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
     tee_output = TeeOutput(log_file_path)
     original_stdout = sys.stdout
     sys.stdout = tee_output
-    
+
     try:
-        for scenario in scenarios:
-            main(
-                scenario=scenario,
-                ev=evs,
-                output_prefix_solution=output_prefix_solution,
-                output_prefix_image=output_prefix_image,
-                linearize_constraints=linearize_constraints,
-                load_if_exists=load_if_exists,
-                solver=solver,
-                time_limit=time_limit,
-                verbose=2,
-                input_excel_file=input_excel_file,
-                scenarios_csv_file=scenarios_csv_file,
-                training_data=training_data_path,
-                # model_prefix=output_prefix_model,
-                # tuned_params_file="../gurobi_parameters/tuned_params_1.prm"
-            )
-        
+        for solver in solvers:
+            linearization_options = [True, False] if solver == "gurobi" else [True]
+            for linearize_constraints in linearization_options:
+
+                # Output files
+                sol_name = f"37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
+                # output_prefix_solution = f"../solutions/{sol_name}"
+                output_prefix_solution = None  # Avoid saving solution
+                # output_prefix_image = f"../images/{sol_name}"
+                output_prefix_image = None  # Avoid saving image
+                # output_prefix_model = f"../gurobi_parameters/{sol_name}"
+                output_prefix_model = None  # Avoid saving concrete model
+                # training_data_path = "../data/training_data.csv"
+                training_data_path = None  # Avoid updating training data
+
+                for scenario in scenarios:
+                    main(
+                        scenario=scenario,
+                        ev=evs,
+                        output_prefix_solution=output_prefix_solution,
+                        output_prefix_image=output_prefix_image,
+                        linearize_constraints=linearize_constraints,
+                        load_if_exists=load_if_exists,
+                        solver=solver,
+                        time_limit=time_limit,
+                        verbose=2,
+                        input_excel_file=input_excel_file,
+                        scenarios_csv_file=scenarios_csv_file,
+                        training_data=training_data_path,
+                        # model_prefix=output_prefix_model,
+                        # tuned_params_file="../gurobi_parameters/tuned_params_1.prm"
+                    )
+
     except Exception as e:
         print(f"Error during execution: {e}")
         import traceback
         traceback.print_exc()
-    
+
     finally:
         # Restore original stdout and close the log file
         sys.stdout = original_stdout
