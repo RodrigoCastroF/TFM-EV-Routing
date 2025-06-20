@@ -179,17 +179,17 @@ def create_analysis_plot(input_file: str, output_file: str,
             print(f"Warning: No valid data for Scenario {scenario}, EV {ev} after filtering for log scale")
             continue
         
-        # Plot lower bound on primary y-axis
-        label_incumbent = f'S{scenario}-EV{ev} Lower Bound'
+        # Plot upper bound on primary y-axis
+        label_incumbent = f'S{scenario}-EV{ev} Upper Bound'
         ax1.plot(time_filtered, incumbent_filtered, color=color, linewidth=2, 
                 label=label_incumbent, linestyle='-', alpha=0.8)
         
-        # Find the point with the best (lowest) lower bound for this section
+        # Find the point with the best (lowest) upper bound for this section
         best_bound_idx = np.argmin(incumbent_filtered)
         best_bound_value = incumbent_filtered[best_bound_idx]
         best_bound_time = time_filtered[best_bound_idx]
         
-        # Mark the best lower bound point
+        # Mark the best upper bound point
         ax1.plot(best_bound_time, best_bound_value, 'o', color=color, markersize=6, 
                 markeredgecolor='black', markeredgewidth=1)
         
@@ -198,7 +198,7 @@ def create_analysis_plot(input_file: str, output_file: str,
         ax1.annotate(f'S{scenario}-EV{ev}', 
                     xy=(time_filtered[mid_idx], incumbent_filtered[mid_idx]),
                     xytext=(5, 5), textcoords='offset points',
-                    fontsize=9, color=color, fontweight='bold',
+                    fontsize=14, color=color, fontweight='bold',
                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
         
         # Collect data for axis limits
@@ -206,10 +206,11 @@ def create_analysis_plot(input_file: str, output_file: str,
         all_time_values.extend(time_filtered)
         all_gap_values.extend(gap_filtered)
     
-    # Set up primary y-axis (lower bound) with log scale
-    ax1.set_xlabel('Execution Time (seconds)', fontsize=12)
-    ax1.set_ylabel('Lower Bound (Incumbent)', color='tab:blue', fontsize=12)
-    ax1.tick_params(axis='y', labelcolor='tab:blue')
+    # Set up primary y-axis (upper bound) with log scale
+    ax1.set_xlabel('Execution Time (seconds)', fontsize=18)
+    ax1.set_ylabel('Upper Bound (Incumbent)', color='tab:blue', fontsize=18)
+    ax1.tick_params(axis='y', labelcolor='tab:blue', labelsize=15)
+    ax1.tick_params(axis='x', labelsize=15)
     ax1.grid(True, alpha=0.3)
     
     # Set log scales
@@ -240,8 +241,8 @@ def create_analysis_plot(input_file: str, output_file: str,
         ax2.plot(time_filtered, gap_filtered, color=color, linewidth=2, 
                 label=label_gap, linestyle='--', alpha=0.6)
     
-    ax2.set_ylabel('Gap (%)', color='tab:red', fontsize=12)
-    ax2.tick_params(axis='y', labelcolor='tab:red')
+    ax2.set_ylabel('Gap (%)', color='tab:red', fontsize=18)
+    ax2.tick_params(axis='y', labelcolor='tab:red', labelsize=15)
     
     # Set axis limits with some padding
     if all_time_values and all_incumbent_values:
@@ -258,8 +259,8 @@ def create_analysis_plot(input_file: str, output_file: str,
     if evs_filter is not None:
         filter_info += f" (EVs: {evs_filter})"
     
-    plt.title(f'Gurobi Solver Progress: Lower Bound and Gap vs Time{filter_info}', 
-              fontsize=14, fontweight='bold')
+    plt.title(f'Gurobi Solver Progress: Upper Bound and Gap vs Time{filter_info}', 
+              fontsize=21, fontweight='bold')
     
     # Create legends
     lines1, labels1 = ax1.get_legend_handles_labels()
@@ -267,12 +268,18 @@ def create_analysis_plot(input_file: str, output_file: str,
     
     # Split legends into two columns if there are many entries
     if len(labels1) + len(labels2) > 6:
-        legend1 = ax1.legend(lines1, labels1, loc='upper left', title='Lower Bound')
-        legend2 = ax2.legend(lines2, labels2, loc='upper right', title='Gap (%)')
+        legend1 = ax1.legend(lines1, labels1, loc='upper center', title='Upper Bound', 
+                            bbox_to_anchor=(0.25, 1.0), fontsize=13)
+        legend2 = ax2.legend(lines2, labels2, loc='upper center', title='Gap (%)', 
+                            bbox_to_anchor=(0.75, 1.0), fontsize=13)
         legend1.get_title().set_fontweight('bold')
+        legend1.get_title().set_fontsize(15)
         legend2.get_title().set_fontweight('bold')
+        legend2.get_title().set_fontsize(15)
     else:
-        ax1.legend(lines1 + lines2, labels1 + labels2, loc='best')
+        legend = ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper center', 
+                           bbox_to_anchor=(0.5, 1.0), fontsize=13)
+        legend.get_title().set_fontsize(15)
     
     # Improve layout
     plt.tight_layout()
