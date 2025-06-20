@@ -164,8 +164,8 @@ def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, 
     
     Parameters
     ----------
-    solution_data: dict
-        A dictionary containing the solution data from extract_solution_data.
+    solution_data: dict or None
+        A dictionary containing the solution data from extract_solution_data, or None for base map.
     input_data: dict
         The input data dictionary from filter_map_data_for_ev, which includes coordinates.
     file_path: str
@@ -186,16 +186,21 @@ def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, 
     charging_stations = paths_data['sChargingStations'][None]
     coordinates = paths_data.get('coordinates')
     
-    # Extract solution data
-    intersections_df = solution_data['intersections_df']
-    paths_df = solution_data['paths_df']
+    # Extract solution data if provided
+    if solution_data is not None:
+        intersections_df = solution_data['intersections_df']
+        paths_df = solution_data['paths_df']
 
-    # Consider only visited intersections and paths
-    # Note Gurobi may save the binary variable as 0.999999936,
-    # so we check for `abs(intersections_df['v01VisitIntersection'] - 1) < eps`
-    # instead of `intersections_df['v01VisitIntersection'] == 1
-    intersections_df = intersections_df[abs(intersections_df['v01VisitIntersection'] - 1) < eps]
-    paths_df = paths_df[abs(paths_df['v01TravelPath'] - 1) < eps]
+        # Consider only visited intersections and paths
+        # Note Gurobi may save the binary variable as 0.999999936,
+        # so we check for `abs(intersections_df['v01VisitIntersection'] - 1) < eps`
+        # instead of `intersections_df['v01VisitIntersection'] == 1
+        intersections_df = intersections_df[abs(intersections_df['v01VisitIntersection'] - 1) < eps]
+        paths_df = paths_df[abs(paths_df['v01TravelPath'] - 1) < eps]
+    else:
+        # No solution data - create empty dataframes
+        intersections_df = pd.DataFrame()
+        paths_df = pd.DataFrame()
     
     # Create graph
     G = nx.Graph()
@@ -271,13 +276,14 @@ def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, 
         else:  # Secondary
             plt.plot(x_coords, y_coords, 'k-', linewidth=1, alpha=0.7)
     
-    # Draw solution paths in red
-    for _, row in paths_df.iterrows():
-        origin = row['pOriginIntersection']
-        dest = row['pDestinationIntersection']
-        x_coords = [pos[origin][0], pos[dest][0]]
-        y_coords = [pos[origin][1], pos[dest][1]]
-        plt.plot(x_coords, y_coords, 'r-', linewidth=6, alpha=0.8)
+    # Draw solution paths in red (only if solution data is provided)
+    if not paths_df.empty:
+        for _, row in paths_df.iterrows():
+            origin = row['pOriginIntersection']
+            dest = row['pDestinationIntersection']
+            x_coords = [pos[origin][0], pos[dest][0]]
+            y_coords = [pos[origin][1], pos[dest][1]]
+            plt.plot(x_coords, y_coords, 'r-', linewidth=6, alpha=0.8)
     
     # Get start/end points from unindexed parameters
     start_point = paths_data['pStartingPoint'][None]
@@ -332,8 +338,8 @@ def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, 
     # Add labels for intersections
     nx.draw_networkx_labels(G, modified_pos, font_size=12, font_weight='bold')
     
-    # Add direction arrow for the start node (showing first path direction)
-    if start_point in modified_pos:
+    # Add direction arrow for the start node (showing first path direction) - only if solution exists
+    if start_point in modified_pos and not paths_df.empty:
         # Find the first path that starts from the start point
         first_path = None
         for _, row in paths_df.iterrows():
@@ -375,109 +381,122 @@ def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, 
                     plt.annotate('', xy=(arrow_end_x, arrow_end_y), xytext=(arrow_start_x, arrow_start_y),
                                arrowprops=dict(arrowstyle='->', color='red', lw=2, alpha=0.8))
     
-    # Add solution information for all visited nodes
-    for _, row in intersections_df.iterrows():
-        intersection = row['intersection']
-        
-        # Get solution values from the DataFrame
-        time_arr = row['vTimeArrival']
-        time_dep = row['vTimeDeparture']
-        soc_arr = row['vSoCArrival']
-        soc_dep = row['vSoCDeparture']
-        
-        # Format text more compactly
-        info_text = []
-        if time_arr is not None and time_dep is not None:
-            if abs(time_arr - time_dep) < eps:  # Values are essentially identical
-                info_text.append(f"Time: {time_arr:.{decimal_precision}f}")
-            else:
-                info_text.append(f"Time: {time_arr:.{decimal_precision}f}→{time_dep:.{decimal_precision}f}")
-        if soc_arr is not None and soc_dep is not None:
-            if abs(soc_arr - soc_dep) < eps:  # Values are essentially identical
-                info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}")
-            else:
-                info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}→{soc_dep:.{decimal_precision}f}")
-        
-        # Add objective function components
-        if intersection in delivery_points:
-            # Delivery time (parameter pTimeWithoutPenalty)
-            delivery_time = paths_data['pTimeWithoutPenalty'][intersection]
-            info_text.append(f"Delivery Time: {delivery_time:.{decimal_precision}f}")
+    # Add solution information for all visited nodes (only if solution data is provided)
+    if not intersections_df.empty:
+        for _, row in intersections_df.iterrows():
+            intersection = row['intersection']
             
-            # Delay penalty calculation: pDelayPenalty * vTimeDelay
-            delay_time = row['vTimeDelay'] if row['vTimeDelay'] is not None else 0
-            delay_penalty_rate = paths_data['pDelayPenalty'][intersection]
-            delay_penalty = delay_penalty_rate * delay_time
-            if delay_penalty > eps:
-                info_text.append(f"Delay Penalty: {delay_penalty:.{decimal_precision}f}")
-            else:
-                info_text.append("Delay Penalty: 0")
-        
-        if intersection in charging_stations:
-            # Charging cost calculation: pChargingPrice * pChargingPower * vTimeCharging * pChargerEfficiencyRate
-            charging_time = row['vTimeCharging'] if row['vTimeCharging'] is not None else 0
-            if charging_time > eps:  # Only show if actually charging
-                charging_price = paths_data['pChargingPrice'][intersection]
-                charging_power = paths_data['pChargingPower'][intersection]
-                charger_efficiency = paths_data['pChargerEfficiencyRate'][intersection]
-                charging_cost = charging_price * charging_power * charging_time * charger_efficiency
-                info_text.append(f"Charging Cost: {charging_cost:.{decimal_precision}f}")
-            else:
-                info_text.append("Charging Cost: 0")
-        
-        if info_text:
-            # Special positioning for start/end nodes at same physical location
-            if same_physical_location and intersection in [start_point, end_point]:
-                if intersection == start_point:
-                    # Position start point label to the right and slightly up
-                    xytext_offset = (20, 10)
-                else:  # end_point
-                    # Position end point label to the right and slightly down
-                    xytext_offset = (20, -15)
-            else:
-                # Default positioning for other nodes
-                xytext_offset = (15, 15)
+            # Get solution values from the DataFrame
+            time_arr = row['vTimeArrival']
+            time_dep = row['vTimeDeparture']
+            soc_arr = row['vSoCArrival']
+            soc_dep = row['vSoCDeparture']
             
-            plt.annotate('\n'.join(info_text), 
-                       xy=modified_pos[intersection], xytext=xytext_offset,
-                       textcoords='offset points', fontsize=10, fontweight='bold',
-                       bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', alpha=0.9, edgecolor='gray'))
+            # Format text more compactly
+            info_text = []
+            if time_arr is not None and time_dep is not None:
+                if abs(time_arr - time_dep) < eps:  # Values are essentially identical
+                    info_text.append(f"Time: {time_arr:.{decimal_precision}f}")
+                else:
+                    info_text.append(f"Time: {time_arr:.{decimal_precision}f}→{time_dep:.{decimal_precision}f}")
+            if soc_arr is not None and soc_dep is not None:
+                if abs(soc_arr - soc_dep) < eps:  # Values are essentially identical
+                    info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}")
+                else:
+                    info_text.append(f"SoC: {soc_arr:.{decimal_precision}f}→{soc_dep:.{decimal_precision}f}")
+            
+            # Add objective function components
+            if intersection in delivery_points:
+                # Delivery time (parameter pTimeWithoutPenalty)
+                delivery_time = paths_data['pTimeWithoutPenalty'][intersection]
+                info_text.append(f"Delivery Time: {delivery_time:.{decimal_precision}f}")
+                
+                # Delay penalty calculation: pDelayPenalty * vTimeDelay
+                delay_time = row['vTimeDelay'] if row['vTimeDelay'] is not None else 0
+                delay_penalty_rate = paths_data['pDelayPenalty'][intersection]
+                delay_penalty = delay_penalty_rate * delay_time
+                if delay_penalty > eps:
+                    info_text.append(f"Delay Penalty: {delay_penalty:.{decimal_precision}f}")
+                else:
+                    info_text.append("Delay Penalty: 0")
+            
+            if intersection in charging_stations:
+                # Charging cost calculation: pChargingPrice * pChargingPower * vTimeCharging * pChargerEfficiencyRate
+                charging_time = row['vTimeCharging'] if row['vTimeCharging'] is not None else 0
+                if charging_time > eps:  # Only show if actually charging
+                    charging_price = paths_data['pChargingPrice'][intersection]
+                    charging_power = paths_data['pChargingPower'][intersection]
+                    charger_efficiency = paths_data['pChargerEfficiencyRate'][intersection]
+                    charging_cost = charging_price * charging_power * charging_time * charger_efficiency
+                    info_text.append(f"Charging Cost: {charging_cost:.{decimal_precision}f}")
+                else:
+                    info_text.append("Charging Cost: 0")
+            
+            if info_text:
+                # Special positioning for start/end nodes at same physical location
+                if same_physical_location and intersection in [start_point, end_point]:
+                    if intersection == start_point:
+                        # Position start point label to the right and slightly up
+                        xytext_offset = (20, 10)
+                    else:  # end_point
+                        # Position end point label to the right and slightly down
+                        xytext_offset = (20, -15)
+                else:
+                    # Default positioning for other nodes
+                    xytext_offset = (15, 15)
+                
+                plt.annotate('\n'.join(info_text), 
+                           xy=modified_pos[intersection], xytext=xytext_offset,
+                           textcoords='offset points', fontsize=10, fontweight='bold',
+                           bbox=dict(boxstyle='round,pad=0.5', facecolor='lightyellow', alpha=0.9, edgecolor='gray'))
     
-    # Calculate and display total objective function value
-    total_charging_cost = 0
-    total_delay_penalty = 0
-    
-    for _, row in intersections_df.iterrows():
-        intersection = row['intersection']
+    # Calculate and display total objective function value (only if solution data is provided)
+    if not intersections_df.empty:
+        total_charging_cost = 0
+        total_delay_penalty = 0
         
-        # Sum charging costs
-        if intersection in charging_stations:
-            charging_time = row['vTimeCharging'] if row['vTimeCharging'] is not None else 0
-            if charging_time > eps:
-                charging_price = paths_data['pChargingPrice'][intersection]
-                charging_power = paths_data['pChargingPower'][intersection]
-                charger_efficiency = paths_data['pChargerEfficiencyRate'][intersection]
-                charging_cost = charging_price * charging_power * charging_time * charger_efficiency
-                total_charging_cost += charging_cost
+        for _, row in intersections_df.iterrows():
+            intersection = row['intersection']
+            
+            # Sum charging costs
+            if intersection in charging_stations:
+                charging_time = row['vTimeCharging'] if row['vTimeCharging'] is not None else 0
+                if charging_time > eps:
+                    charging_price = paths_data['pChargingPrice'][intersection]
+                    charging_power = paths_data['pChargingPower'][intersection]
+                    charger_efficiency = paths_data['pChargerEfficiencyRate'][intersection]
+                    charging_cost = charging_price * charging_power * charging_time * charger_efficiency
+                    total_charging_cost += charging_cost
+            
+            # Sum delay penalties
+            if intersection in delivery_points:
+                delay_time = row['vTimeDelay'] if row['vTimeDelay'] is not None else 0
+                delay_penalty_rate = paths_data['pDelayPenalty'][intersection]
+                delay_penalty = delay_penalty_rate * delay_time
+                total_delay_penalty += delay_penalty
         
-        # Sum delay penalties
-        if intersection in delivery_points:
-            delay_time = row['vTimeDelay'] if row['vTimeDelay'] is not None else 0
-            delay_penalty_rate = paths_data['pDelayPenalty'][intersection]
-            delay_penalty = delay_penalty_rate * delay_time
-            total_delay_penalty += delay_penalty
-    
-    total_objective = total_charging_cost + total_delay_penalty
+        total_objective = total_charging_cost + total_delay_penalty
+    else:
+        # No solution data - set totals to zero
+        total_charging_cost = 0
+        total_delay_penalty = 0
+        total_objective = 0
     
     # Add legend
     legend_elements = [
         plt.Line2D([0], [0], color='black', linewidth=4, label='Main Type 1'),
         plt.Line2D([0], [0], color='black', linewidth=6, label='Main Type 2'),
-        plt.Line2D([0], [0], color='black', linewidth=1, label='Secondary'),
-        plt.Line2D([0], [0], color='red', linewidth=6, label='Solution Path'),
+        plt.Line2D([0], [0], color='black', linewidth=1, label='Secondary')
+    ]
+    
+    # Only add solution path to legend if solution data is provided
+    if not paths_df.empty:
+        legend_elements.append(plt.Line2D([0], [0], color='red', linewidth=6, label='Solution Path'))
+    
+    legend_elements.extend([
         plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='orange', markersize=8, label='Delivery Points'),
         plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='lightblue', markersize=8, label='Charging Stations')
-    ]
+    ])
     
     # Add start/end legend elements based on whether they're at same location
     if start_point != end_point and same_physical_location:
@@ -492,12 +511,16 @@ def create_solution_map(solution_data, input_data, file_path: str, ev: int = 1, 
     
     plt.legend(handles=legend_elements, loc='upper right')
     
-    # Update title to include objective function value
-    plt.title(f'EV Routing Solution - EV {ev}\n'
-              f'Total Cost: {total_objective:.{decimal_precision}f} '
-              f'(Charging: {total_charging_cost:.{decimal_precision}f}, '
-              f'Delay Penalty: {total_delay_penalty:.{decimal_precision}f})', 
-              fontsize=16, fontweight='bold')
+    # Update title based on whether solution data is provided
+    if not intersections_df.empty:
+        plt.title(f'EV Routing Solution - EV {ev}\n'
+                  f'Total Cost: {total_objective:.{decimal_precision}f} '
+                  f'(Charging: {total_charging_cost:.{decimal_precision}f}, '
+                  f'Delay Penalty: {total_delay_penalty:.{decimal_precision}f})', 
+                  fontsize=16, fontweight='bold')
+    else:
+        plt.title(f'EV Routing Network Map - EV {ev}', fontsize=16, fontweight='bold')
+    
     plt.tight_layout()
     
     # Save image
