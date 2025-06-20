@@ -345,7 +345,7 @@ def create_solver_comparison_plot(input_file: str, output_file: str):
     
     # Create the plot
     fig, axes = plt.subplots(3, 3, figsize=(18, 12))
-    fig.suptitle(f'Solver Performance Comparison: Incumbent Values Over Time', fontsize=16, fontweight='bold')
+    fig.suptitle(f'Solver Performance Comparison: Incumbent Values Over Time', fontsize=24, fontweight='bold')
     
     for i, scenario in enumerate(scenarios):
         for j, ev in enumerate(evs):
@@ -368,8 +368,11 @@ def create_solver_comparison_plot(input_file: str, output_file: str):
                     legend_added = True
             
             # Set subplot properties
-            ax.set_title(f'Scenario {scenario}, EV {ev}', fontsize=12, fontweight='bold')
+            ax.set_title(f'Scenario {scenario}, EV {ev}', fontsize=18, fontweight='bold')
             ax.grid(True, alpha=0.3)
+            
+            # Set tick label font sizes
+            ax.tick_params(axis='both', which='major', labelsize=13)
             
             # Set consistent x-axis limits across all subplots
             if max_time > 0:
@@ -397,11 +400,11 @@ def create_solver_comparison_plot(input_file: str, output_file: str):
             
             # Only show x-axis label for bottom row
             if i == 2:
-                ax.set_xlabel('Time (seconds)', fontsize=11)
+                ax.set_xlabel('Time (seconds)', fontsize=17)
             
             # Only show y-axis label for leftmost column
             if j == 0:
-                ax.set_ylabel('Incumbent Value', fontsize=11)
+                ax.set_ylabel('Incumbent Value', fontsize=17)
     
     # Create a single legend for the entire figure
     # Get legend from the first subplot that has data
@@ -417,7 +420,7 @@ def create_solver_comparison_plot(input_file: str, output_file: str):
     
     if handles:
         fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0.02), 
-                  ncol=3, fontsize=14, frameon=True)
+                  ncol=3, fontsize=21, frameon=True)
     
     # Adjust layout to prevent overlap
     plt.tight_layout()
