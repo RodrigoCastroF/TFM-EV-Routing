@@ -223,11 +223,12 @@ def main(input_excel_file, output_prefix_solution=None, output_prefix_image=None
 if __name__ == "__main__":
 
     # Configuration
-    solvers = ["gurobi", "cplex"]
-    scenarios = [0, 1, 2]
-    evs = None  # evs = None to olve for all EVs; evs = [1] to solve for a specific EV
+    solvers = ["gurobi"]  # solvers = ["gurobi", "cplex"]
+    linearization = [True]  # linearization = [True, False]
+    scenarios = [1]
+    evs = None  # evs = None to solve for all EVs; evs = [1] to solve for a specific EV
     time_limit = 15
-    load_if_exists = False
+    load_if_exists = True
 
     # Input files
     input_excel_file = "../data/37-intersection map.xlsx"
@@ -247,15 +248,15 @@ if __name__ == "__main__":
 
     try:
         for solver in solvers:
-            linearization_options = [True, False] if solver == "gurobi" else [True]
+            linearization_options = linearization if solver == "gurobi" else [True]
             for linearize_constraints in linearization_options:
 
                 # Output files
                 sol_name = f"37-intersection map{' LIN' if linearize_constraints else ''}{' CPLEX' if solver == 'cplex' else ''}"
-                # output_prefix_solution = f"../solutions/{sol_name}"
-                output_prefix_solution = None  # Avoid saving solution
-                # output_prefix_image = f"../images/{sol_name}"
-                output_prefix_image = None  # Avoid saving image
+                output_prefix_solution = f"../solutions/{sol_name}"
+                # output_prefix_solution = None  # Avoid saving solution
+                output_prefix_image = f"../images/{sol_name}"
+                # output_prefix_image = None  # Avoid saving image
                 # output_prefix_model = f"../gurobi_parameters/{sol_name}"
                 output_prefix_model = None  # Avoid saving concrete model
                 # training_data_path = "../data/training_data.csv"
